@@ -7,6 +7,7 @@ import { Block, blocksApi } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import DraggableBlock from './DraggableBlock'
+import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
@@ -28,32 +29,78 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
 
-  // LOGIKA UPUSZCZANIA BLOKU
+  // LOGIKA UPUSZCZANIA BLOKU (Pion i Poziom)
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, delta } = event
-    if (!delta.y) return // Brak ruchu w pionie
+    const { active, over, delta } = event
+    
+    // Zabezpieczenie: Jeśli klocek został kliknięty, ale nie przesunięty
+    if (delta.x === 0 && delta.y === 0) return 
 
     const blockId = active.id as string
     const block = blocks.find(b => b.id === blockId)
     if (!block) return
 
-    // Wyliczamy nowe czasy (ruch myszką na minuty)
+    // 1. Zmiana godzin (minuty) na podstawie przesunięcia myszki (oś Y)
     const minutesShift = calculateTimeShift(delta.y)
-    if (minutesShift === 0) return 
+    let { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift)
 
-    const { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift)
+    // 2. Zmiana dnia (oś X) - sprawdzamy nad jaką strefą (id daty) opuszczono klocek
+    if (over && over.id) {
+      const targetDateStr = over.id as string // np. "2024-03-25"
+      const [year, month, day] = targetDateStr.split('-').map(Number)
 
-    // 1. Optymistyczna aktualizacja UI (natychmiastowy efekt u użytkownika)
+      const startObj = new Date(newStart)
+      const durationMs = new Date(newEnd).getTime() - startObj.getTime()
+
+      // Podmieniamy samą datę, zostawiając wyliczone wcześniej godziny
+      startObj.setFullYear(year, month - 1, day)
+
+      newStart = startObj.toISOString()
+      newEnd = new Date(startObj.getTime() + durationMs).toISOString()
+    }
+
+    // Zabezpieczenie: jeśli parametry się nie zmieniły, nie spamujemy bazy
+    if (block.start_time === newStart && block.end_time === newEnd) return
+
+    // 3. Optymistyczna aktualizacja UI
     setBlocks(prev => prev.map(b => 
       b.id === blockId ? { ...b, start_time: newStart, end_time: newEnd } : b
     ))
 
-    // 2. Zapis w tle do Supabase
+    // 4. Zapis w tle do Supabase
     try {
       await blocksApi.updateBlock(supabase, blockId, { 
         start_time: newStart, 
         end_time: newEnd 
       })
+    } catch (error) {
+      console.error(error)
+      alert("Błąd zapisu! Odśwież stronę, aby przywrócić pierwotny stan.")
+    }
+  }
+
+  // LOGIKA ROZCIĄGANIA BLOKU (Zmiana czasu trwania)
+  const handleResizeEnd = async (blockId: string, newHeightPixels: number) => {
+    const block = blocks.find(b => b.id === blockId)
+    if (!block) return
+
+    // Matematyka: 80px to 60 minut, więc 1px to 0.75 minuty
+    const durationMinutes = newHeightPixels * 0.75
+    
+    const startObj = new Date(block.start_time)
+    // Obliczamy nowy czas zakończenia
+    const newEnd = new Date(startObj.getTime() + durationMinutes * 60000).toISOString()
+
+    if (block.end_time === newEnd) return // Jeśli czas jest ten sam, nic nie robimy
+
+    // 1. Optymistyczna aktualizacja UI
+    setBlocks(prev => prev.map(b => 
+      b.id === blockId ? { ...b, end_time: newEnd } : b
+    ))
+
+    // 2. Zapis w tle do Supabase
+    try {
+      await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd })
     } catch (error) {
       console.error(error)
       alert("Błąd zapisu! Odśwież stronę, aby przywrócić pierwotny stan.")
@@ -86,7 +133,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-screen bg-white text-black">
-        {/* NAGŁÓWEK NAWIGACYJNY */}
         <header className="flex justify-between items-center p-4 border-b shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
           <div className="flex gap-2 items-center">
@@ -99,7 +145,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </header>
 
-        {/* GŁÓWNA SIATKA */}
         <div className="flex-1 overflow-auto">
           <div className="flex min-w-[700px]">
             <div className="w-16 flex-none border-r bg-gray-50">
@@ -115,12 +160,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                 const dayBlocks = blocks.filter(b => format(new Date(b.start_time), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
 
                 return (
-                  <div key={day.toISOString()} className="flex-1 border-r relative">
-                    <div className={`h-14 border-b flex flex-col items-center justify-center sticky top-0 z-10 bg-white ${isToday ? 'bg-blue-50' : ''}`}>
-                      <span className={`text-xs ${isToday ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>{format(day, 'EEE')}</span>
-                      <span className={`text-lg ${isToday ? 'text-blue-600 font-bold' : 'text-gray-900 font-semibold'}`}>{format(day, 'd')}</span>
-                    </div>
-
+                  <DroppableDay key={day.toISOString()} day={day} isToday={isToday}>
                     <div className="relative bg-white h-[1920px]">
                       {HOURS.map(hour => (
                         <div key={hour} className="h-20 border-b border-gray-100 box-border pointer-events-none"></div>
@@ -131,10 +171,11 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           key={block.id} 
                           block={block} 
                           style={getBlockPosition(block.start_time, block.end_time)} 
+                          onResizeEnd={handleResizeEnd}
                         />
                       ))}
                     </div>
-                  </div>
+                  </DroppableDay>
                 )
               })}
             </div>
