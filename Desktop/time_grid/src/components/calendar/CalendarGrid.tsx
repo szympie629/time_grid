@@ -9,6 +9,7 @@ import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+import BlockModal from './BlockModal'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -28,6 +29,33 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [currentDate, setCurrentDate] = useState(new Date())
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null) // NOWE
+
+  // NOWE: Funkcje CRUD dla Modala
+  const handleUpdateBlockDetails = async (id: string, updates: any) => {
+    // 1. Optymistyczny UI
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
+    // 2. Docelowo tutaj poleci zapis do Supabase (blocksApi.updateBlock)
+    try {
+      await blocksApi.updateBlock(supabase, id, updates)
+    } catch (error) {
+      console.error(error)
+      alert("Błąd aktualizacji")
+    }
+  }
+  
+  const handleDeleteBlock = async (id: string) => {
+    // 1. Optymistyczny UI
+    setBlocks(prev => prev.filter(b => b.id !== id))
+    setSelectedBlockId(null)
+    // 2. Docelowo tutaj poleci usunięcie z Supabase
+    try {
+      await blocksApi.deleteBlock(supabase, id)
+    } catch (error) {
+      console.error(error)
+      alert("Błąd usuwania")
+    }
+  }
 
   // LOGIKA UPUSZCZANIA BLOKU (Pion i Poziom)
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -172,6 +200,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           block={block} 
                           style={getBlockPosition(block.start_time, block.end_time)} 
                           onResizeEnd={handleResizeEnd}
+                          onClick={(id) => setSelectedBlockId(id)} // NOWE
                         />
                       ))}
                     </div>
@@ -182,6 +211,14 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </div>
       </div>
+      {selectedBlockId && (
+        <BlockModal 
+          block={blocks.find(b => b.id === selectedBlockId)!} 
+          onClose={() => setSelectedBlockId(null)}
+          onUpdate={handleUpdateBlockDetails}
+          onDelete={handleDeleteBlock}
+        />
+      )}
     </DndContext>
   )
 }

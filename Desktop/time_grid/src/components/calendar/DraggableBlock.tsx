@@ -8,9 +8,10 @@ interface Props {
   block: Block;
   style: React.CSSProperties;
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
+  onClick: (blockId: string) => void; // NOWE
 }
 
-export default function DraggableBlock({ block, style, onResizeEnd }: Props) {
+export default function DraggableBlock({ block, style, onResizeEnd, onClick }: Props) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: block.id,
   })
@@ -77,6 +78,12 @@ export default function DraggableBlock({ block, style, onResizeEnd }: Props) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onPointerUp={(e) => {
+        // Zabezpieczenie przed wywołaniem kliknięcia podczas rozciągania
+        if (!isResizing) {
+          onClick(block.id);
+        }
+      }}
       className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
       style={{
         ...style,
