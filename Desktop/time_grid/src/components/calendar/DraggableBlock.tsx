@@ -77,7 +77,14 @@ export default function DraggableBlock({ block, style, onResizeEnd }: Props) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
+      // Dodajemy proste onClick. dnd-kit sam dba o to, by click nie kolidował z dragiem, 
+      // jeśli zdefiniujesz odpowiednie "activation constraints" (zrobimy to w CalendarGrid).
+      onClick={(e) => {
+        // Ważne: zatrzymujemy propagację, żeby nie odpalić "dodawania nowego bloku" w przyszłości
+        e.stopPropagation(); 
+      }}
+      // Zmieniamy cursor, żeby użytkownik wiedział, że może kliknąć
+      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow cursor-pointer ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
       style={{
         ...style,
         ...transformStyle,
@@ -85,9 +92,12 @@ export default function DraggableBlock({ block, style, onResizeEnd }: Props) {
         backgroundColor: block.color_tag || '#3b82f6'
       }}
     >
-      {block.title}
+      <div className="pointer-events-none">
+        <p className="font-bold truncate">{block.title}</p>
+        {block.description && <p className="opacity-80 truncate">{block.description}</p>}
+      </div>
 
-      {/* MAGIACZNY UCHWYT DO ROZCIĄGANIA NA DOLE KAFELKA */}
+      {/* Uchwyt do rozciągania pozostaje bez zmian */}
       <div
         onPointerDown={handlePointerDown}
         className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent"

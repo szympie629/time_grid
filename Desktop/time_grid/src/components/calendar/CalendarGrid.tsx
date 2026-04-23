@@ -9,6 +9,7 @@ import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+import BlockModal from './BlockModal'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -28,6 +29,30 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [currentDate, setCurrentDate] = useState(new Date())
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
+  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null)
+
+  // FUNKCJE DO MODALA
+  const handleUpdateBlockDetails = async (id: string, updates: any) => {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
+    try {
+      await blocksApi.updateBlock(supabase, id, updates)
+    } catch (error) {
+      console.error(error)
+      alert("Błąd zapisu!")
+    }
+  }
+
+  const handleDeleteBlock = async (id: string) => {
+    setBlocks(prev => prev.filter(b => b.id !== id))
+    setSelectedBlock(null)
+    try {
+      await blocksApi.deleteBlock(supabase, id)
+    } catch (error) {
+      console.error(error)
+      alert("Błąd podczas usuwania!")
+    }
+  }
+
 
   // LOGIKA UPUSZCZANIA BLOKU (Pion i Poziom)
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -172,6 +197,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           block={block} 
                           style={getBlockPosition(block.start_time, block.end_time)} 
                           onResizeEnd={handleResizeEnd}
+                          onClick={() => setSelectedBlock(block)} // <--- DODAJ TO (musisz też dodać ten prop do DraggableBlock.tsx)
                         />
                       ))}
                     </div>
@@ -182,6 +208,14 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </div>
       </div>
+      {selectedBlock && (
+          <BlockModal 
+            block={selectedBlock}
+            onClose={() => setSelectedBlock(null)}
+            onUpdate={handleUpdateBlockDetails}
+            onDelete={handleDeleteBlock}
+          />
+        )}
     </DndContext>
   )
 }
