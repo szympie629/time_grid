@@ -8,7 +8,7 @@ interface Props {
   block: Block;
   style: React.CSSProperties;
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
-  onClick: (blockId: string) => void; // NOWE
+  onClick: (blockId: string) => void;
 }
 
 export default function DraggableBlock({ block, style, onResizeEnd, onClick }: Props) {
@@ -16,19 +16,16 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
     id: block.id,
   })
 
-  // STAN DO OBSŁUGI ROZCIĄGANIA (Zmienia wysokość kafelka w locie)
   const [isResizing, setIsResizing] = useState(false)
   const [resizeHeight, setResizeHeight] = useState<number | null>(null)
   const initialHeightRef = useRef<number>(0)
   const startYRef = useRef<number>(0)
 
-  // Pobieramy domyślną wysokość wyliczoną w CalendarGrid z prop "style"
   const baseHeight = parseInt(style.height as string)
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
-  // ZŁAPANIE ZA UCHWYT (Zatrzymujemy dnd-kit i zaczynamy nasz własny skrypt)
   const handlePointerDown = (e: React.PointerEvent) => {
-    e.stopPropagation() // To jest klucz: blokujemy D&D!
+    e.stopPropagation() 
     e.preventDefault()
 
     setIsResizing(true)
@@ -36,26 +33,22 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
     initialHeightRef.current = baseHeight
   }
 
-  // ŚLEDZENIE RUCHU MYSZKI W DÓŁ/GÓRĘ
   useEffect(() => {
     if (!isResizing) return
 
     const handlePointerMove = (e: PointerEvent) => {
       const deltaY = e.clientY - startYRef.current
-      // Minimalna wysokość to 20px (czyli 15 minut)
       const newHeight = Math.max(20, initialHeightRef.current + deltaY) 
-      // Wymuszamy skokowe rozciąganie co 20px (15 minut)
       const snappedHeight = Math.round(newHeight / 20) * 20
       setResizeHeight(snappedHeight)
     }
 
     const handlePointerUp = () => {
       setIsResizing(false)
-      // Zgłaszamy nową wysokość do głównego kalendarza tylko jeśli się zmieniła
       if (resizeHeight !== null && resizeHeight !== initialHeightRef.current) {
          onResizeEnd(block.id, resizeHeight)
       }
-      setResizeHeight(null) // Czyścimy i czekamy aż baza odda nowe dane
+      setResizeHeight(null)
     }
 
     window.addEventListener('pointermove', handlePointerMove)
@@ -78,8 +71,9 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onPointerUp={(e) => {
-        // Zabezpieczenie przed wywołaniem kliknięcia podczas rozciągania
+      onClick={(e) => {
+        // Blokujemy dalszą propagację kliknięcia i sprawdzamy czy nie skalujemy
+        e.stopPropagation();
         if (!isResizing) {
           onClick(block.id);
         }
@@ -94,7 +88,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
     >
       {block.title}
 
-      {/* MAGIACZNY UCHWYT DO ROZCIĄGANIA NA DOLE KAFELKA */}
       <div
         onPointerDown={handlePointerDown}
         className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent"

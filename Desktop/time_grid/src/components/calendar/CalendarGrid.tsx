@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { getWeekDays, getNextWeek, getPrevWeek } from '@/utils/dateHelpers'
 import { Block, blocksApi } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
@@ -29,13 +29,19 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [currentDate, setCurrentDate] = useState(new Date())
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null) // NOWE
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
 
-  // NOWE: Funkcje CRUD dla Modala
+  // NOWE: Konfiguracja sensorów - 5px tolerancji
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  )
+
   const handleUpdateBlockDetails = async (id: string, updates: any) => {
-    // 1. Optymistyczny UI
     setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
-    // 2. Docelowo tutaj poleci zapis do Supabase (blocksApi.updateBlock)
     try {
       await blocksApi.updateBlock(supabase, id, updates)
     } catch (error) {
@@ -45,10 +51,8 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   }
   
   const handleDeleteBlock = async (id: string) => {
-    // 1. Optymistyczny UI
     setBlocks(prev => prev.filter(b => b.id !== id))
     setSelectedBlockId(null)
-    // 2. Docelowo tutaj poleci usunięcie z Supabase
     try {
       await blocksApi.deleteBlock(supabase, id)
     } catch (error) {
@@ -57,45 +61,37 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     }
   }
 
-  // LOGIKA UPUSZCZANIA BLOKU (Pion i Poziom)
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over, delta } = event
     
-    // Zabezpieczenie: Jeśli klocek został kliknięty, ale nie przesunięty
     if (delta.x === 0 && delta.y === 0) return 
 
     const blockId = active.id as string
     const block = blocks.find(b => b.id === blockId)
     if (!block) return
 
-    // 1. Zmiana godzin (minuty) na podstawie przesunięcia myszki (oś Y)
     const minutesShift = calculateTimeShift(delta.y)
     let { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift)
 
-    // 2. Zmiana dnia (oś X) - sprawdzamy nad jaką strefą (id daty) opuszczono klocek
     if (over && over.id) {
-      const targetDateStr = over.id as string // np. "2024-03-25"
+      const targetDateStr = over.id as string
       const [year, month, day] = targetDateStr.split('-').map(Number)
 
       const startObj = new Date(newStart)
       const durationMs = new Date(newEnd).getTime() - startObj.getTime()
 
-      // Podmieniamy samą datę, zostawiając wyliczone wcześniej godziny
       startObj.setFullYear(year, month - 1, day)
 
       newStart = startObj.toISOString()
       newEnd = new Date(startObj.getTime() + durationMs).toISOString()
     }
 
-    // Zabezpieczenie: jeśli parametry się nie zmieniły, nie spamujemy bazy
     if (block.start_time === newStart && block.end_time === newEnd) return
 
-    // 3. Optymistyczna aktualizacja UI
     setBlocks(prev => prev.map(b => 
       b.id === blockId ? { ...b, start_time: newStart, end_time: newEnd } : b
     ))
 
-    // 4. Zapis w tle do Supabase
     try {
       await blocksApi.updateBlock(supabase, blockId, { 
         start_time: newStart, 
@@ -107,26 +103,21 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     }
   }
 
-  // LOGIKA ROZCIĄGANIA BLOKU (Zmiana czasu trwania)
   const handleResizeEnd = async (blockId: string, newHeightPixels: number) => {
     const block = blocks.find(b => b.id === blockId)
     if (!block) return
 
-    // Matematyka: 80px to 60 minut, więc 1px to 0.75 minuty
     const durationMinutes = newHeightPixels * 0.75
     
     const startObj = new Date(block.start_time)
-    // Obliczamy nowy czas zakończenia
     const newEnd = new Date(startObj.getTime() + durationMinutes * 60000).toISOString()
 
-    if (block.end_time === newEnd) return // Jeśli czas jest ten sam, nic nie robimy
+    if (block.end_time === newEnd) return
 
-    // 1. Optymistyczna aktualizacja UI
     setBlocks(prev => prev.map(b => 
       b.id === blockId ? { ...b, end_time: newEnd } : b
     ))
 
-    // 2. Zapis w tle do Supabase
     try {
       await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd })
     } catch (error) {
@@ -159,7 +150,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-screen bg-white text-black">
         <header className="flex justify-between items-center p-4 border-b shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
@@ -200,7 +191,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           block={block} 
                           style={getBlockPosition(block.start_time, block.end_time)} 
                           onResizeEnd={handleResizeEnd}
-                          onClick={(id) => setSelectedBlockId(id)} // NOWE
+                          onClick={(id) => setSelectedBlockId(id)}
                         />
                       ))}
                     </div>
