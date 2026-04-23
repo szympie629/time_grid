@@ -1,13 +1,11 @@
-'use client'
-
 import { useState } from 'react'
 import { Block } from '@/lib/api/blocks'
 
 interface Props {
   block: Block
   onClose: () => void
-  onUpdate: (id: string, updates: any) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onUpdate: (id: string, updates: Partial<Block>) => void
+  onDelete: (id: string) => void
 }
 
 export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props) {
@@ -20,43 +18,57 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="font-bold text-lg text-black">Edytuj blok</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-black text-2xl">&times;</button>
-        </div>
-        
-        <div className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Tytuł</label>
-            <input 
-              type="text" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block w-full border rounded-md p-2 text-black bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Opis</label>
-            <textarea 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 block w-full border rounded-md p-2 text-black bg-gray-50 h-24 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40" 
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white p-6 rounded-lg w-[400px] shadow-xl flex flex-col gap-4 text-black"
+        onClick={e => e.stopPropagation()} // Zapobiega zamknięciu przy kliknięciu w sam modal
+      >
+        <div className="flex justify-between items-center border-b pb-2">
+          <h2 className="text-xl font-bold">Edytuj blok</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-black font-bold">✕</button>
         </div>
 
-        <div className="p-4 bg-gray-50 flex justify-between">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-600">Tytuł</label>
+          <input 
+            value={title} 
+            onChange={e => setTitle(e.target.value)}
+            className="border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500"
+            autoFocus
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-600">Opis</label>
+          <textarea 
+            value={description} 
+            onChange={e => setDescription(e.target.value)}
+            className="border border-gray-300 p-2 rounded h-24 resize-none focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div className="flex justify-between mt-4">
           <button 
-            onClick={() => { if(confirm('Usunąć ten blok?')) onDelete(block.id) }}
-            className="text-red-600 hover:text-red-800 text-sm font-bold"
+            onClick={() => {
+              if (confirm('Na pewno chcesz trwale usunąć ten blok?')) {
+                onDelete(block.id)
+              }
+            }} 
+            className="px-4 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 font-medium transition-colors"
           >
-            USUŃ BLOK
+            Usuń blok
           </button>
-          <div className="space-x-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 font-medium">Anuluj</button>
-            <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold">Zapisz</button>
+          
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+              Anuluj
+            </button>
+            <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium">
+              Zapisz
+            </button>
           </div>
         </div>
       </div>

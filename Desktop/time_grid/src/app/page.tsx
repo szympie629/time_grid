@@ -2,6 +2,8 @@ import CalendarGrid from '@/components/calendar/CalendarGrid'
 import { createClient } from '@/lib/supabase/server'
 import { blocksApi, type Block } from '@/lib/api/blocks'
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const supabase = await createClient()
   
