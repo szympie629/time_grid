@@ -90,9 +90,8 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
 
       <div
         onPointerDown={handlePointerDown}
-        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent"
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
+        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent"
       >
         <div className="w-6 h-1 bg-white/50 rounded-full"></div>
       </div>
