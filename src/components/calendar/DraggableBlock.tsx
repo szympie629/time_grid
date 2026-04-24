@@ -12,7 +12,7 @@ interface Props {
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
-  onUpdate: (blockId: string, updates: Partial<Block>) => void; // <-- DODANE
+  onUpdate: (blockId: string, updates: Partial<Block>) => void;
 }
 
 export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
@@ -25,7 +25,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
   const initialHeightRef = useRef<number>(0)
   const startYRef = useRef<number>(0)
   
-  // Stan na zadania
   const [tasks, setTasks] = useState<Task[]>([])
 
   const baseHeight = parseInt(style.height as string)
@@ -43,20 +42,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
     }
     fetchTasks()
 
-    // Subskrypcja na żywo
-    //const subscription = supabase
-    //  .channel(`tasks_for_block_${block.id}`)
-    //  .on('postgres_changes', { 
-    //    event: '*', 
-    //    schema: 'public', 
-    //    table: 'tasks',
-    //    filter: `block_id=eq.${block.id}` 
-    //  }, () => {
-    //     fetchTasks()
-    //  })
-    //  .subscribe()
-
-    // Nasłuchiwanie na CustomEvent z Modala
     const handleTasksUpdate = () => fetchTasks()
     window.addEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
 
@@ -65,19 +50,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
       window.removeEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
     }
   }, [block.id])
-
-  // Subskrypcja na żywo
-    const subscription = supabase
-      .channel(`tasks_for_block_${block.id}`)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'tasks',
-        filter: `block_id=eq.${block.id}` 
-      }, () => {
-         fetchTasks()
-      })
-      .subscribe()
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation() 
@@ -121,7 +93,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
     opacity: 0.8,
   } : undefined
 
-  // Obliczenia postępu
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.is_completed).length
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
@@ -168,7 +139,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         ✕
       </button>
 
-      {/* Tytuł kafelka - dodany padding z lewej i prawej (pl-5 pr-4) żeby nie nachodził na ikony */}
       <div className="pl-5 pr-4 truncate">{block.title}</div>
 
       {/* Pasek postępu i licznik - tylko jeśli są zadania */}
