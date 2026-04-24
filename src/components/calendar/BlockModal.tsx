@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Block } from '@/lib/api/blocks'
 
 interface Props {
@@ -12,23 +12,56 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const [title, setTitle] = useState(block.title)
   const [description, setDescription] = useState(block.description || '')
 
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isMounted, setIsMounted] = useState(false)
+  const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
+
+  useEffect(() => {
+    // Ustawia modal na środku ekranu przy pierwszym otwarciu
+    setPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 200 })
+    setIsMounted(true)
+  }, [])
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = { startX: e.clientX, startY: e.clientY, initX: position.x, initY: position.y }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+    setPosition({ x: dragRef.current.initX + dx, y: Math.max(0, dragRef.current.initY + dy) })
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+      dragRef.current = null
+    }
+  }
+
+  if (!isMounted) return null
+
   const handleSave = () => {
     onUpdate(block.id, { title, description })
     onClose()
   }
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40" 
-      onClick={onClose}
-    >
+    return (
       <div 
-        className="bg-white p-6 rounded-lg w-[400px] shadow-xl flex flex-col gap-4 text-black"
-        onClick={e => e.stopPropagation()} // Zapobiega zamknięciu przy kliknięciu w sam modal
+        className="fixed z-[100] bg-white p-6 rounded-lg w-[400px] shadow-2xl flex flex-col gap-4 text-black border border-gray-200"
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
       >
-        <div className="flex justify-between items-center border-b pb-2">
-          <h2 className="text-xl font-bold">Edytuj blok</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-black font-bold">✕</button>
+        <div 
+          className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-black font-bold p-1">✕</button>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -71,7 +104,6 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
             </button>
           </div>
         </div>
-      </div>
     </div>
   )
 }
