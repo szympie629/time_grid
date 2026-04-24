@@ -1,22 +1,32 @@
 'use client'
 
 import { supabase } from '@/lib/supabase/client'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Odczytywanie błędu z adresu URL
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'Unauthorized') {
+      setError('Brak dostępu. Twój adres e-mail nie znajduje się na białej liście.')
+    } else if (errorParam === 'auth_failed') {
+      setError('Błąd uwierzytelniania z Google.')
+    }
+  }, [searchParams])
 
   const handleGoogleLogin = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      // Inicjalizacja logowania Google OAuth
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // URL, na który Google przekieruje użytkownika po zalogowaniu
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
@@ -33,7 +43,7 @@ export default function LoginPage() {
       <h1 className="text-2xl font-bold mb-6">TimeGrid Login</h1>
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 max-w-md text-center font-medium">
           {error}
         </div>
       )}
@@ -46,5 +56,13 @@ export default function LoginPage() {
         {loading ? 'Łączenie...' : 'Zaloguj przez Google'}
       </button>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Ładowanie...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
