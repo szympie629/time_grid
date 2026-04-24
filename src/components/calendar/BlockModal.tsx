@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Block } from '@/lib/api/blocks'
+import { tasksApi, Task } from '@/lib/api/tasks'
+import { supabase } from '@/lib/supabase/client'
 
 interface Props {
   block: Block
@@ -9,7 +11,7 @@ interface Props {
 }
 
 export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props) {
-  // --- Stany formularza ---
+  // --- Stany formularza głównego ---
   const [title, setTitle] = useState(block.title)
   const [description, setDescription] = useState(block.description || '')
   const [activeTab, setActiveTab] = useState('main')
@@ -18,16 +20,12 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const [endTime, setEndTime] = useState(block.end_time.split('T')[1].substring(0, 5))
   const [colorTag, setColorTag] = useState(block.color_tag || '#3b82f6')
 
-  // --- Konfiguracja zakładek ---
-  const tabs = [
-    { id: 'main', label: 'Główne' },
-    { id: 'todo', label: 'To-Do' },
-    { id: 'notes', label: 'Notatki' },
-    { id: 'resources', label: 'Zasoby' },
-    { id: 'focus', label: 'Skupienie' }
-  ]
+  // --- Stany dla To-Do ---
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [loadingTasks, setLoadingTasks] = useState(false)
 
-  // --- Logika przesuwania okna (Draggable) ---
+  // --- Logika przesuwania okna ---
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isMounted, setIsMounted] = useState(false)
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
@@ -35,9 +33,57 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   useEffect(() => {
     setPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 250 })
     setIsMounted(true)
+    fetchTasks()
   }, [])
 
+  // --- Obsługa API To-Do ---
+  const fetchTasks = async () => {
+    setLoadingTasks(true)
+    try {
+      const data = await tasksApi.getTasks(supabase, block.id)
+      setTasks(data)
+    } catch (error) {
+      console.error("Błąd pobierania zadań:", error)
+    } finally {
+      setLoadingTasks(false)
+    }
+  }
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newTaskTitle.trim()) return
+    try {
+      const newTask = await tasksApi.createTask(supabase, block.id, newTaskTitle)
+      setTasks(prev => [...prev, newTask])
+      setNewTaskTitle('')
+    } catch (error) {
+      alert("Błąd dodawania zadania")
+    }
+  }
+
+  const handleToggleTask = async (taskId: string, currentStatus: boolean) => {
+    try {
+      const updated = await tasksApi.toggleTask(supabase, taskId, !currentStatus)
+      setTasks(prev => prev.map(t => t.id === taskId ? updated : t))
+    } catch (error) {
+      alert("Błąd zmiany statusu")
+    }
+  }
+
+  const handleDeleteSubTask = async (taskId: string) => {
+    try {
+      await tasksApi.deleteTask(supabase, taskId)
+      setTasks(prev => prev.filter(t => t.id !== taskId))
+    } catch (error) {
+      alert("Błąd usuwania zadania")
+    }
+  }
+
+  // --- Obsługa przesuwania (Poprawka dla przycisku X) ---
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Jeśli kliknięto w przycisk, nie aktywuj przesuwania
+    if ((e.target as HTMLElement).closest('button')) return
+    
     dragRef.current = { startX: e.clientX, startY: e.clientY, initX: position.x, initY: position.y }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
@@ -74,7 +120,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       className="fixed z-[100] bg-white p-6 rounded-lg w-[400px] shadow-2xl flex flex-col gap-4 text-black border border-gray-200"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
     >
-      {/* Nagłówek - Uchwyt do przesuwania */}
+      {/* Nagłówek */}
       <div 
         className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
         onPointerDown={handlePointerDown}
@@ -82,17 +128,22 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         onPointerUp={handlePointerUp}
       >
         <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
-        <button onClick={onClose} className="text-gray-400 hover:text-black font-bold p-1">✕</button>
+        <button onClick={onClose} className="text-gray-400 hover:text-black font-bold p-2 transition-colors">✕</button>
       </div>
 
-      {/* Nawigacja Zakładek */}
+      {/* Zakładki */}
       <div className="flex border-b border-gray-100 mb-2 overflow-x-auto no-scrollbar">
-        {tabs.map(tab => (
+        {[
+          { id: 'main', label: 'Główne' },
+          { id: 'todo', label: 'To-Do' },
+          { id: 'notes', label: 'Notatki' },
+          { id: 'focus', label: 'Skupienie' }
+        ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap ${
-              activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'
+            className={`px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap ${
+              activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400'
             }`}
           >
             {tab.label}
@@ -100,102 +151,86 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         ))}
       </div>
 
-      {/* Treść Zakładki: Główne */}
+      {/* Treść: Główne */}
       {activeTab === 'main' && (
-        <div className="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-1">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase font-bold text-gray-400">Tytuł zadania</label>
-            <input 
-              value={title} 
-              onChange={e => setTitle(e.target.value)} 
-              className="border border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" 
-            />
+            <label className="text-[10px] uppercase font-bold text-gray-400">Tytuł</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none" />
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase font-bold text-gray-400">Data</label>
-              <input 
-                type="date" 
-                value={date} 
-                onChange={e => setDate(e.target.value)} 
-                className="border border-gray-200 p-2 rounded text-sm outline-none" 
-              />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase font-bold text-gray-400">Kolor</label>
               <div className="flex gap-2 items-center h-full">
                 {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'].map(c => (
-                  <button 
-                    key={c} 
-                    onClick={() => setColorTag(c)}
-                    className={`w-6 h-6 rounded-full border-2 ${colorTag === c ? 'border-black' : 'border-transparent'}`}
-                    style={{ backgroundColor: c }}
-                  />
+                  <button key={c} onClick={() => setColorTag(c)} className={`w-6 h-6 rounded-full border-2 ${colorTag === c ? 'border-black' : 'border-transparent'}`} style={{ backgroundColor: c }} />
                 ))}
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Start</label>
-              <input 
-                type="time" 
-                value={startTime} 
-                onChange={e => setStartTime(e.target.value)} 
-                className="border border-gray-200 p-2 rounded text-sm outline-none" 
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Koniec</label>
-              <input 
-                type="time" 
-                value={endTime} 
-                onChange={e => setEndTime(e.target.value)} 
-                className="border border-gray-200 p-2 rounded text-sm outline-none" 
-              />
-            </div>
+            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
+            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
           </div>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Opis..." className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none" />
+        </div>
+      )}
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase font-bold text-gray-400">Opis</label>
-            <textarea 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-              className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none" 
+      {/* Treść: To-Do */}
+      {activeTab === 'todo' && (
+        <div className="flex flex-col gap-4 h-[300px]">
+          <form onSubmit={handleAddTask} className="flex gap-2">
+            <input 
+              value={newTaskTitle} 
+              onChange={e => setNewTaskTitle(e.target.value)}
+              placeholder="Dodaj zadanie..." 
+              className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none"
             />
+            <button type="submit" className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">+</button>
+          </form>
+
+          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2">
+            {loadingTasks ? (
+              <p className="text-center text-gray-400 text-xs py-4">Ładowanie...</p>
+            ) : tasks.length === 0 ? (
+              <p className="text-center text-gray-400 text-xs py-4">Brak zadań. Dodaj pierwsze!</p>
+            ) : (
+              tasks.map(task => (
+                <div key={task.id} className="flex items-center justify-between group bg-gray-50 p-2 rounded border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      checked={task.is_completed} 
+                      onChange={() => handleToggleTask(task.id, task.is_completed)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span className={`text-sm ${task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                      {task.title}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteSubTask(task.id)}
+                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
-      {/* Treść pozostałych zakładek (Placeholder) */}
-      {activeTab !== 'main' && (
-        <div className="py-10 text-center text-gray-400 text-sm italic h-[300px] flex items-center justify-center">
-          Sekcja {tabs.find(t => t.id === activeTab)?.label} będzie dostępna wkrótce...
-        </div>
-      )}
-
-      {/* Stopka z przyciskami */}
+      {/* Stopka */}
       <div className="flex justify-between mt-4 border-t pt-4">
-        <button 
-          onClick={() => {
-            if (confirm('Na pewno chcesz trwale usunąć ten blok?')) {
-              onDelete(block.id)
-            }
-          }} 
-          className="px-4 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 font-medium transition-colors text-sm"
-        >
-          Usuń blok
-        </button>
-        
+        <button onClick={() => confirm('Usunąć cały blok?') && onDelete(block.id)} className="text-red-600 text-xs font-bold hover:underline">USUŃ BLOK</button>
         <div className="flex gap-2">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors text-sm">
-            Anuluj
-          </button>
-          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium text-sm">
-            Zapisz
-          </button>
+          <button onClick={onClose} className="px-4 py-2 bg-gray-100 rounded text-sm">Anuluj</button>
+          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold">Zapisz</button>
         </div>
       </div>
     </div>
