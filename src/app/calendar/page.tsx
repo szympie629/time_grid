@@ -24,7 +24,7 @@ export default async function CalendarPage() {
       supabase, 
       user.id, 
       '2024-01-01T00:00:00Z', 
-      '2026-01-01T00:00:00Z'
+      '2060-01-01T00:00:00Z'
     )
   } catch (error) {
     console.error("Błąd pobierania bloków na serwerze:", error)
