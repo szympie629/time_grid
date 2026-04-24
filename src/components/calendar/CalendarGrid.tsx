@@ -199,6 +199,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           onResizeEnd={handleResizeEnd}
                           onClick={(id) => setSelectedBlockId(id)}
                           onDelete={handleDeleteBlock}
+                          onUpdate={handleUpdateBlock} // <-- DODANE (użyj nazwy funkcji, która aktualizuje blok u Ciebie w pliku)
                         />
                       ))}
                     </div>

@@ -12,6 +12,7 @@ interface Props {
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
+  onUpdate: (blockId: string, updates: Partial<Block>) => void; // <-- DODANE
 }
 
 export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete }: Props) {
@@ -125,6 +126,20 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         backgroundColor: block.color_tag || '#3b82f6'
       }}
     >
+      {/* Checkbox "Wykonano" (Lewy górny róg) */}
+      <div 
+        className="absolute top-1.5 left-1.5 z-10 flex items-center justify-center"
+        onPointerDown={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input 
+          type="checkbox"
+          checked={block.is_completed ?? false}
+          onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
+          className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm"
+        />
+      </div>
+
       {/* Przycisk usuwania "X" */}
       <button 
         onClick={(e) => {
@@ -136,8 +151,8 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         ✕
       </button>
 
-      {/* Tytuł kafelka - ucinany jeśli za długi */}
-      <div className="pr-4 truncate">{block.title}</div>
+      {/* Tytuł kafelka - dodany padding z lewej i prawej (pl-5 pr-4) żeby nie nachodził na ikony */}
+      <div className="pl-5 pr-4 truncate">{block.title}</div>
 
       {/* Pasek postępu i licznik - tylko jeśli są zadania */}
       {totalTasks > 0 && (
