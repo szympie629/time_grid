@@ -33,7 +33,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // LOGIKA REDIREKTÓW (FS 5.3)
-  // Jeśli użytkownik nie jest zalogowany i nie jest na stronie logowania ani callbacku -> kieruj do /login
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
@@ -41,6 +40,13 @@ export async function updateSession(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // NOWE: Zalogowany użytkownik nie ma czego szukać na stronie logowania
+  if (user && request.nextUrl.pathname.startsWith('/login')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/calendar'
     return NextResponse.redirect(url)
   }
 

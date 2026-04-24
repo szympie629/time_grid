@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   // Parametr "next" pozwala przekierować użytkownika tam, gdzie chciał wejść przed logowaniem
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? '/calendar'
 
   if (code) {
     const supabase = await createClient()
