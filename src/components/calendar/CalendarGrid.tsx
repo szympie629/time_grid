@@ -12,11 +12,6 @@ import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
 import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
 
-// Zabezpieczenie przed ucinaniem strefy czasowej przez Supabase
-const fixTimezone = (dateStr: string) => {
-  return dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z'
-}
-
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
 function getBlockPosition(startTime: string, endTime: string) {
@@ -33,13 +28,7 @@ function getBlockPosition(startTime: string, endTime: string) {
 
 export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[] }) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [blocks, setBlocks] = useState<Block[]>(() => 
-    initialBlocks.map(b => ({
-      ...b,
-      start_time: fixTimezone(b.start_time),
-      end_time: fixTimezone(b.end_time)
-    }))
-  )
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const router = useRouter()
@@ -106,7 +95,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
       newStart = startObj.toISOString()
       newEnd = new Date(startObj.getTime() + durationMs).toISOString()
     }
-
+    
     if (block.start_time === newStart && block.end_time === newEnd) return
 
     setBlocks(prev => prev.map(b => 
@@ -162,23 +151,17 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     end.setHours(hours + 1, minutes, 0, 0)
 
     const newBlock = await blocksApi.createBlock(supabase, {
-        user_id: user.id,
-        title: 'Nowe zadanie',
-        description: '',
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        color_tag: '#3b82f6',
-      })
-      
-      // Wymuszamy dodanie 'Z', jeśli baza zwróciła obcięty string
-      const fixedBlock = {
-        ...newBlock,
-        start_time: fixTimezone(newBlock.start_time),
-        end_time: fixTimezone(newBlock.end_time)
-      }
-      
-      setBlocks(prev => [...prev, fixedBlock])
-      setSelectedBlockId(fixedBlock.id)
+      user_id: user.id,
+      title: 'Nowe zadanie',
+      description: '',
+      // .toISOString() wyśle do bazy np. 14:00Z zamiast 16:00
+      start_time: start.toISOString(), 
+      end_time: end.toISOString(),
+      color_tag: '#3b82f6',
+    })
+    
+    setBlocks(prev => [...prev, newBlock])
+    setSelectedBlockId(newBlock.id)
   } catch (error) {
     console.error("Błąd tworzenia bloku:", error)
   }
