@@ -49,11 +49,10 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   }
 
   return (
-    return (
-      <div 
-        className="fixed z-[100] bg-white p-6 rounded-lg w-[400px] shadow-2xl flex flex-col gap-4 text-black border border-gray-200"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      >
+    <div 
+      className="fixed z-[100] bg-white p-6 rounded-lg w-[400px] shadow-2xl flex flex-col gap-4 text-black border border-gray-200"
+      style={{ left: `${position.x}px`, top: `${position.y}px` }}
+    >
         <div 
           className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
           onPointerDown={handlePointerDown}
