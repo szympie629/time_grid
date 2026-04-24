@@ -8,10 +8,11 @@ export type BlockUpdate = Database['public']['Tables']['blocks']['Update']
 
 export const blocksApi = {
   // POBIERANIE BLOKÓW (np. dla konkretnego tygodnia)
-  async getBlocks(supabase: SupabaseClient<Database>, startDate: string, endDate: string) {
+  async getBlocks(supabase: SupabaseClient<Database>, userId: string, startDate: string, endDate: string) {
     const { data, error } = await supabase
       .from('blocks')
       .select('*')
+      .eq('user_id', userId) // Wymuszamy filtrację po Twoim ID
       .gte('start_time', startDate)
       .lte('start_time', endDate)
       .order('start_time', { ascending: true })
