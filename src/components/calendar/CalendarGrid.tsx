@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { getWeekDays, getNextWeek, getPrevWeek } from '@/utils/dateHelpers'
 import { Block, blocksApi } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
@@ -41,7 +40,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     router.refresh()
   }
 
-  // NOWE: Konfiguracja sensorów - 5px tolerancji
+  // Konfiguracja sensorów - 5px tolerancji
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -143,15 +142,12 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
 
       const [hours, minutes] = hourString.split(':').map(Number)
       
-      // Tworzymy datę początkową na podstawie klikniętego dnia i godziny
       const start = new Date(day)
       start.setHours(hours, minutes, 0, 0)
       
-      // Domyślny czas trwania: 1 godzina
       const end = new Date(start)
       end.setHours(hours + 1, minutes, 0, 0)
 
-      // Tworzymy szkielet bloku w bazie
       const newBlock = await blocksApi.createBlock(supabase, {
         user_id: user.id,
         title: 'Nowe zadanie',
@@ -161,7 +157,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
         color_tag: '#3b82f6',
       })
       
-      // Dodajemy do stanu i od razu otwieramy Modal do edycji
       setBlocks(prev => [...prev, newBlock])
       setSelectedBlockId(newBlock.id)
     } catch (error) {
