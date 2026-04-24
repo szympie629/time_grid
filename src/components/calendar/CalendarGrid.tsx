@@ -83,18 +83,19 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     let { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift)
 
     if (over && over.id) {
-      const targetDateStr = over.id as string
+      const targetDateStr = over.id as string // Format YYYY-MM-DD z DroppableDay
       const [year, month, day] = targetDateStr.split('-').map(Number)
 
       const startObj = new Date(newStart)
       const durationMs = new Date(newEnd).getTime() - startObj.getTime()
 
+      // Ustawiamy nową datę, zachowując lokalną godzinę
       startObj.setFullYear(year, month - 1, day)
 
-      newStart = toLocalISOString(startObj)
-      newEnd = toLocalISOString(new Date(startObj.getTime() + durationMs))
+      newStart = startObj.toISOString()
+      newEnd = new Date(startObj.getTime() + durationMs).toISOString()
     }
-
+    
     if (block.start_time === newStart && block.end_time === newEnd) return
 
     setBlocks(prev => prev.map(b => 
@@ -136,34 +137,35 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   }
 
   const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return alert("Brak sesji!")
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return alert("Brak sesji!")
 
-      const [hours, minutes] = hourString.split(':').map(Number)
-      
-      const start = new Date(day)
-      start.setHours(hours, minutes, 0, 0)
-      
-      const end = new Date(start)
-      end.setHours(hours + 1, minutes, 0, 0)
+    const [hours, minutes] = hourString.split(':').map(Number)
+    
+    // Tworzymy datę w czasie lokalnym przeglądarki
+    const start = new Date(day)
+    start.setHours(hours, minutes, 0, 0)
+    
+    const end = new Date(start)
+    end.setHours(hours + 1, minutes, 0, 0)
 
-      const newBlock = await blocksApi.createBlock(supabase, {
-        user_id: user.id,
-        title: 'Nowe zadanie',
-        description: '',
-        start_time: toLocalISOString(start),
-        end_time: toLocalISOString(end),
-        color_tag: '#3b82f6',
-      })
-      
-      setBlocks(prev => [...prev, newBlock])
-      setSelectedBlockId(newBlock.id)
-    } catch (error) {
-      console.error("Błąd tworzenia bloku:", error)
-      alert("Nie udało się utworzyć bloku.")
-    }
+    const newBlock = await blocksApi.createBlock(supabase, {
+      user_id: user.id,
+      title: 'Nowe zadanie',
+      description: '',
+      // .toISOString() wyśle do bazy np. 14:00Z zamiast 16:00
+      start_time: start.toISOString(), 
+      end_time: end.toISOString(),
+      color_tag: '#3b82f6',
+    })
+    
+    setBlocks(prev => [...prev, newBlock])
+    setSelectedBlockId(newBlock.id)
+  } catch (error) {
+    console.error("Błąd tworzenia bloku:", error)
   }
+}
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
