@@ -182,6 +182,38 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                 const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
                 const dayBlocks = blocks.filter(b => b.start_time.startsWith(dateKey))
 
+                // --- LOGIKA KOLIZJI I KASKADY ---
+                const blocksWithLayout = dayBlocks.map(block => {
+                  const start = new Date(block.start_time).getTime()
+                  const end = new Date(block.end_time).getTime()
+                  const duration = end - start
+
+                  // Liczymy bloki, które nachodzą na obecny i są DŁUŻSZE (lub zaczęły się wcześniej)
+                  const overlappingBigger = dayBlocks.filter(other => {
+                    if (other.id === block.id) return false
+                    const oStart = new Date(other.start_time).getTime()
+                    const oEnd = new Date(other.end_time).getTime()
+                    const oDuration = oEnd - oStart
+
+                    // Sprawdzenie czy w ogóle nachodzą na siebie w czasie
+                    if (!(start < oEnd && end > oStart)) return false
+
+                    // Jeśli są dłuższe -> idą pod spód
+                    if (oDuration > duration) return true
+                    // Jeśli trwają tyle samo, ale zaczęły się wcześniej -> pod spód
+                    if (oDuration === duration && oStart < start) return true
+                    // Fallback na ID
+                    if (oDuration === duration && oStart === start && other.id < block.id) return true
+                    return false
+                  })
+
+                  return { ...block, duration, overlapLevel: overlappingBigger.length }
+                })
+                
+                // Sortujemy po długości malejąco (najkrótsze ładują się na końcu, więc lądują NA WIERZCHU DOM)
+                blocksWithLayout.sort((a, b) => b.duration - a.duration)
+                // --------------------------------
+
                 return (
                   <DroppableDay key={dateKey} day={day} isToday={isToday}>
                     <div className="relative bg-white h-[1920px]">
@@ -191,18 +223,26 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                         </div>
                       ))}
                       
-                      {dayBlocks.map(block => (
-                        <DraggableBlock 
-                          key={block.id} 
-                          block={block} 
-                          style={getBlockPosition(block.start_time, block.end_time)} 
-                          onResizeEnd={handleResizeEnd}
-                          onClick={(id) => setSelectedBlockId(id)}
-                          onDelete={handleDeleteBlock}
-                          onUpdate={handleUpdateBlockDetails}
-                          isActive={selectedBlockId === block.id}
-                        />
-                      ))}
+                      {blocksWithLayout.map(block => {
+                        const baseStyle = getBlockPosition(block.start_time, block.end_time)
+                        
+                        // Kaskada: z każdym kolidującym blokiem zwężamy o 15% i przesuwamy w prawo o 15%
+                        const widthPercent = Math.max(45, 90 - (block.overlapLevel * 15))
+                        const leftPercent = 5 + (block.overlapLevel * 15)
+                        
+                        return (
+                          <DraggableBlock 
+                            key={block.id} 
+                            block={block as Block} 
+                            style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }} 
+                            onResizeEnd={handleResizeEnd}
+                            onClick={(id) => setSelectedBlockId(id)}
+                            onDelete={handleDeleteBlock}
+                            onUpdate={handleUpdateBlockDetails}
+                            isActive={selectedBlockId === block.id}
+                          />
+                        )
+                      })}
                     </div>
                   </DroppableDay>
                 )
