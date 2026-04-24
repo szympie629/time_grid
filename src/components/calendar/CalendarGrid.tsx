@@ -14,90 +14,60 @@ import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
+// Funkcja oblicza pozycję kafelka bez użycia obiektu Date (odporna na strefy czasowe)
 function getBlockPosition(startTime: string, endTime: string) {
-  const start = new Date(startTime)
-  const end = new Date(endTime)
-  const startHours = start.getHours() + start.getMinutes() / 60
-  const durationHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+  const startT = startTime.split('T')[1]
+  const endT = endTime.split('T')[1]
+
+  const [sHours, sMinutes] = startT.split(':').map(Number)
+  const [eHours, eMinutes] = endT.split(':').map(Number)
+
+  const startDecimal = sHours + sMinutes / 60
+  const endDecimal = eHours + eMinutes / 60
+  const duration = endDecimal - startDecimal
 
   return {
-    top: `${startHours * 80}px`,
-    height: `${durationHours * 80}px`,
+    top: `${startDecimal * 80}px`,
+    height: `${duration * 80}px`,
   }
 }
 
 export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[] }) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
-  const weekDays = getWeekDays(currentDate)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+  const weekDays = getWeekDays(currentDate)
   const router = useRouter()
 
-  // Funkcja wylogowująca
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  )
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
   }
 
-  // Konfiguracja sensorów - 5px tolerancji
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  )
-
-  const handleUpdateBlockDetails = async (id: string, updates: any) => {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
-    try {
-      await blocksApi.updateBlock(supabase, id, updates)
-    } catch (error) {
-      console.error(error)
-      alert("Błąd aktualizacji")
-    }
-  }
-  
-  const handleDeleteBlock = async (id: string) => {
-    setBlocks(prev => prev.filter(b => b.id !== id))
-    setSelectedBlockId(null)
-    try {
-      await blocksApi.deleteBlock(supabase, id)
-    } catch (error) {
-      console.error(error)
-      alert("Błąd usuwania")
-    }
-  }
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over, delta } = event
-    
-    if (delta.x === 0 && delta.y === 0) return 
+    if (!over || (delta.x === 0 && delta.y === 0)) return
 
     const blockId = active.id as string
     const block = blocks.find(b => b.id === blockId)
     if (!block) return
 
     const minutesShift = calculateTimeShift(delta.y)
-    let { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift)
+    const targetDateStr = over.id as string // ID to format YYYY-MM-DD z DroppableDay
 
-    if (over && over.id) {
-      const targetDateStr = over.id as string // Format YYYY-MM-DD z DroppableDay
-      const [year, month, day] = targetDateStr.split('-').map(Number)
+    // Nowa, czysta logika przesuwania (oś X i Y razem)
+    const { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift, targetDateStr)
 
-      const startObj = new Date(newStart)
-      const durationMs = new Date(newEnd).getTime() - startObj.getTime()
-
-      // Ustawiamy nową datę, zachowując lokalną godzinę
-      startObj.setFullYear(year, month - 1, day)
-
-      newStart = startObj.toISOString()
-      newEnd = new Date(startObj.getTime() + durationMs).toISOString()
-    }
-    
     if (block.start_time === newStart && block.end_time === newEnd) return
 
+    // Optymistyczna aktualizacja UI
     setBlocks(prev => prev.map(b => 
       b.id === blockId ? { ...b, start_time: newStart, end_time: newEnd } : b
     ))
@@ -109,7 +79,54 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
       })
     } catch (error) {
       console.error(error)
-      alert("Błąd zapisu! Odśwież stronę, aby przywrócić pierwotny stan.")
+      alert("Błąd zapisu! Odśwież stronę.")
+    }
+  }
+
+  const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return alert("Brak sesji!")
+
+      const [hours, minutes] = hourString.split(':').map(Number)
+      const start = new Date(day)
+      start.setHours(hours, minutes, 0, 0)
+      
+      const end = new Date(start)
+      end.setHours(hours + 1, minutes, 0, 0)
+
+      const newBlock = await blocksApi.createBlock(supabase, {
+        user_id: user.id,
+        title: 'Nowe zadanie',
+        description: '',
+        start_time: toLocalISOString(start),
+        end_time: toLocalISOString(end),
+        color_tag: '#3b82f6',
+      })
+      
+      setBlocks(prev => [...prev, newBlock])
+      setSelectedBlockId(newBlock.id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleUpdateBlockDetails = async (id: string, updates: any) => {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
+    try {
+      await blocksApi.updateBlock(supabase, id, updates)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  
+  const handleDeleteBlock = async (id: string) => {
+    setBlocks(prev => prev.filter(b => b.id !== id))
+    setSelectedBlockId(null)
+    try {
+      await blocksApi.deleteBlock(supabase, id)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -118,54 +135,16 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     if (!block) return
 
     const durationMinutes = newHeightPixels * 0.75
-    
     const startObj = new Date(block.start_time)
     const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
-    if (block.end_time === newEnd) return
-
-    setBlocks(prev => prev.map(b => 
-      b.id === blockId ? { ...b, end_time: newEnd } : b
-    ))
-
+    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, end_time: newEnd } : b))
     try {
       await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd })
     } catch (error) {
       console.error(error)
-      alert("Błąd zapisu! Odśwież stronę, aby przywrócić pierwotny stan.")
     }
   }
-
-  const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return alert("Brak sesji!")
-
-    const [hours, minutes] = hourString.split(':').map(Number)
-    
-    // Tworzymy datę w czasie lokalnym przeglądarki
-    const start = new Date(day)
-    start.setHours(hours, minutes, 0, 0)
-    
-    const end = new Date(start)
-    end.setHours(hours + 1, minutes, 0, 0)
-
-    const newBlock = await blocksApi.createBlock(supabase, {
-      user_id: user.id,
-      title: 'Nowe zadanie',
-      description: '',
-      // .toISOString() wyśle do bazy np. 14:00Z zamiast 16:00
-      start_time: start.toISOString(), 
-      end_time: end.toISOString(),
-      color_tag: '#3b82f6',
-    })
-    
-    setBlocks(prev => [...prev, newBlock])
-    setSelectedBlockId(newBlock.id)
-  } catch (error) {
-    console.error("Błąd tworzenia bloku:", error)
-  }
-}
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -173,9 +152,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
         <header className="flex justify-between items-center p-4 border-b shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
           <div className="flex gap-2 items-center">
-            <button onClick={handleLogout} className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded text-sm transition-colors ml-4">
-              Wyloguj
-            </button>
+            <button onClick={handleLogout} className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded text-sm transition-colors ml-4">Wyloguj</button>
             <button onClick={() => setCurrentDate(getPrevWeek(currentDate))} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">Poprzedni</button>
             <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">Dzisiaj</button>
             <button onClick={() => setCurrentDate(getNextWeek(currentDate))} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">Następny</button>
@@ -193,21 +170,16 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
 
             <div className="flex-1 flex">
               {weekDays.map((day) => {
-                const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                const dayBlocks = blocks.filter(b => format(new Date(b.start_time), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
+                const dateKey = format(day, 'yyyy-MM-dd')
+                const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
+                const dayBlocks = blocks.filter(b => b.start_time.startsWith(dateKey))
 
                 return (
-                  <DroppableDay key={toLocalISOString(day)} day={day} isToday={isToday}>
+                  <DroppableDay key={dateKey} day={day} isToday={isToday}>
                     <div className="relative bg-white h-[1920px]">
                       {HOURS.map(hour => (
-                        <div 
-                          key={hour} 
-                          onClick={() => handleCreateBlockFromGrid(day, hour)}
-                          className="h-20 border-b border-gray-100 box-border group hover:bg-blue-50/50 cursor-pointer flex items-center justify-center transition-colors"
-                        >
-                          <span className="opacity-0 group-hover:opacity-100 text-blue-400 font-bold text-xl transition-opacity">
-                            +
-                          </span>
+                        <div key={hour} onClick={() => handleCreateBlockFromGrid(day, hour)} className="h-20 border-b border-gray-100 box-border group hover:bg-blue-50/50 cursor-pointer flex items-center justify-center transition-colors">
+                          <span className="opacity-0 group-hover:opacity-100 text-blue-400 font-bold text-xl">+</span>
                         </div>
                       ))}
                       
@@ -228,6 +200,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </div>
       </div>
+
       {selectedBlockId && (
         <BlockModal 
           block={blocks.find(b => b.id === selectedBlockId)!} 
