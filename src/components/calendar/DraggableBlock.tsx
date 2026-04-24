@@ -15,7 +15,7 @@ interface Props {
   onUpdate: (blockId: string, updates: Partial<Block>) => void; // <-- DODANE
 }
 
-export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete }: Props) {
+export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: block.id,
   })
@@ -44,6 +44,29 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
     fetchTasks()
 
     // Subskrypcja na żywo
+    //const subscription = supabase
+    //  .channel(`tasks_for_block_${block.id}`)
+    //  .on('postgres_changes', { 
+    //    event: '*', 
+    //    schema: 'public', 
+    //    table: 'tasks',
+    //    filter: `block_id=eq.${block.id}` 
+    //  }, () => {
+    //     fetchTasks()
+    //  })
+    //  .subscribe()
+
+    // Nasłuchiwanie na CustomEvent z Modala
+    const handleTasksUpdate = () => fetchTasks()
+    window.addEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
+
+    return () => { 
+      isMounted = false
+      window.removeEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
+    }
+  }, [block.id])
+
+  // Subskrypcja na żywo
     const subscription = supabase
       .channel(`tasks_for_block_${block.id}`)
       .on('postgres_changes', { 
@@ -55,12 +78,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
          fetchTasks()
       })
       .subscribe()
-
-    return () => { 
-      isMounted = false
-      supabase.removeChannel(subscription)
-    }
-  }, [block.id])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation() 

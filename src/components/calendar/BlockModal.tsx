@@ -30,6 +30,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isMounted, setIsMounted] = useState(false)
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
+  const notifyTasksChanged = () => window.dispatchEvent(new CustomEvent(`tasks-updated-${block.id}`))
 
   // --- Obsługa API To-Do (Przeniesione wyżej, żeby uniknąć ReferenceError) ---
   const fetchTasks = async () => {
@@ -58,6 +59,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       const newTask = await tasksApi.createTask(supabase, block.id, newTaskTitle)
       setTasks(prev => [...prev, newTask])
       setNewTaskTitle('')
+      notifyTasksChanged()
     } catch (error) {
       alert("Błąd dodawania zadania")
     }
@@ -67,6 +69,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
     try {
       const updated = await tasksApi.toggleTask(supabase, taskId, !currentStatus)
       setTasks(prev => prev.map(t => t.id === taskId ? updated : t))
+      notifyTasksChanged() // <-- DODANE
     } catch (error) {
       alert("Błąd zmiany statusu")
     }
@@ -76,6 +79,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
     try {
       await tasksApi.deleteTask(supabase, taskId)
       setTasks(prev => prev.filter(t => t.id !== taskId))
+      notifyTasksChanged()
     } catch (error) {
       alert("Błąd usuwania zadania")
     }
