@@ -10,6 +10,7 @@ import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import BlockModal from './BlockModal'
+import { useRouter } from 'next/navigation'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -30,6 +31,14 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const weekDays = getWeekDays(currentDate)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+  const router = useRouter()
+
+  // Funkcja wylogowująca
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   // NOWE: Konfiguracja sensorów - 5px tolerancji
   const sensors = useSensors(
@@ -155,6 +164,9 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
         <header className="flex justify-between items-center p-4 border-b shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
           <div className="flex gap-2 items-center">
+            <button onClick={handleLogout} className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded text-sm transition-colors ml-4">
+              Wyloguj
+            </button>
             <button onClick={handleAddTestBlock} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold transition-colors mr-4">
               + Dodaj Testowy Blok
             </button>
