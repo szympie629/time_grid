@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Block, blocksApi } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
@@ -11,6 +11,7 @@ import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
 import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
+
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -38,6 +39,13 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const weekDays = getWeekDays(currentDate)
   const router = useRouter()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 560 // 7:00 (7 * 80px)
+    }
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -159,7 +167,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
           <div className="flex min-w-[700px]">
             <div className="w-16 flex-none border-r bg-gray-50">
               <div className="h-14 border-b sticky top-0 bg-gray-50 z-20"></div>
