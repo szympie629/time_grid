@@ -30,13 +30,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const [isMounted, setIsMounted] = useState(false)
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
 
-  useEffect(() => {
-    setPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 250 })
-    setIsMounted(true)
-    fetchTasks()
-  }, [])
-
-  // --- Obsługa API To-Do ---
+  // --- Obsługa API To-Do (Przeniesione wyżej, żeby uniknąć ReferenceError) ---
   const fetchTasks = async () => {
     setLoadingTasks(true)
     try {
@@ -48,6 +42,13 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       setLoadingTasks(false)
     }
   }
+
+  useEffect(() => {
+    setPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 250 })
+    setIsMounted(true)
+    fetchTasks()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,11 +80,8 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
     }
   }
 
-  // --- Obsługa przesuwania (Poprawka dla przycisku X) ---
+  // --- Obsługa przesuwania ---
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Jeśli kliknięto w przycisk, nie aktywuj przesuwania
-    if ((e.target as HTMLElement).closest('button')) return
-    
     dragRef.current = { startX: e.clientX, startY: e.clientY, initX: position.x, initY: position.y }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
@@ -128,7 +126,14 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         onPointerUp={handlePointerUp}
       >
         <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
-        <button onClick={onClose} className="text-gray-400 hover:text-black font-bold p-2 transition-colors">✕</button>
+        {/* Twarde zablokowanie propagacji dla przycisku X */}
+        <button 
+          onPointerDown={(e) => e.stopPropagation()} 
+          onClick={onClose} 
+          className="text-gray-400 hover:text-red-500 font-bold px-2 py-1 transition-colors"
+        >
+          ✕
+        </button>
       </div>
 
       {/* Zakładki */}
@@ -142,8 +147,8 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap ${
-              activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400'
+            className={`px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
+              activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
             {tab.label}
@@ -156,12 +161,12 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase font-bold text-gray-400">Tytuł</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none" />
+            <input value={title} onChange={e => setTitle(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase font-bold text-gray-400">Data</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase font-bold text-gray-400">Kolor</label>
@@ -173,24 +178,33 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
-            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm" />
+             <div className="flex flex-col gap-1">
+                <label className="text-[10px] uppercase font-bold text-gray-400">Start</label>
+                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
+             </div>
+             <div className="flex flex-col gap-1">
+                <label className="text-[10px] uppercase font-bold text-gray-400">Koniec</label>
+                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
+             </div>
           </div>
-          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Opis..." className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none" />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase font-bold text-gray-400">Opis</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none focus:border-blue-500" />
+          </div>
         </div>
       )}
 
       {/* Treść: To-Do */}
       {activeTab === 'todo' && (
-        <div className="flex flex-col gap-4 h-[300px]">
+        <div className="flex flex-col gap-4 h-[310px]">
           <form onSubmit={handleAddTask} className="flex gap-2">
             <input 
               value={newTaskTitle} 
               onChange={e => setNewTaskTitle(e.target.value)}
               placeholder="Dodaj zadanie..." 
-              className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none"
+              className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
             />
-            <button type="submit" className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">+</button>
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-3 py-1 rounded text-sm font-bold">+</button>
           </form>
 
           <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2">
@@ -214,7 +228,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
                   </div>
                   <button 
                     onClick={() => handleDeleteSubTask(task.id)}
-                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1"
+                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1 font-bold"
                   >
                     ✕
                   </button>
@@ -225,12 +239,19 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         </div>
       )}
 
+      {/* Treść: Puste zakładki (Notatki, Skupienie) */}
+      {activeTab !== 'main' && activeTab !== 'todo' && (
+        <div className="py-10 text-center text-gray-400 text-sm italic h-[310px] flex items-center justify-center">
+          Sekcja {['main', 'todo', 'notes', 'focus'].find(t => t === activeTab) === 'notes' ? 'Notatki' : 'Skupienie'} będzie dostępna wkrótce...
+        </div>
+      )}
+
       {/* Stopka */}
       <div className="flex justify-between mt-4 border-t pt-4">
         <button onClick={() => confirm('Usunąć cały blok?') && onDelete(block.id)} className="text-red-600 text-xs font-bold hover:underline">USUŃ BLOK</button>
         <div className="flex gap-2">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-100 rounded text-sm">Anuluj</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold">Zapisz</button>
+          <button onClick={onClose} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded text-sm font-medium">Anuluj</button>
+          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded text-sm font-bold">Zapisz</button>
         </div>
       </div>
     </div>
