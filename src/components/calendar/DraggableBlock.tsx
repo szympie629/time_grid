@@ -3,15 +3,18 @@
 import { useDraggable } from '@dnd-kit/core'
 import { Block } from '@/lib/api/blocks'
 import { useState, useRef, useEffect } from 'react'
+import { tasksApi, Task } from '@/lib/api/tasks'
+import { supabase } from '@/lib/supabase/client'
 
 interface Props {
   block: Block;
   style: React.CSSProperties;
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
   onClick: (blockId: string) => void;
+  onDelete: (blockId: string) => void;
 }
 
-export default function DraggableBlock({ block, style, onResizeEnd, onClick }: Props) {
+export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete }: Props) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: block.id,
   })
@@ -20,9 +23,27 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
   const [resizeHeight, setResizeHeight] = useState<number | null>(null)
   const initialHeightRef = useRef<number>(0)
   const startYRef = useRef<number>(0)
+  
+  // Stan na zadania
+  const [tasks, setTasks] = useState<Task[]>([])
 
   const baseHeight = parseInt(style.height as string)
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
+
+  // Pobieranie zadań dla paska postępu
+  useEffect(() => {
+    let isMounted = true
+    const fetchTasks = async () => {
+      try {
+        const data = await tasksApi.getTasks(supabase, block.id)
+        if (isMounted) setTasks(data)
+      } catch (error) {
+        console.error("Błąd pobierania zadań w kafelku:", error)
+      }
+    }
+    fetchTasks()
+    return () => { isMounted = false }
+  }, [block.id])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation() 
@@ -66,19 +87,21 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
     opacity: 0.8,
   } : undefined
 
+  // Obliczenia postępu
+  const totalTasks = tasks.length
+  const completedTasks = tasks.filter(t => t.is_completed).length
+  const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       onClick={(e) => {
-        // Blokujemy dalszą propagację kliknięcia i sprawdzamy czy nie skalujemy
         e.stopPropagation();
-        if (!isResizing) {
-          onClick(block.id);
-        }
+        if (!isResizing) onClick(block.id);
       }}
-      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
+      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
       style={{
         ...style,
         ...transformStyle,
@@ -86,12 +109,40 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick }: P
         backgroundColor: block.color_tag || '#3b82f6'
       }}
     >
-      {block.title}
+      {/* Przycisk usuwania "X" */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation()
+          if (confirm('Usunąć ten blok?')) onDelete(block.id)
+        }}
+        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10"
+      >
+        ✕
+      </button>
 
+      {/* Tytuł kafelka - ucinany jeśli za długi */}
+      <div className="pr-4 truncate">{block.title}</div>
+
+      {/* Pasek postępu i licznik - tylko jeśli są zadania */}
+      {totalTasks > 0 && (
+        <div className="absolute bottom-3 left-2 right-2 flex flex-col gap-1 z-10">
+          <div className="text-[9px] font-bold opacity-80 text-right">
+            {completedTasks}/{totalTasks}
+          </div>
+          <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Obszar do rozciągania bloku */}
       <div
         onPointerDown={handlePointerDown}
         onClick={(e) => e.stopPropagation()}
-        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent"
+        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent z-20"
       >
         <div className="w-6 h-1 bg-white/50 rounded-full"></div>
       </div>

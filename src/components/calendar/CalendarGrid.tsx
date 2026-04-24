@@ -198,6 +198,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                           style={getBlockPosition(block.start_time, block.end_time)} 
                           onResizeEnd={handleResizeEnd}
                           onClick={(id) => setSelectedBlockId(id)}
+                          onDelete={handleDeleteBlock}
                         />
                       ))}
                     </div>
