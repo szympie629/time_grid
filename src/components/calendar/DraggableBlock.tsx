@@ -13,9 +13,10 @@ interface Props {
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
   onUpdate: (blockId: string, updates: Partial<Block>) => void;
+  isActive: boolean; // <-- DODANE
 }
 
-export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
+export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete, onUpdate, isActive }: Props) { // <-- DODANE
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: block.id,
   })
@@ -97,6 +98,19 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
   const completedTasks = tasks.filter(t => t.is_completed).length
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
+  // NOWE: Automatyczne przełączanie statusu "Wykonano" na podstawie sub-zadań
+  useEffect(() => {
+    if (totalTasks > 0) {
+      const allDone = completedTasks === totalTasks
+      if (allDone && !block.is_completed) {
+        onUpdate(block.id, { is_completed: true })
+      } else if (!allDone && block.is_completed) {
+        onUpdate(block.id, { is_completed: false })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks]) // Celowo tylko [tasks], żeby nie zablokować ręcznego klikania gdy brak zadań
+
   return (
     <div
       ref={setNodeRef}
@@ -111,7 +125,8 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         ...style,
         ...transformStyle,
         height: `${currentHeight}px`,
-        backgroundColor: block.color_tag || '#3b82f6'
+        backgroundColor: block.color_tag || '#3b82f6',
+        zIndex: isResizing || transform ? 50 : (isActive ? 40 : 10) // <-- DODANE (Aktywny na wierzchu)
       }}
     >
       {/* Checkbox "Wykonano" (Lewy górny róg) */}
