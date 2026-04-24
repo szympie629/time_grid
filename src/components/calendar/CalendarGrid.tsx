@@ -191,16 +191,17 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                         </div>
                       ))}
                       
-                      <DraggableBlock 
-                        key={block.id} 
-                        block={block} 
-                        style={getBlockPosition(block.start_time, block.end_time)} 
-                        onResizeEnd={handleResizeEnd}
-                        onClick={(id) => setSelectedBlockId(id)}
-                        onDelete={handleDeleteBlock}
-                        onUpdate={handleUpdateBlockDetails}
-                        isActive={selectedBlockId === block.id} // <-- DODANE
-                      />
+                      {dayBlocks.map(block => (
+                        <DraggableBlock 
+                          key={block.id} 
+                          block={block} 
+                          style={getBlockPosition(block.start_time, block.end_time)} 
+                          onResizeEnd={handleResizeEnd}
+                          onClick={(id) => setSelectedBlockId(id)}
+                          onDelete={handleDeleteBlock}
+                          onUpdate={handleUpdateBlockDetails}
+                          isActive={selectedBlockId === block.id}
+                        />
                       ))}
                     </div>
                   </DroppableDay>
