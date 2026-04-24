@@ -135,26 +135,37 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     }
   }
 
-  const handleAddTestBlock = async () => {
+  const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
     try {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0)
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30)
-
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return alert("Brak sesji!")
 
+      const [hours, minutes] = hourString.split(':').map(Number)
+      
+      // Tworzymy datę początkową na podstawie klikniętego dnia i godziny
+      const start = new Date(day)
+      start.setHours(hours, minutes, 0, 0)
+      
+      // Domyślny czas trwania: 1 godzina
+      const end = new Date(start)
+      end.setHours(hours + 1, minutes, 0, 0)
+
+      // Tworzymy szkielet bloku w bazie
       const newBlock = await blocksApi.createBlock(supabase, {
         user_id: user.id,
-        title: 'Testowy Blok 🚀',
-        description: 'Sprawdzamy D&D',
+        title: 'Nowe zadanie',
+        description: '',
         start_time: start.toISOString(),
         end_time: end.toISOString(),
         color_tag: '#3b82f6',
       })
-      setBlocks([...blocks, newBlock])
+      
+      // Dodajemy do stanu i od razu otwieramy Modal do edycji
+      setBlocks(prev => [...prev, newBlock])
+      setSelectedBlockId(newBlock.id)
     } catch (error) {
-      console.error(error)
+      console.error("Błąd tworzenia bloku:", error)
+      alert("Nie udało się utworzyć bloku.")
     }
   }
 
@@ -166,9 +177,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           <div className="flex gap-2 items-center">
             <button onClick={handleLogout} className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded text-sm transition-colors ml-4">
               Wyloguj
-            </button>
-            <button onClick={handleAddTestBlock} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold transition-colors mr-4">
-              + Dodaj Testowy Blok
             </button>
             <button onClick={() => setCurrentDate(getPrevWeek(currentDate))} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">Poprzedni</button>
             <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">Dzisiaj</button>
@@ -194,7 +202,15 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                   <DroppableDay key={day.toISOString()} day={day} isToday={isToday}>
                     <div className="relative bg-white h-[1920px]">
                       {HOURS.map(hour => (
-                        <div key={hour} className="h-20 border-b border-gray-100 box-border pointer-events-none"></div>
+                        <div 
+                          key={hour} 
+                          onClick={() => handleCreateBlockFromGrid(day, hour)}
+                          className="h-20 border-b border-gray-100 box-border group hover:bg-blue-50/50 cursor-pointer flex items-center justify-center transition-colors"
+                        >
+                          <span className="opacity-0 group-hover:opacity-100 text-blue-400 font-bold text-xl transition-opacity">
+                            +
+                          </span>
+                        </div>
                       ))}
                       
                       {dayBlocks.map(block => (
