@@ -1,4 +1,5 @@
 import { addMinutes, subMinutes } from 'date-fns'
+import { toLocalISOString } from './dateHelpers'
 
 // Przelicznik: 1 godzina = 80px. 
 // Chcemy, aby blok "przyklejał" się co kwadrans (15 minut = 20px).
@@ -12,11 +13,7 @@ export function getNewTimes(startTime: string, endTime: string, minutesShift: nu
   const end = new Date(endTime)
 
   return {
-    newStart: minutesShift >= 0 
-      ? addMinutes(start, minutesShift).toISOString() 
-      : subMinutes(start, Math.abs(minutesShift)).toISOString(),
-    newEnd: minutesShift >= 0 
-      ? addMinutes(end, minutesShift).toISOString() 
-      : subMinutes(end, Math.abs(minutesShift)).toISOString(),
+  newStart: toLocalISOString(start),
+  newEnd: toLocalISOString(end)
   }
 }

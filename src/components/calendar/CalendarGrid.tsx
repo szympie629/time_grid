@@ -11,6 +11,7 @@ import DroppableDay from './DroppableDay'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
+import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -91,8 +92,8 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
 
       startObj.setFullYear(year, month - 1, day)
 
-      newStart = startObj.toISOString()
-      newEnd = new Date(startObj.getTime() + durationMs).toISOString()
+      newStart = toLocalISOString(startObj)
+      newEnd = toLocalISOString(new Date(startObj.getTime() + durationMs))
     }
 
     if (block.start_time === newStart && block.end_time === newEnd) return
@@ -119,7 +120,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     const durationMinutes = newHeightPixels * 0.75
     
     const startObj = new Date(block.start_time)
-    const newEnd = new Date(startObj.getTime() + durationMinutes * 60000).toISOString()
+    const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
     if (block.end_time === newEnd) return
 
@@ -155,8 +156,8 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
         user_id: user.id,
         title: 'Nowe zadanie',
         description: '',
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
+        start_time: toLocalISOString(start),
+        end_time: toLocalISOString(end),
         color_tag: '#3b82f6',
       })
       
@@ -199,7 +200,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                 const dayBlocks = blocks.filter(b => format(new Date(b.start_time), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
 
                 return (
-                  <DroppableDay key={day.toISOString()} day={day} isToday={isToday}>
+                  <DroppableDay key={toLocalISOString(day)} day={day} isToday={isToday}>
                     <div className="relative bg-white h-[1920px]">
                       {HOURS.map(hour => (
                         <div 
