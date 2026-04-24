@@ -30,7 +30,6 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
   const baseHeight = parseInt(style.height as string)
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
-  // Pobieranie zadań dla paska postępu
   useEffect(() => {
     let isMounted = true
     const fetchTasks = async () => {
@@ -42,7 +41,24 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
       }
     }
     fetchTasks()
-    return () => { isMounted = false }
+
+    // Subskrypcja na żywo
+    const subscription = supabase
+      .channel(`tasks_for_block_${block.id}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'tasks',
+        filter: `block_id=eq.${block.id}` 
+      }, () => {
+         fetchTasks()
+      })
+      .subscribe()
+
+    return () => { 
+      isMounted = false
+      supabase.removeChannel(subscription)
+    }
   }, [block.id])
 
   const handlePointerDown = (e: React.PointerEvent) => {
