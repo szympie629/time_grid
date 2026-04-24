@@ -19,6 +19,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const [startTime, setStartTime] = useState(block.start_time.split('T')[1].substring(0, 5))
   const [endTime, setEndTime] = useState(block.end_time.split('T')[1].substring(0, 5))
   const [colorTag, setColorTag] = useState(block.color_tag || '#3b82f6')
+  const [isCompleted, setIsCompleted] = useState(block.is_completed ?? false)
 
   // --- Stany dla To-Do ---
   const [tasks, setTasks] = useState<Task[]>([])
@@ -106,7 +107,8 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       description,
       start_time: `${date}T${startTime}:00`,
       end_time: `${date}T${endTime}:00`,
-      color_tag: colorTag
+      color_tag: colorTag,
+      is_completed: isCompleted // <-- DODANE
     })
     onClose()
   }
@@ -125,7 +127,22 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
+          <label 
+            className="flex items-center gap-2 cursor-pointer"
+            onPointerDown={(e) => e.stopPropagation()} // Zapobiega przesuwaniu okna przy klikaniu checkboxa
+          >
+            <input 
+              type="checkbox" 
+              checked={isCompleted} 
+              onChange={(e) => setIsCompleted(e.target.checked)}
+              className="w-4 h-4 cursor-pointer accent-green-600"
+            />
+            <span className="text-sm text-gray-500 font-semibold select-none">Wykonano</span>
+          </label>
+        </div>
+        
         {/* Twarde zablokowanie propagacji dla przycisku X */}
         <button 
           onPointerDown={(e) => e.stopPropagation()} 

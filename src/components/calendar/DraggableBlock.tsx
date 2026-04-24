@@ -117,7 +117,7 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         e.stopPropagation();
         if (!isResizing) onClick(block.id);
       }}
-      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'}`}
+      className={`absolute w-[90%] left-[5%] rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-shadow flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'} ${block.is_completed ? 'opacity-40 grayscale line-through' : ''}`}
       style={{
         ...style,
         ...transformStyle,
