@@ -187,7 +187,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
         <div ref={scrollContainerRef} className="flex-1 overflow-auto">
           <div className="flex min-w-[700px]">
             <div className="w-16 flex-none border-r border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 transition-colors">
-              <div className="h-14 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-20 transition-colors"></div>
+              <div className="h-14 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-30 transition-colors"></div>
               {HOURS.map(hour => (
                 <div key={hour} className="h-20 text-xs text-right pr-2 pt-2 border-b border-gray-200 dark:border-slate-800 text-gray-400 dark:text-slate-500 box-border transition-colors">{hour}</div>
               ))}
@@ -227,7 +227,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                   <DroppableDay key={dateKey} day={day} isToday={isToday}>
                     <div className="relative bg-white dark:bg-slate-950 h-[1920px] transition-colors">
                       {HOURS.map(hour => (
-                        <div key={hour} onClick={() => handleCreateBlockFromGrid(day, hour)} className="h-20 border-b border-gray-100 dark:border-slate-800/50 box-border group hover:bg-blue-50/50 dark:hover:bg-blue-900/20 cursor-pointer flex items-center justify-center transition-colors">
+                        <div key={hour} onClick={() => handleCreateBlockFromGrid(day, hour)} className="h-20 border-b border-gray-100 dark:border-slate-800 box-border group hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center justify-center transition-colors">
                           <span className="opacity-0 group-hover:opacity-100 text-blue-400 dark:text-blue-500 font-bold text-xl">+</span>
                         </div>
                       ))}
