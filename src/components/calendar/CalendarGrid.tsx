@@ -226,9 +226,9 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                       {blocksWithLayout.map(block => {
                         const baseStyle = getBlockPosition(block.start_time, block.end_time)
                         
-                        // Kaskada: z każdym kolidującym blokiem zwężamy o 15% i przesuwamy w prawo o 15%
-                        const widthPercent = Math.max(45, 90 - (block.overlapLevel * 15))
-                        const leftPercent = 5 + (block.overlapLevel * 15)
+                        // Kaskada: mniejszy skok, twarda blokada (clamp) żeby nie wylecieć poza kolumnę
+                        const leftPercent = Math.min(75, 5 + (block.overlapLevel * 8))
+                        const widthPercent = Math.max(20, 95 - leftPercent)
                         
                         return (
                           <DraggableBlock 
