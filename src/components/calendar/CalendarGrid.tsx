@@ -143,7 +143,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     if (!block) return
 
     const durationMinutes = newHeightPixels * 0.75
-    const startObj = new Date(block.start_time)
+    const startObj = new Date(block.start_time.substring(0, 19))
     const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
     setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, end_time: newEnd } : b))
@@ -184,15 +184,15 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
 
                 // --- LOGIKA KOLIZJI I KASKADY ---
                 const blocksWithLayout = dayBlocks.map(block => {
-                  const start = new Date(block.start_time).getTime()
-                  const end = new Date(block.end_time).getTime()
+                  const start = new Date(block.start_time.substring(0, 19)).getTime()
+                  const end = new Date(block.end_time.substring(0, 19)).getTime()
                   const duration = end - start
 
                   // Liczymy bloki, które nachodzą na obecny i są DŁUŻSZE (lub zaczęły się wcześniej)
                   const overlappingBigger = dayBlocks.filter(other => {
                     if (other.id === block.id) return false
-                    const oStart = new Date(other.start_time).getTime()
-                    const oEnd = new Date(other.end_time).getTime()
+                    const oStart = new Date(other.start_time.substring(0, 19)).getTime()
+                    const oEnd = new Date(other.end_time.substring(0, 19)).getTime()
                     const oDuration = oEnd - oStart
 
                     // Sprawdzenie czy w ogóle nachodzą na siebie w czasie

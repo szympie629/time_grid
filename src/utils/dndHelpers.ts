@@ -7,8 +7,9 @@ export function calculateTimeShift(pixelsY: number): number {
 }
 
 export function getNewTimes(startTime: string, endTime: string, minutesShift: number, targetDateStr?: string) {
-  let startObj = new Date(startTime)
-  let endObj = new Date(endTime)
+  // Odcinamy końcówkę strefy (np. +00:00 lub Z), by JS nie dodawał +2h
+  let startObj = new Date(startTime.substring(0, 19))
+  let endObj = new Date(endTime.substring(0, 19))
 
   // 1. Zmiana godziny (oś Y)
   startObj = addMinutes(startObj, minutesShift)
