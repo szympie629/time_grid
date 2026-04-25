@@ -3,7 +3,7 @@
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
 import { blocksApi, type Block } from '@/lib/api/blocks'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 
 export default function CalendarPage() {
@@ -12,7 +12,6 @@ export default function CalendarPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         // Pobieramy szeroki zakres dat, aby kalendarz miał co wyświetlać

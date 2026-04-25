@@ -170,7 +170,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-screen bg-white dark:bg-slate-950 text-black dark:text-slate-100 transition-colors">
+      <div className="flex flex-col h-full bg-white dark:bg-slate-950 text-black dark:text-slate-100 transition-colors">
         <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
           <div className="flex gap-2 items-center">
