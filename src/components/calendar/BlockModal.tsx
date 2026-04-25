@@ -32,7 +32,6 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
   const notifyTasksChanged = () => window.dispatchEvent(new CustomEvent(`tasks-updated-${block.id}`))
 
-  // --- Obsługa API To-Do (Przeniesione wyżej, żeby uniknąć ReferenceError) ---
   const fetchTasks = async () => {
     setLoadingTasks(true)
     try {
@@ -52,6 +51,14 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // NOWE: Dynamiczne wyliczanie stanu `isCompleted` modala na podstawie sub-zadań
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const allDone = tasks.every(t => t.is_completed)
+      setIsCompleted(allDone)
+    }
+  }, [tasks])
+
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTaskTitle.trim()) return
@@ -69,7 +76,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
     try {
       const updated = await tasksApi.toggleTask(supabase, taskId, !currentStatus)
       setTasks(prev => prev.map(t => t.id === taskId ? updated : t))
-      notifyTasksChanged() // <-- DODANE
+      notifyTasksChanged()
     } catch (error) {
       alert("Błąd zmiany statusu")
     }
@@ -112,7 +119,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       start_time: `${date}T${startTime}:00`,
       end_time: `${date}T${endTime}:00`,
       color_tag: colorTag,
-      is_completed: isCompleted // <-- DODANE
+      is_completed: isCompleted
     })
     onClose()
   }
@@ -135,7 +142,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
           <h2 className="text-xl font-bold select-none">Edytuj blok</h2>
           <label 
             className="flex items-center gap-2 cursor-pointer"
-            onPointerDown={(e) => e.stopPropagation()} // Zapobiega przesuwaniu okna przy klikaniu checkboxa
+            onPointerDown={(e) => e.stopPropagation()} 
           >
             <input 
               type="checkbox" 
@@ -147,7 +154,6 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
           </label>
         </div>
         
-        {/* Twarde zablokowanie propagacji dla przycisku X */}
         <button 
           onPointerDown={(e) => e.stopPropagation()} 
           onClick={onClose} 
