@@ -239,7 +239,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                             onClick={(id) => setSelectedBlockId(id)}
                             onDelete={handleDeleteBlock}
                             onUpdate={handleUpdateBlockDetails}
-                            isActive={selectedBlockId === block.id}
                           />
                         )
                       })}
