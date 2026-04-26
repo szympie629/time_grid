@@ -187,7 +187,7 @@ export default function CalendarPage() {
          await refreshData();
        }
     }
-
+  }
   if (loading) return null
 
   return (
