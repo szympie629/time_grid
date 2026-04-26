@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+import { defaultDropAnimationSideEffects } from '@dnd-kit/core'
 
 function getDurationHeight(startTime: string, endTime: string) {
   const startT = startTime.split('T')[1]
@@ -56,16 +57,18 @@ export default function CalendarPage() {
   }, [])
 
   const handleDragStart = (e: DragStartEvent) => {
+    document.body.style.overflow = 'hidden' // Wycinamy mikro-scrolle przy dragu
     setActiveId(String(e.active.id))
     
-    // Pobieramy rzeczywistą szerokość w pikselach elementu, który właśnie chwyciliśmy
-    const widthPixels = e.active.rect.current.initial?.width
-    
-    setActiveStyle({
-      width: widthPixels ? `${widthPixels}px` : '200px',
-      // Dodajemy mały cień, żeby było widać, że trzymamy element
-      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)'
-    })
+    // Twarde zamrożenie wymiarów w pikselach z momentu kliknięcia
+    const rect = e.active.rect.current.initial
+    if (rect) {
+      setActiveStyle({
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+      })
+    }
     
     if (e.active.data.current?.block) {
       setActiveBlock(e.active.data.current.block as Block)
@@ -73,8 +76,10 @@ export default function CalendarPage() {
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    document.body.style.overflow = ''
     setActiveId(null)
     setActiveBlock(null)
+    setActiveStyle({})
     
     const { active, over, delta } = event
     if (!over) return
@@ -188,18 +193,21 @@ export default function CalendarPage() {
         </Group>
 
         {/* Globalny cień podczas przeciągania */}
-        <DragOverlay zIndex={1000}>
+        <DragOverlay 
+          zIndex={1000} 
+          dropAnimation={{
+            sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } })
+          }}
+        >
           {activeBlock ? (
-            <div className="opacity-90 scale-105 shadow-2xl transition-transform cursor-grabbing pointer-events-none">
+            <div className="opacity-90 scale-105 transition-transform cursor-grabbing pointer-events-none" style={{ width: activeStyle.width, height: activeStyle.height }}>
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
                 style={{ 
-                  ...activeStyle, // wrzucamy zapisaną szerokość z momentu złapania
-                  height: activeBlock ? getDurationHeight(activeBlock.start_time, activeBlock.end_time) : '80px', 
-                  position: 'relative',
-                  left: 0, // zerujemy lewy margines, bo DragOverlay ogarnia pozycjonowanie sam
-                  top: 0   // zerujemy górny margines z tego samego powodu
+                  width: '100%',  // Zmuszamy kafelek do trzymania rozmiaru zablokowanego wrappera
+                  height: '100%',
+                  margin: 0
                 }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
