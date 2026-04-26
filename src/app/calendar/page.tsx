@@ -200,13 +200,13 @@ export default function CalendarPage() {
           }}
         >
           {activeBlock ? (
-            <div className="opacity-90 scale-105 transition-transform cursor-grabbing pointer-events-none" style={{ width: activeStyle.width, height: activeStyle.height }}>
+            <div className="opacity-90 scale-105 transition-transform cursor-grabbing pointer-events-none">
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
                 style={{ 
-                  width: '100%',  // Zmuszamy kafelek do trzymania rozmiaru zablokowanego wrappera
-                  height: '100%',
+                  width: activeStyle.width,
+                  height: activeStyle.height,
                   margin: 0
                 }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
@@ -214,7 +214,6 @@ export default function CalendarPage() {
             </div>
           ) : null}
         </DragOverlay>
-
       </DndContext>
     </main>
   )
