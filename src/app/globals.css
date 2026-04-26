@@ -28,3 +28,22 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-aurora {
+  /* Tło zorzy: czerń, fiolet, ciemna czerwień i głęboki granat */
+  background: linear-gradient(-45deg, #000000, #2b0b3f, #4a0024, #0b0726);
+  background-size: 400% 400%;
+  animation: aurora 15s ease infinite;
+}

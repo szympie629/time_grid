@@ -25,7 +25,7 @@ export default function CalendarPage() {
   if (loading) return null
 
   return (
-    <main className="h-screen w-full overflow-hidden bg-gray-100 dark:bg-black p-4 transition-colors">
+    <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <Group 
         orientation="horizontal" 
         autoSave="calendar-layout-v1" 
