@@ -9,6 +9,15 @@ import { useEffect, useState } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 
+function getDurationHeight(startTime: string, endTime: string) {
+  const startT = startTime.split('T')[1]
+  const endT = endTime.split('T')[1]
+  const [sHours, sMinutes] = startT.split(':').map(Number)
+  const [eHours, eMinutes] = endT.split(':').map(Number)
+  const duration = (eHours + eMinutes / 60) - (sHours + sMinutes / 60)
+  return `${duration * 80}px`
+}
+
 // Pomocniczy kontener do zrzucania bloków do Backlogu (Case C)
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
@@ -174,7 +183,11 @@ export default function CalendarPage() {
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
-                style={{ height: '80px', position: 'relative' }} 
+                style={{ 
+                  height: activeBlock ? getDurationHeight(activeBlock.start_time, activeBlock.end_time) : '80px', 
+                  position: 'relative',
+                  width: '200px' // Szerokość nakładki podczas przeciągania
+                }} 
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
             </div>

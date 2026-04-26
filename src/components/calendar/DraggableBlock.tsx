@@ -35,7 +35,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
   useEffect(() => {
-    if (isOverlay) return; // Nie pobieramy zadań dla cienia podczas przeciągania
 
     let isMounted = true
     const fetchTasks = async () => {
@@ -95,10 +94,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }, [isResizing, resizeHeight, block.id, onResizeEnd])
 
   const transformStyle = transform && !isResizing ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    zIndex: 50,
-    opacity: 0.8,
-  } : undefined
+    opacity: 0.3, // Zamiast przesuwać oryginał, tylko go "gasimy" na czas przeciągania
+  } : undefinedS
 
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.is_completed).length
