@@ -26,26 +26,55 @@ export default function CalendarPage() {
 
   return (
     <main className="h-screen w-full overflow-hidden bg-gray-100 dark:bg-black p-4 transition-colors">
-      {/* Poprawiony Group: flex, h-full, w-full oraz nowe API autoSave */}
       <Group 
         orientation="horizontal" 
-        autoSave="calendar-layout"
+        autoSave="calendar-layout-v1" 
+        id="calendar-layout"
         className="flex h-full w-full"
       >
         
-        {/* Lewy Panel */}
+        {/* Lewy Panel - Grupa pionowa (Backlog + Rytuały) */}
         <Panel defaultSize="25%" minSize="15%">
-          <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-             <div className="flex-1 overflow-y-auto p-6 min-h-0">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Inbox</h2>
-                <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                  <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą pakiety zadań.</p>
+          <Group 
+            orientation="vertical" 
+            autoSave="left-panel-layout-v1" 
+            id="left-panel-layout" 
+            className="flex flex-col h-full"
+          >
+            
+            {/* Góra: Backlog */}
+            <Panel defaultSize="50%" minSize="20%">
+              <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 min-h-0">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
+                  <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                    <p className="text-sm text-gray-600 dark:text-slate-300">Twoje zadania do zaplanowania.</p>
+                  </div>
                 </div>
-             </div>
-          </aside>
+              </aside>
+            </Panel>
+
+            {/* Suwak poziomy (Separator) dla lewego panelu */}
+            <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10">
+              <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+            </Separator>
+
+            {/* Dół: Rytuały */}
+            <Panel defaultSize="50%" minSize="20%">
+              <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 min-h-0">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
+                  <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                    <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
+                  </div>
+                </div>
+              </aside>
+            </Panel>
+
+          </Group>
         </Panel>
 
-        {/* Separator - to jest nasz suwak */}
+        {/* Główny Suwak pionowy (między panelami) */}
         <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10">
           <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
         </Separator>
