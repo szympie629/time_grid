@@ -31,7 +31,16 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   
   const [tasks, setTasks] = useState<Task[]>([])
 
-  const baseHeight = style?.height ? parseInt(style.height as string) : 80
+  let baseHeight = style?.height ? parseInt(style.height as string) : 80;
+  if (isOverlay && block.start_time && block.end_time) {
+    const startT = block.start_time.split('T')[1];
+    const endT = block.end_time.split('T')[1];
+    if (startT && endT) {
+      const [sHours, sMinutes] = startT.split(':').map(Number);
+      const [eHours, eMinutes] = endT.split(':').map(Number);
+      baseHeight = ((eHours + eMinutes / 60) - (sHours + sMinutes / 60)) * 80;
+    }
+  }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
   useEffect(() => {

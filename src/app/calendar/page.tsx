@@ -36,7 +36,6 @@ export default function CalendarPage() {
   // Stany dla Globalnego Drag & Drop
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
-  const [activeStyle, setActiveStyle] = useState<React.CSSProperties>({})
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,16 +59,6 @@ export default function CalendarPage() {
     document.body.style.overflow = 'hidden' // Wycinamy mikro-scrolle przy dragu
     setActiveId(String(e.active.id))
     
-    // Twarde zamrożenie wymiarów w pikselach z momentu kliknięcia
-    const rect = e.active.rect.current.initial
-    if (rect) {
-      setActiveStyle({
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
-      })
-    }
-    
     if (e.active.data.current?.block) {
       setActiveBlock(e.active.data.current.block as Block)
     }
@@ -79,7 +68,6 @@ export default function CalendarPage() {
     document.body.style.overflow = ''
     setActiveId(null)
     setActiveBlock(null)
-    setActiveStyle({})
     
     const { active, over, delta } = event
     if (!over) return
@@ -204,11 +192,7 @@ export default function CalendarPage() {
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
-                style={{ 
-                  width: activeStyle.width,
-                  height: activeStyle.height,
-                  margin: 0
-                }}
+                style={{ width: '100%', margin: 0, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
             </div>
