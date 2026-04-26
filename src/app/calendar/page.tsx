@@ -4,11 +4,11 @@ import { Panel, Group, Separator } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
 import DraggableBlock from '@/components/calendar/DraggableBlock'
 import { blocksApi, type Block } from '@/lib/api/blocks'
+import { backlogApi, type BacklogItem } from '@/lib/api/backlog'
 import { supabase } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core'
+import { useEffect, useState, useCallback } from 'react'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable, defaultDropAnimationSideEffects } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
-import { defaultDropAnimationSideEffects } from '@dnd-kit/core'
 
 function getDurationHeight(startTime: string, endTime: string) {
   const startT = startTime.split('T')[1]
@@ -19,7 +19,7 @@ function getDurationHeight(startTime: string, endTime: string) {
   return `${duration * 80}px`
 }
 
-// Pomocniczy kontener do zrzucania bloków do Backlogu (Case C)
+// Kontener dla Backlogu
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
   return (
@@ -29,11 +29,32 @@ function DroppableBacklogContainer({ children }: { children: React.ReactNode }) 
   )
 }
 
+// Pojedynczy kafelek w Backlogu
+function DraggableBacklogItem({ item }: { item: BacklogItem }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `backlog-${item.id}`,
+    data: { type: 'backlog', item }
+  })
+  
+  return (
+    <div 
+      ref={setNodeRef} 
+      {...listeners} 
+      {...attributes} 
+      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 ${item.color_tag ? `border-[${item.color_tag}]` : 'border-blue-500'} cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+      style={{ borderLeftColor: item.color_tag || '#3B82F6' }}
+    >
+      <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block">{item.title}</span>
+      <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes} min</span>
+    </div>
+  )
+}
+
 export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
+  const [backlogItems, setBacklogItems] = useState<BacklogItem[]>([])
   const [loading, setLoading] = useState(true)
   
-  // Stany dla Globalnego Drag & Drop
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
 
@@ -43,24 +64,46 @@ export default function CalendarPage() {
     })
   )
 
-  useEffect(() => {
-    async function fetchData() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const data = await blocksApi.getBlocks(supabase, user.id, '2024-01-01', '2060-01-01')
-        setBlocks(data)
-      }
-      setLoading(false)
+  const refreshData = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const [blocksData, backlogData] = await Promise.all([
+        blocksApi.getBlocks(supabase, user.id, '2024-01-01', '2060-01-01'),
+        backlogApi.getBacklog(supabase, user.id)
+      ])
+      setBlocks(blocksData)
+      setBacklogItems(backlogData)
     }
-    fetchData()
   }, [])
 
+  useEffect(() => {
+    refreshData().finally(() => setLoading(false))
+  }, [refreshData])
+
   const handleDragStart = (e: DragStartEvent) => {
-    document.body.style.overflow = 'hidden' // Wycinamy mikro-scrolle przy dragu
+    document.body.style.overflow = 'hidden'
     setActiveId(String(e.active.id))
     
-    if (e.active.data.current?.block) {
-      setActiveBlock(e.active.data.current.block as Block)
+    const data = e.active.data.current
+    if (data?.type === 'calendar') {
+      setActiveBlock(data.block as Block)
+    } else if (data?.type === 'backlog') {
+      // Tworzymy "fałszywy" Block dla nakładki DragOverlay, żeby wyglądał jak ten z kalendarza
+      const item = data.item as BacklogItem
+      const duration = item.duration_minutes || 60
+      const dummyBlock: Block = {
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        color_tag: item.color_tag,
+        start_time: `2024-01-01T09:00:00`,
+        end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
+        is_completed: item.is_completed || false,
+        created_at: item.created_at,
+        is_deleted: false
+      }
+      setActiveBlock(dummyBlock)
     }
   }
 
@@ -73,20 +116,30 @@ export default function CalendarPage() {
     if (!over) return
 
     const activeData = active.data.current
-    const block = activeData?.block as Block
-    if (!block) return
-
-    const type = activeData?.type // 'calendar', 'backlog', 'ritual'
+    const type = activeData?.type
     const overId = String(over.id)
 
-    // Logika przemieszczania w obrębie Kalendarza
+    // CASE 1: Poruszanie czymś co już było na Kalendarzu
     if (type === 'calendar') {
+      const block = activeData?.block as Block
+      if (!block) return
+
       if (overId === 'droppable-backlog') {
-        // CASE C: Kalendarz -> Backlog
-        console.log("Przeniesiono do Backlogu: wyzerować daty.")
-        // TODO: Update bazy danych - ustawienie start_time i end_time na null
+        // Z Kalendarza do Backlogu
+        const sTime = new Date(block.start_time).getTime()
+        const eTime = new Date(block.end_time).getTime()
+        const durationMin = Math.round((eTime - sTime) / 60000)
+
+        setBlocks(prev => prev.filter(b => b.id !== block.id)) // Optimistic remove
+        try {
+          await backlogApi.moveToBacklog(supabase, block, durationMin)
+          await refreshData()
+        } catch (err) {
+          alert("Błąd zapisu!")
+          await refreshData()
+        }
       } else if (overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Przesuwanie na siatce (Istniejąca logika)
+        // Po siatce kalendarza (standard)
         if (delta.x === 0 && delta.y === 0) return
         
         const minutesShift = calculateTimeShift(delta.y)
@@ -97,24 +150,34 @@ export default function CalendarPage() {
         setBlocks(prev => prev.map(b => 
           b.id === block.id ? { ...b, start_time: newStart, end_time: newEnd } : b
         ))
-
         try {
           await blocksApi.updateBlock(supabase, block.id, { start_time: newStart, end_time: newEnd })
         } catch (error) {
-          console.error(error)
           alert("Błąd zapisu! Odśwież stronę.")
+          await refreshData()
         }
       }
     } 
-    // Logika z Backlogu do Kalendarza
+    // CASE 2: Wyciąganie z Backlogu na Kalendarz
     else if (type === 'backlog' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-       // CASE A: Backlog -> Kalendarz
-       console.log(`Upuszczono z Backlogu na dzień ${overId}. Należy utworzyć/zaktualizować blok.`)
-    }
-    // Logika z Rytuałów do Kalendarza
-    else if (type === 'ritual' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-       // CASE B: Rytuał -> Kalendarz (Klonowanie)
-       console.log(`Skopiowano Rytuał na dzień ${overId}.`)
+       const item = activeData?.item as BacklogItem
+       if (!item) return
+
+       // Domyślnie wrzucamy na 09:00 rano
+       const startTime = `${overId}T09:00:00`
+       const duration = item.duration_minutes || 60
+       const endHours = 9 + Math.floor(duration / 60)
+       const endMins = duration % 60
+       const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`
+
+       setBacklogItems(prev => prev.filter(i => i.id !== item.id)) // Optimistic remove
+       try {
+         await backlogApi.moveToCalendar(supabase, item, startTime, endTime)
+         await refreshData()
+       } catch (err) {
+         alert("Błąd zapisu!")
+         await refreshData()
+       }
     }
   }
 
@@ -129,18 +192,23 @@ export default function CalendarPage() {
           id="calendar-layout"
           className="flex h-full w-full"
         >
-          {/* Lewy Panel */}
           <Panel defaultSize="25%" minSize="15%">
             <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
               
-              {/* Backlog */}
               <Panel defaultSize="50%" minSize="20%">
                 <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                   <DroppableBacklogContainer>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
-                    <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                      <p className="text-sm text-gray-600 dark:text-slate-300">Twoje zadania do zaplanowania.</p>
-                      {/* Tu wylądują Draggable elementy Backlogu */}
+                    <div className="flex flex-col gap-1 min-h-[100px]">
+                      {backlogItems.length === 0 ? (
+                        <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                          <p className="text-sm text-gray-600 dark:text-slate-300">Brak zadań.</p>
+                        </div>
+                      ) : (
+                        backlogItems.map(item => (
+                          <DraggableBacklogItem key={item.id} item={item} />
+                        ))
+                      )}
                     </div>
                   </DroppableBacklogContainer>
                 </aside>
@@ -150,7 +218,6 @@ export default function CalendarPage() {
                 <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
               </Separator>
 
-              {/* Rytuały */}
               <Panel defaultSize="50%" minSize="20%">
                 <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                   <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
@@ -169,7 +236,6 @@ export default function CalendarPage() {
             <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
           </Separator>
 
-          {/* Prawy Panel - Kalendarz */}
           <Panel minSize="40%">
             <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden min-h-0 relative">
@@ -180,7 +246,6 @@ export default function CalendarPage() {
 
         </Group>
 
-        {/* Globalny cień podczas przeciągania */}
         <DragOverlay 
           zIndex={1000} 
           dropAnimation={{
