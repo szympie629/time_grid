@@ -95,7 +95,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
   const transformStyle = transform && !isResizing ? {
     opacity: 0.3, // Zamiast przesuwać oryginał, tylko go "gasimy" na czas przeciągania
-  } : undefinedS
+  } : undefined
 
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.is_completed).length
