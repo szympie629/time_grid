@@ -57,6 +57,7 @@ export default function CalendarPage() {
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
+  const [overlayWidth, setOverlayWidth] = useState<number>(200) // DODANE
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -84,6 +85,10 @@ export default function CalendarPage() {
     document.body.style.overflow = 'hidden'
     setActiveId(String(e.active.id))
     
+    // Złapanie dowolnej kolumny dnia i wyliczenie 90% jej szerokości
+    const dayColumn = document.querySelector('[id^="20"]') as HTMLElement;
+    if (dayColumn) setOverlayWidth(dayColumn.clientWidth * 0.9);
+
     const data = e.active.data.current
     if (data?.type === 'calendar') {
       setActiveBlock(data.block as Block)
@@ -259,11 +264,16 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
           }}
         >
           {activeBlock ? (
-            <div className="opacity-90 scale-105 transition-transform cursor-grabbing pointer-events-none">
+            {/* Usunąłem scale-105 żeby rozmiar zgadzał się co do piksela */}
+            <div className="opacity-90 transition-transform cursor-grabbing pointer-events-none">
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
-                style={{ width: '100%', margin: 0, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
+                style={{ 
+                  width: `${overlayWidth}px`, // Wrzucamy twarde piksele
+                  margin: 0, 
+                  boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' 
+                }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
             </div>
