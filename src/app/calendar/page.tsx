@@ -14,7 +14,6 @@ export default function CalendarPage() {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Pobieramy szeroki zakres dat, aby kalendarz miał co wyświetlać
         const data = await blocksApi.getBlocks(supabase, user.id, '2024-01-01', '2060-01-01')
         setBlocks(data)
       }
@@ -26,12 +25,16 @@ export default function CalendarPage() {
   if (loading) return null
 
   return (
-    // overflow-hidden i flex utrzymują ramy okna w ryzach
-    <main className="h-screen w-full flex overflow-hidden bg-gray-100 dark:bg-black p-4 transition-colors">
-      <Group orientation="horizontal" autoSaveId="calendar-layout">
+    <main className="h-screen w-full overflow-hidden bg-gray-100 dark:bg-black p-4 transition-colors">
+      {/* Poprawiony Group: flex, h-full, w-full oraz nowe API autoSave */}
+      <Group 
+        orientation="horizontal" 
+        id="calendar-layout" 
+        autoSave 
+        className="flex h-full w-full"
+      >
         
         {/* Lewy Panel */}
-        {/* W v4 domyślne wielkości to stringi (np. "25%"), liczby są traktowane jako piksele */}
         <Panel defaultSize="25%" minSize="15%">
           <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
              <div className="flex-1 overflow-y-auto p-6 min-h-0">
@@ -43,15 +46,14 @@ export default function CalendarPage() {
           </aside>
         </Panel>
 
-        {/* Poprawiony Separator (dawniej PanelResizeHandle) - większy hit-area (w-4) dla łatwiejszego chwytania */}
-        <Separator className="w-4 mx-1 group flex items-center justify-center cursor-col-resize">
+        {/* Separator - to jest nasz suwak */}
+        <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10">
           <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
         </Separator>
 
         {/* Prawy Panel - Kalendarz */}
         <Panel minSize="40%">
           <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-            {/* Dodajemy kontener ograniczający, żeby wewnętrzny scroll z CalendarGrid działał poprawnie */}
             <div className="flex-1 overflow-hidden min-h-0 relative">
               <CalendarGrid initialBlocks={blocks} />
             </div>
