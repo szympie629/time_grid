@@ -47,3 +47,12 @@
   background-size: 400% 400%;
   animation: aurora 15s ease infinite;
 }
+
+/* Ukrycie paska przewijania, ale zachowanie funkcjonalności */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE i Edge */
+  scrollbar-width: none; /* Firefox */
+}

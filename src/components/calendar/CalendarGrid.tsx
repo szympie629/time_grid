@@ -184,7 +184,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           </div>
         </header>
 
-        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto no-scrollbar">
           <div className="flex min-w-[700px]">
             <div className="w-16 flex-none border-r border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 transition-colors">
               <div className="h-14 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-30 transition-colors"></div>

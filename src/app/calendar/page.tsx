@@ -45,7 +45,7 @@ export default function CalendarPage() {
             {/* Góra: Backlog */}
             <Panel defaultSize="50%" minSize="20%">
               <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 min-h-0">
+                <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
                   <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
                     <p className="text-sm text-gray-600 dark:text-slate-300">Twoje zadania do zaplanowania.</p>
@@ -62,7 +62,7 @@ export default function CalendarPage() {
             {/* Dół: Rytuały */}
             <Panel defaultSize="50%" minSize="20%">
               <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 min-h-0">
+                <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar" >
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
                   <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
                     <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
