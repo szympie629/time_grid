@@ -164,8 +164,7 @@ export default function CalendarPage() {
        if (!item) return
 
        // Obliczanie czasu na podstawie pozycji Y myszki względem kolumny
-       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top : 9 * 80;
-       let dropMinutes = Math.floor((yOffset / 80) * 60);
+const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       let dropMinutes = Math.floor((yOffset / 80) * 60);
        dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15); // snap do 15 min
 
        const startHours = Math.floor(dropMinutes / 60);
