@@ -163,23 +163,30 @@ export default function CalendarPage() {
        const item = activeData?.item as BacklogItem
        if (!item) return
 
-       // Domyślnie wrzucamy na 09:00 rano
-       const startTime = `${overId}T09:00:00`
-       const duration = item.duration_minutes || 60
-       const endHours = 9 + Math.floor(duration / 60)
-       const endMins = duration % 60
-       const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`
+       // Obliczanie czasu na podstawie pozycji Y myszki względem kolumny
+       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top : 9 * 80;
+       let dropMinutes = Math.floor((yOffset / 80) * 60);
+       dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15); // snap do 15 min
 
-       setBacklogItems(prev => prev.filter(i => i.id !== item.id)) // Optimistic remove
+       const startHours = Math.floor(dropMinutes / 60);
+       const startMins = dropMinutes % 60;
+       const startTime = `${overId}T${String(startHours).padStart(2, '0')}:${String(startMins).padStart(2, '0')}:00`;
+
+       const duration = item.duration_minutes || 60;
+       const endMinutesTotal = dropMinutes + duration;
+       const endHours = Math.floor(endMinutesTotal / 60);
+       const endMins = endMinutesTotal % 60;
+       const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
+
+       setBacklogItems(prev => prev.filter(i => i.id !== item.id)); 
        try {
-         await backlogApi.moveToCalendar(supabase, item, startTime, endTime)
-         await refreshData()
+         await backlogApi.moveToCalendar(supabase, item, startTime, endTime);
+         await refreshData();
        } catch (err) {
-         alert("Błąd zapisu!")
-         await refreshData()
+         alert("Błąd zapisu!");
+         await refreshData();
        }
     }
-  }
 
   if (loading) return null
 
