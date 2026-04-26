@@ -35,6 +35,7 @@ export default function CalendarPage() {
   // Stany dla Globalnego Drag & Drop
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
+  const [activeWidth, setActiveWidth] = useState<number>(200)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -56,6 +57,9 @@ export default function CalendarPage() {
 
   const handleDragStart = (e: DragStartEvent) => {
     setActiveId(String(e.active.id))
+    // Pobieramy rzeczywistą szerokość chwytanego kafelka (fallback do 200px)
+    setActiveWidth(e.active.rect.current.initial?.width ?? 200) 
+    
     if (e.active.data.current?.block) {
       setActiveBlock(e.active.data.current.block as Block)
     }
@@ -186,8 +190,8 @@ export default function CalendarPage() {
                 style={{ 
                   height: activeBlock ? getDurationHeight(activeBlock.start_time, activeBlock.end_time) : '80px', 
                   position: 'relative',
-                  width: '200px' // Szerokość nakładki podczas przeciągania
-                }} 
+                  width: `${activeWidth}px` // <-- PODMIENIONE TUTAJ
+                }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
             </div>
