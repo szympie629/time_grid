@@ -264,13 +264,12 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
           }}
         >
           {activeBlock ? (
-            {/* Usunąłem scale-105 żeby rozmiar zgadzał się co do piksela */}
             <div className="opacity-90 transition-transform cursor-grabbing pointer-events-none">
               <DraggableBlock 
                 block={activeBlock} 
                 isOverlay={true}
                 style={{ 
-                  width: `${overlayWidth}px`, // Wrzucamy twarde piksele
+                  width: `${overlayWidth}px`, 
                   margin: 0, 
                   boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' 
                 }}
