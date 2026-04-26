@@ -29,8 +29,7 @@ export default function CalendarPage() {
       {/* Poprawiony Group: flex, h-full, w-full oraz nowe API autoSave */}
       <Group 
         orientation="horizontal" 
-        id="calendar-layout" 
-        autoSave 
+        autoSave="calendar-layout"
         className="flex h-full w-full"
       >
         
