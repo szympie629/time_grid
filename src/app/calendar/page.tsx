@@ -35,7 +35,7 @@ export default function CalendarPage() {
   // Stany dla Globalnego Drag & Drop
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
-  const [activeWidth, setActiveWidth] = useState<number>(200)
+  const [activeStyle, setActiveStyle] = useState<React.CSSProperties>({})
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -57,8 +57,15 @@ export default function CalendarPage() {
 
   const handleDragStart = (e: DragStartEvent) => {
     setActiveId(String(e.active.id))
-    // Pobieramy rzeczywistą szerokość chwytanego kafelka (fallback do 200px)
-    setActiveWidth(e.active.rect.current.initial?.width ?? 200) 
+    
+    // Pobieramy rzeczywistą szerokość w pikselach elementu, który właśnie chwyciliśmy
+    const widthPixels = e.active.rect.current.initial?.width
+    
+    setActiveStyle({
+      width: widthPixels ? `${widthPixels}px` : '200px',
+      // Dodajemy mały cień, żeby było widać, że trzymamy element
+      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)'
+    })
     
     if (e.active.data.current?.block) {
       setActiveBlock(e.active.data.current.block as Block)
@@ -188,9 +195,11 @@ export default function CalendarPage() {
                 block={activeBlock} 
                 isOverlay={true}
                 style={{ 
+                  ...activeStyle, // wrzucamy zapisaną szerokość z momentu złapania
                   height: activeBlock ? getDurationHeight(activeBlock.start_time, activeBlock.end_time) : '80px', 
                   position: 'relative',
-                  width: `${activeWidth}px` // <-- PODMIENIONE TUTAJ
+                  left: 0, // zerujemy lewy margines, bo DragOverlay ogarnia pozycjonowanie sam
+                  top: 0   // zerujemy górny margines z tego samego powodu
                 }}
                 onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
               />
