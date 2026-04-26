@@ -2,13 +2,36 @@
 
 import { Panel, Group, Separator } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
+import DraggableBlock from '@/components/calendar/DraggableBlock'
 import { blocksApi, type Block } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core'
+import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+
+// Pomocniczy kontener do zrzucania bloków do Backlogu (Case C)
+function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
+  return (
+    <div ref={setNodeRef} className={`flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar transition-colors ${isOver ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}>
+      {children}
+    </div>
+  )
+}
 
 export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Stany dla Globalnego Drag & Drop
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeBlock, setActiveBlock] = useState<Block | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  )
 
   useEffect(() => {
     async function fetchData() {
@@ -22,73 +45,143 @@ export default function CalendarPage() {
     fetchData()
   }, [])
 
+  const handleDragStart = (e: DragStartEvent) => {
+    setActiveId(String(e.active.id))
+    if (e.active.data.current?.block) {
+      setActiveBlock(e.active.data.current.block as Block)
+    }
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveId(null)
+    setActiveBlock(null)
+    
+    const { active, over, delta } = event
+    if (!over) return
+
+    const activeData = active.data.current
+    const block = activeData?.block as Block
+    if (!block) return
+
+    const type = activeData?.type // 'calendar', 'backlog', 'ritual'
+    const overId = String(over.id)
+
+    // Logika przemieszczania w obrębie Kalendarza
+    if (type === 'calendar') {
+      if (overId === 'droppable-backlog') {
+        // CASE C: Kalendarz -> Backlog
+        console.log("Przeniesiono do Backlogu: wyzerować daty.")
+        // TODO: Update bazy danych - ustawienie start_time i end_time na null
+      } else if (overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Przesuwanie na siatce (Istniejąca logika)
+        if (delta.x === 0 && delta.y === 0) return
+        
+        const minutesShift = calculateTimeShift(delta.y)
+        const { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift, overId)
+
+        if (block.start_time === newStart && block.end_time === newEnd) return
+
+        setBlocks(prev => prev.map(b => 
+          b.id === block.id ? { ...b, start_time: newStart, end_time: newEnd } : b
+        ))
+
+        try {
+          await blocksApi.updateBlock(supabase, block.id, { start_time: newStart, end_time: newEnd })
+        } catch (error) {
+          console.error(error)
+          alert("Błąd zapisu! Odśwież stronę.")
+        }
+      }
+    } 
+    // Logika z Backlogu do Kalendarza
+    else if (type === 'backlog' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
+       // CASE A: Backlog -> Kalendarz
+       console.log(`Upuszczono z Backlogu na dzień ${overId}. Należy utworzyć/zaktualizować blok.`)
+    }
+    // Logika z Rytuałów do Kalendarza
+    else if (type === 'ritual' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
+       // CASE B: Rytuał -> Kalendarz (Klonowanie)
+       console.log(`Skopiowano Rytuał na dzień ${overId}.`)
+    }
+  }
+
   if (loading) return null
 
   return (
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
-      <Group 
-        orientation="horizontal" 
-        autoSave="calendar-layout-v1" 
-        id="calendar-layout"
-        className="flex h-full w-full"
-      >
-        
-        {/* Lewy Panel - Grupa pionowa (Backlog + Rytuały) */}
-        <Panel defaultSize="25%" minSize="15%">
-          <Group 
-            orientation="vertical" 
-            autoSave="left-panel-layout-v1" 
-            id="left-panel-layout" 
-            className="flex flex-col h-full"
-          >
-            
-            {/* Góra: Backlog */}
-            <Panel defaultSize="50%" minSize="20%">
-              <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
-                  <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                    <p className="text-sm text-gray-600 dark:text-slate-300">Twoje zadania do zaplanowania.</p>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <Group 
+          orientation="horizontal" 
+          autoSave="calendar-layout-v1" 
+          id="calendar-layout"
+          className="flex h-full w-full"
+        >
+          {/* Lewy Panel */}
+          <Panel defaultSize="25%" minSize="15%">
+            <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
+              
+              {/* Backlog */}
+              <Panel defaultSize="50%" minSize="20%">
+                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                  <DroppableBacklogContainer>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                      <p className="text-sm text-gray-600 dark:text-slate-300">Twoje zadania do zaplanowania.</p>
+                      {/* Tu wylądują Draggable elementy Backlogu */}
+                    </div>
+                  </DroppableBacklogContainer>
+                </aside>
+              </Panel>
+
+              <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10">
+                <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+              </Separator>
+
+              {/* Rytuały */}
+              <Panel defaultSize="50%" minSize="20%">
+                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                      <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
+                    </div>
                   </div>
-                </div>
-              </aside>
-            </Panel>
+                </aside>
+              </Panel>
 
-            {/* Suwak poziomy (Separator) dla lewego panelu */}
-            <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10">
-              <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-            </Separator>
+            </Group>
+          </Panel>
 
-            {/* Dół: Rytuały */}
-            <Panel defaultSize="50%" minSize="20%">
-              <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar" >
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
-                  <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                    <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
-                  </div>
-                </div>
-              </aside>
-            </Panel>
+          <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10">
+            <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+          </Separator>
 
-          </Group>
-        </Panel>
+          {/* Prawy Panel - Kalendarz */}
+          <Panel minSize="40%">
+            <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden min-h-0 relative">
+                <CalendarGrid blocks={blocks} setBlocks={setBlocks} />
+              </div>
+            </section>
+          </Panel>
 
-        {/* Główny Suwak pionowy (między panelami) */}
-        <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10">
-          <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-        </Separator>
+        </Group>
 
-        {/* Prawy Panel - Kalendarz */}
-        <Panel minSize="40%">
-          <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-hidden min-h-0 relative">
-              <CalendarGrid initialBlocks={blocks} />
+        {/* Globalny cień podczas przeciągania */}
+        <DragOverlay zIndex={1000}>
+          {activeBlock ? (
+            <div className="opacity-90 scale-105 shadow-2xl transition-transform cursor-grabbing pointer-events-none">
+              <DraggableBlock 
+                block={activeBlock} 
+                isOverlay={true}
+                style={{ height: '80px', position: 'relative' }} 
+                onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
+              />
             </div>
-          </section>
-        </Panel>
+          ) : null}
+        </DragOverlay>
 
-      </Group>
+      </DndContext>
     </main>
   )
 }

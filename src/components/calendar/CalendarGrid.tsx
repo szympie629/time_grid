@@ -4,14 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Block, blocksApi } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
-import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
-import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
 import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
-
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -32,9 +29,13 @@ function getBlockPosition(startTime: string, endTime: string) {
   }
 }
 
-export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[] }) {
+interface CalendarGridProps {
+  blocks: Block[];
+  setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
+}
+
+export default function CalendarGrid({ blocks, setBlocks }: CalendarGridProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
@@ -46,7 +47,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 560 
     }
-    // Inicjalizacja motywu
     const stored = localStorage.getItem('theme') || 'light'
     setTheme(stored as 'light' | 'dark')
     if (stored === 'dark') document.documentElement.classList.add('dark')
@@ -63,46 +63,10 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
     }
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    })
-  )
-
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over, delta } = event
-    if (!over || (delta.x === 0 && delta.y === 0)) return
-
-    const blockId = active.id as string
-    const block = blocks.find(b => b.id === blockId)
-    if (!block) return
-
-    const minutesShift = calculateTimeShift(delta.y)
-    const targetDateStr = over.id as string
-
-    const { newStart, newEnd } = getNewTimes(block.start_time, block.end_time, minutesShift, targetDateStr)
-
-    if (block.start_time === newStart && block.end_time === newEnd) return
-
-    setBlocks(prev => prev.map(b => 
-      b.id === blockId ? { ...b, start_time: newStart, end_time: newEnd } : b
-    ))
-
-    try {
-      await blocksApi.updateBlock(supabase, blockId, { 
-        start_time: newStart, 
-        end_time: newEnd 
-      })
-    } catch (error) {
-      console.error(error)
-      alert("Błąd zapisu! Odśwież stronę.")
-    }
   }
 
   const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
@@ -169,7 +133,7 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <>
       <div className="flex flex-col h-full bg-white dark:bg-slate-950 text-black dark:text-slate-100 transition-colors">
         <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
           <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
@@ -234,13 +198,13 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
                       
                       {blocksWithLayout.map(block => {
                         const baseStyle = getBlockPosition(block.start_time, block.end_time)
-                        
                         const leftPercent = Math.min(75, 5 + (block.overlapLevel * 8))
                         const widthPercent = Math.max(20, 95 - leftPercent)
                         
                         return (
                           <DraggableBlock 
-                            key={block.id} 
+                            key={`calendar-${block.id}`} 
+                            idPrefix="calendar-"
                             block={block as Block} 
                             style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }} 
                             onResizeEnd={handleResizeEnd}
@@ -267,6 +231,6 @@ export default function CalendarGrid({ initialBlocks }: { initialBlocks: Block[]
           onDelete={handleDeleteBlock}
         />
       )}
-    </DndContext>
+    </>
   )
 }

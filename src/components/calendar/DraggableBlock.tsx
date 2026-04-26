@@ -8,16 +8,20 @@ import { supabase } from '@/lib/supabase/client'
 
 interface Props {
   block: Block;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
+  idPrefix?: string;
+  isOverlay?: boolean;
   onResizeEnd: (blockId: string, newHeightPixels: number) => void;
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
   onUpdate: (blockId: string, updates: Partial<Block>) => void;
 }
 
-export default function DraggableBlock({ block, style, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
+export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
+  const type = idPrefix.replace('-', '')
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: block.id,
+    id: `${idPrefix}${block.id}`,
+    data: { type, block }
   })
 
   const [isResizing, setIsResizing] = useState(false)
@@ -27,10 +31,12 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
   
   const [tasks, setTasks] = useState<Task[]>([])
 
-  const baseHeight = parseInt(style.height as string)
+  const baseHeight = style?.height ? parseInt(style.height as string) : 80
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
   useEffect(() => {
+    if (isOverlay) return; // Nie pobieramy zadań dla cienia podczas przeciągania
+
     let isMounted = true
     const fetchTasks = async () => {
       try {
@@ -49,9 +55,10 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
       isMounted = false
       window.removeEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
     }
-  }, [block.id])
+  }, [block.id, isOverlay])
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (isOverlay) return;
     e.stopPropagation() 
     e.preventDefault()
 
@@ -104,7 +111,7 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
       {...attributes}
       onClick={(e) => {
         e.stopPropagation();
-        if (!isResizing) onClick(block.id);
+        if (!isResizing && !isOverlay) onClick(block.id);
       }}
       className={`absolute rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-colors transition-shadow select-none touch-none flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'} ${block.is_completed ? 'opacity-40 grayscale line-through' : ''}`}
       style={{
@@ -112,10 +119,9 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         ...transformStyle,
         height: `${currentHeight}px`,
         backgroundColor: block.color_tag || '#3b82f6',
-        zIndex: isResizing || transform ? 50 : 10
+        zIndex: isResizing || transform || isOverlay ? 50 : 10
       }}
     >
-      {/* Checkbox "Wykonano" (Lewy górny róg) */}
       <div 
         className="absolute top-1.5 left-1.5 z-10 flex items-center justify-center"
         onPointerDown={(e) => e.stopPropagation()} 
@@ -129,11 +135,10 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         />
       </div>
 
-      {/* Przycisk usuwania "X" */}
       <button 
         onClick={(e) => {
           e.stopPropagation()
-          if (confirm('Usunąć ten blok?')) onDelete(block.id)
+          if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id)
         }}
         className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10"
       >
@@ -142,8 +147,7 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
 
       <div className="pl-5 pr-4 truncate">{block.title}</div>
 
-      {/* Pasek postępu i licznik - tylko jeśli są zadania */}
-      {totalTasks > 0 && (
+      {totalTasks > 0 && !isOverlay && (
         <div className="absolute bottom-3 left-2 right-2 flex flex-col gap-1 z-10">
           <div className="text-[9px] font-bold opacity-80 text-right">
             {completedTasks}/{totalTasks}
@@ -157,14 +161,15 @@ export default function DraggableBlock({ block, style, onResizeEnd, onClick, onD
         </div>
       )}
 
-      {/* Obszar do rozciągania bloku */}
-      <div
-        onPointerDown={handlePointerDown}
-        onClick={(e) => e.stopPropagation()}
-        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent z-20"
-      >
-        <div className="w-6 h-1 bg-white/50 rounded-full"></div>
-      </div>
+      {!isOverlay && (
+        <div
+          onPointerDown={handlePointerDown}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-1 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent z-20"
+        >
+          <div className="w-6 h-1 bg-white/50 rounded-full"></div>
+        </div>
+      )}
     </div>
   )
 }
