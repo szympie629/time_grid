@@ -58,6 +58,9 @@ export default function CalendarPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
   const [overlayWidth, setOverlayWidth] = useState<number>(200) // DODANE
+  const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null) // NOWY STAN
+
+  
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -159,6 +162,8 @@ export default function CalendarPage() {
         setBlocks(prev => prev.map(b => 
           b.id === block.id ? { ...b, start_time: newStart, end_time: newEnd } : b
         ))
+        setRecentlyDroppedId(block.id)
+        setTimeout(() => setRecentlyDroppedId(null), 1000)
         try {
           await blocksApi.updateBlock(supabase, block.id, { start_time: newStart, end_time: newEnd })
         } catch (error) {
@@ -254,7 +259,7 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
           <Panel minSize="40%">
             <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden min-h-0 relative">
-                <CalendarGrid blocks={blocks} setBlocks={setBlocks} />
+                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} />
               </div>
             </section>
           </Panel>

@@ -15,11 +15,12 @@ interface Props {
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
   onUpdate: (blockId: string, updates: Partial<Block>) => void;
+  recentlyDroppedId?: string | null; // NOWE
 }
 
-export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate }: Props) {
-  const type = idPrefix.replace('-', '')
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId }: Props) {
+    const type = idPrefix.replace('-', '')
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `${idPrefix}${block.id}`,
     data: { type, block }
   })
@@ -46,15 +47,20 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
-  // Ripple Effect wykrywa każdą zmianę kolumny (daty), czasu (start_time) lub kaskadowości (left/top)
+  // Ripple Effect wykrywa każdą zmianę pozycji ORAZ sytuację tuż po dropie w nowej kolumnie
   useEffect(() => {
-    if (!isOverlay && !isResizing && posRef.current !== posKey) {
+    if (isOverlay || isResizing) return
+
+    const positionChanged = posRef.current !== posKey
+    const justDropped = recentlyDroppedId === block.id
+
+    if (positionChanged || justDropped) {
       setRipple(true)
       const timer = setTimeout(() => setRipple(false), 600)
       posRef.current = posKey
       return () => clearTimeout(timer)
     }
-  }, [posKey, isOverlay, isResizing])
+  }, [posKey, isOverlay, isResizing, recentlyDroppedId, block.id])
 
   useEffect(() => {
     let isMounted = true

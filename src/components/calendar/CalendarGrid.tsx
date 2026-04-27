@@ -32,9 +32,10 @@ function getBlockPosition(startTime: string, endTime: string) {
 interface CalendarGridProps {
   blocks: Block[];
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
+  recentlyDroppedId?: string | null; // NOWE - ID ostatnio upuszczonego bloku, aby wywołać efekt wizualny
 }
 
-export default function CalendarGrid({ blocks, setBlocks }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: CalendarGridProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -211,6 +212,7 @@ export default function CalendarGrid({ blocks, setBlocks }: CalendarGridProps) {
                             onClick={(id) => setSelectedBlockId(id)}
                             onDelete={handleDeleteBlock}
                             onUpdate={handleUpdateBlockDetails}
+                            recentlyDroppedId={recentlyDroppedId} // NOWE
                           />
                         )
                       })}
