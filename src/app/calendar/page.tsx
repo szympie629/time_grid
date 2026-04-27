@@ -103,8 +103,8 @@ export default function CalendarPage() {
       const actualWidth = domWidth || e.active.rect.current.initial?.width || defaultColumnWidth;
       setOverlayWidth(actualWidth);
     } else if (data?.type === 'backlog') {
-      // Dla backlogu zostawiamy 90% kolumny
-      setOverlayWidth(defaultColumnWidth)
+      // Dla backlogu też bierzemy jego fizyczną szerokość
+      setOverlayWidth(domWidth || defaultColumnWidth);
       
       const item = data.item as BacklogItem
       const duration = item.duration_minutes || 60
