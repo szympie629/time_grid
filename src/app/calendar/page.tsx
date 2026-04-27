@@ -192,6 +192,8 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
        const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
 
        setBacklogItems(prev => prev.filter(i => i.id !== item.id)); 
+       setRecentlyDroppedId(item.id);
+       setTimeout(() => setRecentlyDroppedId(null), 1000);
        try {
          await backlogApi.moveToCalendar(supabase, item, startTime, endTime);
          await refreshData();
