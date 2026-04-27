@@ -30,6 +30,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const startYRef = useRef<number>(0)
   
   const [tasks, setTasks] = useState<Task[]>([])
+  const [ripple, setRipple] = useState(false)
+  const posRef = useRef(`${style?.top}-${style?.left}`)
 
   let baseHeight = style?.height ? parseInt(style.height as string) : 80;
   if (isOverlay && block.start_time && block.end_time) {
@@ -43,8 +45,18 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
+  // Ripple Effect wykrywa zmianę pozycji / upuszczenie
   useEffect(() => {
+    const newPos = `${style?.top}-${style?.left}`
+    if (!isOverlay && !isResizing && posRef.current !== newPos) {
+      setRipple(true)
+      const timer = setTimeout(() => setRipple(false), 600)
+      posRef.current = newPos
+      return () => clearTimeout(timer)
+    }
+  }, [style?.top, style?.left, isOverlay, isResizing])
 
+  useEffect(() => {
     let isMounted = true
     const fetchTasks = async () => {
       try {
@@ -55,10 +67,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       }
     }
     fetchTasks()
-
     const handleTasksUpdate = () => fetchTasks()
     window.addEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
-
     return () => { 
       isMounted = false
       window.removeEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
@@ -69,7 +79,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
     if (isOverlay) return;
     e.stopPropagation() 
     e.preventDefault()
-
     setIsResizing(true)
     startYRef.current = e.clientY
     initialHeightRef.current = baseHeight
@@ -77,14 +86,12 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
   useEffect(() => {
     if (!isResizing) return
-
     const handlePointerMove = (e: PointerEvent) => {
       const deltaY = e.clientY - startYRef.current
       const newHeight = Math.max(20, initialHeightRef.current + deltaY) 
       const snappedHeight = Math.round(newHeight / 20) * 20
       setResizeHeight(snappedHeight)
     }
-
     const handlePointerUp = () => {
       setIsResizing(false)
       if (resizeHeight !== null && resizeHeight !== initialHeightRef.current) {
@@ -92,23 +99,25 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       }
       setResizeHeight(null)
     }
-
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
-
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
   }, [isResizing, resizeHeight, block.id, onResizeEnd])
 
-  const transformStyle = transform && !isResizing ? {
-    opacity: 0.3, // Zamiast przesuwać oryginał, tylko go "gasimy" na czas przeciągania
-  } : undefined
+  const transformStyle = transform && !isResizing ? { opacity: 0.3 } : undefined
 
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.is_completed).length
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+
+  // Style dynamiczne z animacjami podnoszenia i fali
+  const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 transition-transform duration-200 cursor-grabbing' : ''
+  const dragClass = isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'
+  const rippleClass = ripple ? 'ripple-effect' : ''
+  const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
 
   return (
     <div
@@ -119,16 +128,13 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         e.stopPropagation();
         if (!isResizing && !isOverlay) onClick(block.id);
       }}
-        className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-colors transition-shadow select-none touch-none flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'} ${block.is_completed ? 'opacity-40 grayscale line-through' : ''}`}      
-        style={{
+      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md select-none touch-none flex flex-col ${overlayClass} ${dragClass} ${rippleClass} ${completedClass}`}      
+      style={{
         ...style,
         ...transformStyle,
         height: `${currentHeight}px`,
         backgroundColor: block.color_tag || '#3b82f6',
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
-        transitionProperty: isResizing ? 'none' : 'width, left',
-        transitionDuration: '250ms',
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
       <div 

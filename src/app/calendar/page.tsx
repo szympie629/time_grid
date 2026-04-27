@@ -7,7 +7,7 @@ import { blocksApi, type Block } from '@/lib/api/blocks'
 import { backlogApi, type BacklogItem } from '@/lib/api/backlog'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable, defaultDropAnimationSideEffects } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable, defaultDropAnimationSideEffects, defaultDropAnimation } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 
 function getDurationHeight(startTime: string, endTime: string) {
@@ -260,22 +260,20 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
         <DragOverlay 
           zIndex={1000} 
           dropAnimation={{
+            ...defaultDropAnimation, // <-- to przywraca prawidłowy czas lotu i skalowanie szerokości kafelka!
             sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } })
           }}
         >
           {activeBlock ? (
-            <div className="opacity-90 transition-transform cursor-grabbing pointer-events-none">
-              <DraggableBlock 
-                block={activeBlock} 
-                isOverlay={true}
-                style={{ 
-                  width: `${overlayWidth}px`, 
-                  margin: 0, 
-                  boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' 
-                }}
-                onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
-              />
-            </div>
+            <DraggableBlock 
+              block={activeBlock} 
+              isOverlay={true}
+              style={{ 
+                width: `${overlayWidth}px`, 
+                margin: 0
+              }}
+              onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
+            />
           ) : null}
         </DragOverlay>
       </DndContext>
