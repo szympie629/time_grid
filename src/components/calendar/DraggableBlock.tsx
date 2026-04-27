@@ -31,7 +31,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   
   const [tasks, setTasks] = useState<Task[]>([])
   const [ripple, setRipple] = useState(false)
-  const posKey = `${block.date || 'backlog'}-${block.start_time || 'none'}-${style?.top || 0}-${style?.left || 0}`
+  const posKey = `${block.start_time || 'backlog'}-${style?.top || 0}-${style?.left || 0}`
   const posRef = useRef(posKey)
 
   let baseHeight = style?.height ? parseInt(style.height as string) : 80;
