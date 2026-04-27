@@ -23,7 +23,7 @@ export const backlogApi = {
     startTime: string, 
     endTime: string
   ) {
-    const { error: insertError } = await supabase.from('blocks').insert({
+    const { data: newBlock, error: insertError } = await supabase.from('blocks').insert({
       user_id: backlogItem.user_id,
       title: backlogItem.title,
       description: backlogItem.description,
@@ -32,12 +32,15 @@ export const backlogApi = {
       end_time: endTime,
       is_completed: backlogItem.is_completed || false,
       is_deleted: false
-    })
+    }).select().single() // POBIERZ NOWY REKORD
+
     if (insertError) throw new Error(insertError.message)
 
     // Twardy DELETE ze źródła
     const { error: deleteError } = await supabase.from('backlog').delete().eq('id', backlogItem.id)
     if (deleteError) throw new Error(deleteError.message)
+    
+    return newBlock // ZWRÓĆ NOWY REKORD
   },
 
   async moveToBacklog(
