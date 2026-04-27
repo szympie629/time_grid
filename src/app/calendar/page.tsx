@@ -85,15 +85,19 @@ export default function CalendarPage() {
     document.body.style.overflow = 'hidden'
     setActiveId(String(e.active.id))
     
-    // Złapanie dowolnej kolumny dnia i wyliczenie 90% jej szerokości
     const dayColumn = document.querySelector('[id^="20"]') as HTMLElement;
-    if (dayColumn) setOverlayWidth(dayColumn.clientWidth * 0.9);
+    const defaultColumnWidth = dayColumn ? dayColumn.clientWidth * 0.9 : 200;
 
     const data = e.active.data.current
     if (data?.type === 'calendar') {
       setActiveBlock(data.block as Block)
+      // Kluczowa zmiana: pobieramy fizyczną szerokość kafelka z kalendarza, by uniknąć skoku przy upuszczaniu
+      const actualWidth = e.active.rect.current.initial?.width || defaultColumnWidth;
+      setOverlayWidth(actualWidth);
     } else if (data?.type === 'backlog') {
-      // Tworzymy "fałszywy" Block dla nakładki DragOverlay, żeby wyglądał jak ten z kalendarza
+      // Dla backlogu zostawiamy 90% kolumny
+      setOverlayWidth(defaultColumnWidth);
+      
       const item = data.item as BacklogItem
       const duration = item.duration_minutes || 60
       const dummyBlock: Block = {
