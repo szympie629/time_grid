@@ -119,12 +119,16 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         e.stopPropagation();
         if (!isResizing && !isOverlay) onClick(block.id);
       }}
-        className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-colors transition-shadow select-none touch-none flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'} ${block.is_completed ? 'opacity-40 grayscale line-through' : ''}`}      style={{
+        className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md transition-colors transition-shadow select-none touch-none flex flex-col ${isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'} ${block.is_completed ? 'opacity-40 grayscale line-through' : ''}`}      
+        style={{
         ...style,
         ...transformStyle,
         height: `${currentHeight}px`,
         backgroundColor: block.color_tag || '#3b82f6',
-        zIndex: isResizing || transform || isOverlay ? 50 : 10
+        zIndex: isResizing || transform || isOverlay ? 50 : 10,
+        transitionProperty: isResizing ? 'none' : 'width, left',
+        transitionDuration: '250ms',
+        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
       <div 
