@@ -270,10 +270,8 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
 
         <DragOverlay 
           zIndex={1000} 
-          dropAnimation={{
-            ...defaultDropAnimation, // <-- to przywraca prawidłowy czas lotu i skalowanie szerokości kafelka!
-            sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } })
-          }}
+          dropAnimation={null}
+            // dropAnimation={{ sideEffects: defaultDropAnimationSideEffects, ...defaultDropAnimation, duration: 300 }} 
         >
           {activeBlock ? (
             <DraggableBlock 
