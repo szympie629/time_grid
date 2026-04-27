@@ -31,7 +31,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   
   const [tasks, setTasks] = useState<Task[]>([])
   const [ripple, setRipple] = useState(false)
-  const posRef = useRef(`${style?.top}-${style?.left}`)
+  const posKey = `${block.date || 'backlog'}-${block.start_time || 'none'}-${style?.top || 0}-${style?.left || 0}`
+  const posRef = useRef(posKey)
 
   let baseHeight = style?.height ? parseInt(style.height as string) : 80;
   if (isOverlay && block.start_time && block.end_time) {
@@ -45,16 +46,15 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
-  // Ripple Effect wykrywa zmianę pozycji / upuszczenie
+  // Ripple Effect wykrywa każdą zmianę kolumny (daty), czasu (start_time) lub kaskadowości (left/top)
   useEffect(() => {
-    const newPos = `${style?.top}-${style?.left}`
-    if (!isOverlay && !isResizing && posRef.current !== newPos) {
+    if (!isOverlay && !isResizing && posRef.current !== posKey) {
       setRipple(true)
       const timer = setTimeout(() => setRipple(false), 600)
-      posRef.current = newPos
+      posRef.current = posKey
       return () => clearTimeout(timer)
     }
-  }, [style?.top, style?.left, isOverlay, isResizing])
+  }, [posKey, isOverlay, isResizing])
 
   useEffect(() => {
     let isMounted = true
