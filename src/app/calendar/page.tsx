@@ -39,6 +39,7 @@ function DraggableBacklogItem({ item }: { item: BacklogItem }) {
   return (
     <div 
       ref={setNodeRef} 
+      id={`backlog-${item.id}`}
       {...listeners} 
       {...attributes} 
       className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 ${item.color_tag ? `border-[${item.color_tag}]` : 'border-blue-500'} cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
@@ -91,15 +92,19 @@ export default function CalendarPage() {
     const dayColumn = document.querySelector('[id^="20"]') as HTMLElement;
     const defaultColumnWidth = dayColumn ? dayColumn.clientWidth * 0.9 : 200;
 
+    // NOWE: Twarde pobranie pikseli prosto z wyrenderowanego DOM na podstawie ID
+    const draggedElement = document.getElementById(String(e.active.id));
+    const domWidth = draggedElement ? draggedElement.getBoundingClientRect().width : null;
+
     const data = e.active.data.current
     if (data?.type === 'calendar') {
       setActiveBlock(data.block as Block)
-      // Kluczowa zmiana: pobieramy fizyczną szerokość kafelka z kalendarza, by uniknąć skoku przy upuszczaniu
-      const actualWidth = e.active.rect.current.initial?.width || defaultColumnWidth;
+      // Wymuszamy domWidth, jeśli nie znajdzie, odpali fallbacki
+      const actualWidth = domWidth || e.active.rect.current.initial?.width || defaultColumnWidth;
       setOverlayWidth(actualWidth);
     } else if (data?.type === 'backlog') {
       // Dla backlogu zostawiamy 90% kolumny
-      setOverlayWidth(defaultColumnWidth);
+      setOverlayWidth(defaultColumnWidth)
       
       const item = data.item as BacklogItem
       const duration = item.duration_minutes || 60

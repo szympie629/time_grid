@@ -128,6 +128,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   return (
     <div
       ref={setNodeRef}
+      id={`${idPrefix}${block.id}`}
       {...listeners}
       {...attributes}
       onClick={(e) => {
