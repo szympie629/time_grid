@@ -19,6 +19,7 @@ export default function DroppableDay({ day, isToday, children }: Props) {
   return (
     <div 
       ref={setNodeRef} 
+      id={dateString} // <-- DODANE
       className={`flex-1 border-r border-gray-200 dark:border-slate-800 relative transition-colors ${isOver ? 'bg-blue-50/30 dark:bg-blue-900/20' : ''}`}
     >
       {/* Nagłówek dnia - z-index 20 i tła dark mode */}
