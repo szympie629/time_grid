@@ -186,7 +186,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </button>
       )}
 
-      <div className="pl-5 pr-4 truncate">{block.title}</div>
+      <div className="absolute top-1.5 left-6 right-12 truncate font-bold text-xs leading-none">
+        {block.title}
+      </div>
 
       {totalTasks > 0 && !isDraft && (
         <div className="absolute bottom-3 left-2 right-2 flex flex-col gap-1 z-10">
