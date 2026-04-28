@@ -9,6 +9,7 @@ import DroppableDay from './DroppableDay'
 import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
 import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
+import { tasksApi } from '@/lib/api/tasks'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -39,6 +40,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
+  const [copiedBlock, setCopiedBlock] = useState<Block | null>(null)
   const [copiedBlock, setCopiedBlock] = useState<Partial<Block> | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
@@ -107,25 +109,43 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     const [hours, minutes] = hourString.split(':').map(Number)
     const start = new Date(day)
     start.setHours(hours, minutes, 0, 0)
-    
-    let end = new Date(start)
-    end.setHours(hours + 1, minutes, 0, 0)
 
-    // Jeśli mamy skopiowany blok, zachowaj jego oryginalny czas trwania
-    if (copiedBlock && copiedBlock.start_time && copiedBlock.end_time) {
+    if (copiedBlock) {
       const copiedStart = new Date(copiedBlock.start_time).getTime()
       const copiedEnd = new Date(copiedBlock.end_time).getTime()
-      end = new Date(start.getTime() + (copiedEnd - copiedStart))
+      const end = new Date(start.getTime() + (copiedEnd - copiedStart))
+
+      // 1. Zapis bloku
+      const newBlock = await blocksApi.createBlock(supabase, {
+        user_id: user.id,
+        title: copiedBlock.title,
+        description: copiedBlock.description,
+        color_tag: copiedBlock.color_tag,
+        start_time: toLocalISOString(start),
+        end_time: toLocalISOString(end),
+      })
+
+      // 2. Klonowanie zadań To-Do
+      const originalTasks = await tasksApi.getTasks(supabase, copiedBlock.id)
+      for (const task of originalTasks) {
+        await tasksApi.createTask(supabase, newBlock.id, task.title)
+      }
+
+      setBlocks(prev => [...prev, newBlock])
+      return
     }
+
+    const end = new Date(start)
+    end.setHours(hours + 1, minutes, 0, 0)
 
     const draft: Block = {
       id: 'draft',
       user_id: user.id,
-      title: copiedBlock ? copiedBlock.title! : 'Nowe zadanie',
-      description: copiedBlock ? (copiedBlock.description || '') : '',
+      title: 'Nowe zadanie',
+      description: '',
       start_time: toLocalISOString(start),
       end_time: toLocalISOString(end),
-      color_tag: copiedBlock ? copiedBlock.color_tag! : '#3b82f6',
+      color_tag: '#3b82f6',
       created_at: new Date().toISOString(),
       is_completed: false,
       is_deleted: false
@@ -269,6 +289,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
                             onDelete={handleDeleteBlock}
                             onUpdate={handleUpdateBlockDetails}
                             recentlyDroppedId={recentlyDroppedId} // NOWE
+                            onCopy={setCopiedBlock}
                           />
                         )
                       })}
@@ -328,6 +349,20 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
           onDelete={() => setDraftBlock(null)}
         />
       )}
+      
+      {copiedBlock && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-[200] border-2 border-white/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+          <span className="font-semibold text-sm">Malujesz: {copiedBlock.title}</span>
+          <button 
+            onClick={() => setCopiedBlock(null)} 
+            className="bg-indigo-800 px-3 py-1 rounded-full hover:bg-indigo-900 transition-colors text-xs font-bold"
+          >
+            Zakończ
+          </button>
+        </div>
+      )}
+
     </>
   )
 }
