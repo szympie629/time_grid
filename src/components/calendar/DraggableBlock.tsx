@@ -121,6 +121,13 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.is_completed).length
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+  const pendingTasks = tasks.filter(t => !t.is_completed)
+
+  // Wyliczanie czasu trwania (80px = 60m)
+  const durationMinutes = Math.round((currentHeight / 80) * 60)
+  const hours = Math.floor(durationMinutes / 60)
+  const mins = durationMinutes % 60
+  const durationText = hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`
 
   const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 transition-transform duration-200 cursor-grabbing' : ''
   const dragClass = isDraft ? '' : (isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing')
@@ -147,52 +154,77 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >
-      {!isDraft && (
-        <div 
-          className="absolute top-1.5 left-1.5 z-10 flex items-center justify-center"
-          onPointerDown={(e) => e.stopPropagation()} 
-          onClick={(e) => e.stopPropagation()}
-        >
-          <input 
-            type="checkbox"
-            checked={block.is_completed ?? false}
-            onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
-            className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm"
-          />
+      {/* Top Bar: Checkbox, Czas trwania, Akcje */}
+      <div className="flex items-start justify-between gap-1 w-full z-10 shrink-0">
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {!isDraft && (
+            <div 
+              onPointerDown={(e) => e.stopPropagation()} 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input 
+                type="checkbox"
+                checked={block.is_completed ?? false}
+                onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
+                className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm block"
+              />
+            </div>
+          )}
+          {!isDraft && (
+            <span className="text-[10px] font-medium opacity-90 leading-none block mt-0.5">
+              {durationText}
+            </span>
+          )}
         </div>
-        )}
-      {!isDraft && onCopy && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation()
-            onCopy(block)
-          }}
-          className="absolute top-1 right-7 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10 text-white"
-          title="Kopiuj (Tryb Pędzla)"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
-        </button>
-      )}
 
-      {!isDraft && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation()
-            if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id)
-          }}
-          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10"
-        >
-          ✕
-        </button>
-      )}
+        <div className="flex items-center gap-0.5 -mt-1 -mr-1 shrink-0">
+          {!isDraft && onCopy && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onCopy(block); }}
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-white"
+              title="Kopiuj (Tryb Pędzla)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+            </button>
+          )}
+          {!isDraft && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id);
+              }}
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
 
-      <div className="absolute top-1.5 left-6 right-12 truncate font-bold text-xs leading-none">
+      {/* Tytuł */}
+      <div className="mt-1 font-bold text-xs leading-tight line-clamp-2 z-10 w-full pr-1 shrink-0">
         {block.title}
       </div>
 
+      {/* Aktywne Sub-zadania */}
+      {!isDraft && pendingTasks.length > 0 && (
+        <div className="mt-1.5 flex flex-col gap-0.5 z-10 overflow-hidden shrink-0">
+          {pendingTasks.map(task => (
+            <div key={task.id} className="text-[10px] leading-tight opacity-85 flex items-start gap-1">
+              <span className="mt-[4px] w-1 h-1 rounded-full bg-white/70 shrink-0" />
+              <span className="line-clamp-2">{task.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Spychacz paska postępu na dół */}
+      <div className="flex-1 min-h-[4px]" />
+
+      {/* Pasek postępu */}
       {totalTasks > 0 && !isDraft && (
-        <div className="absolute bottom-3 left-2 right-2 flex flex-col gap-1 z-10">
-          <div className="text-[9px] font-bold opacity-80 text-right">
+        <div className="flex flex-col gap-1 z-10 w-full mb-1 shrink-0">
+          <div className="text-[9px] font-bold opacity-80 text-right leading-none">
             {completedTasks}/{totalTasks}
           </div>
           <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden">
@@ -204,6 +236,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </div>
       )}
 
+      {/* Uchwyt zmiany rozmiaru (na samym dole) */}
       {!isOverlay && !isDraft && (
         <div
           onPointerDown={handlePointerDown}
