@@ -38,6 +38,7 @@ interface CalendarGridProps {
 export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: CalendarGridProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+  const [draftBlock, setDraftBlock] = useState<Block | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
   const weekDays = getWeekDays(currentDate)
@@ -70,7 +71,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     router.refresh()
   }
 
-  const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
+  /*const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return alert("Brak sesji!")
@@ -95,6 +96,47 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
       setSelectedBlockId(newBlock.id)
     } catch (error) {
       console.error(error)
+    }
+  }*/
+
+    const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return alert("Brak sesji!")
+
+    const [hours, minutes] = hourString.split(':').map(Number)
+    const start = new Date(day)
+    start.setHours(hours, minutes, 0, 0)
+    
+    const end = new Date(start)
+    end.setHours(hours + 1, minutes, 0, 0)
+
+    // Tworzymy jedynie lokalny obiekt szkicu z fikcyjnym ID
+    const draft: Block = {
+      id: 'draft',
+      user_id: user.id,
+      title: 'Nowe zadanie',
+      description: '',
+      start_time: toLocalISOString(start),
+      end_time: toLocalISOString(end),
+      color_tag: '#3b82f6',
+      created_at: new Date().toISOString()
+    }
+    setDraftBlock(draft)
+  }
+
+  const handleSaveDraft = async (_id: string, updates: any) => {
+    if (!draftBlock) return
+    try {
+      const dataToInsert = { ...draftBlock, ...updates }
+      delete dataToInsert.id // Usuwamy 'draft'
+      delete dataToInsert.created_at
+
+      const newBlock = await blocksApi.createBlock(supabase, dataToInsert)
+      setBlocks(prev => [...prev, newBlock])
+      setDraftBlock(null)
+    } catch (error) {
+      console.error(error)
+      alert("Błąd zapisu bloku")
     }
   }
 
@@ -231,6 +273,15 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
           onClose={() => setSelectedBlockId(null)}
           onUpdate={handleUpdateBlockDetails}
           onDelete={handleDeleteBlock}
+        />
+      )}
+      {/* NOWE: Modal dla szkicu */}
+      {draftBlock && (
+        <BlockModal 
+          block={draftBlock} 
+          onClose={() => setDraftBlock(null)}
+          onUpdate={handleSaveDraft}
+          onDelete={() => setDraftBlock(null)}
         />
       )}
     </>

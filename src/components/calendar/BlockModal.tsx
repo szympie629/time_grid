@@ -33,6 +33,10 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
   const notifyTasksChanged = () => window.dispatchEvent(new CustomEvent(`tasks-updated-${block.id}`))
 
   const fetchTasks = async () => {
+    if (block.id === 'draft') {
+      setLoadingTasks(false)
+      return
+    }
     setLoadingTasks(true)
     try {
       const data = await tasksApi.getTasks(supabase, block.id)
@@ -224,25 +228,31 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       {/* Treść: To-Do */}
       {activeTab === 'todo' && (
         <div className="flex flex-col gap-4 h-[310px]">
-          <form onSubmit={handleAddTask} className="flex gap-2">
-            <input 
-              value={newTaskTitle} 
-              onChange={e => setNewTaskTitle(e.target.value)}
-              placeholder="Dodaj zadanie..." 
-              className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
-            />
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-3 py-1 rounded text-sm font-bold">+</button>
-          </form>
+          {block.id === 'draft' ? (
+            <div className="flex-1 flex items-center justify-center text-center text-gray-500 text-sm italic">
+              Najpierw zapisz blok, aby móc dodawać do niego zadania To-Do.
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleAddTask} className="flex gap-2">
+                <input 
+                  value={newTaskTitle} 
+                  onChange={e => setNewTaskTitle(e.target.value)}
+                  placeholder="Dodaj zadanie..." 
+                  className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+                />
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-3 py-1 rounded text-sm font-bold">+</button>
+              </form>
 
-          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2">
-            {loadingTasks ? (
-              <p className="text-center text-gray-400 text-xs py-4">Ładowanie...</p>
-            ) : tasks.length === 0 ? (
-              <p className="text-center text-gray-400 text-xs py-4">Brak zadań. Dodaj pierwsze!</p>
-            ) : (
-              tasks.map(task => (
-                <div key={task.id} className="flex items-center justify-between group bg-gray-50 p-2 rounded border border-gray-100">
-                  <div className="flex items-center gap-2">
+              <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2">
+                {loadingTasks ? (
+                  <p className="text-center text-gray-400 text-xs py-4">Ładowanie...</p>
+                ) : tasks.length === 0 ? (
+                  <p className="text-center text-gray-400 text-xs py-4">Brak zadań. Dodaj pierwsze!</p>
+                ) : (
+                  tasks.map(task => (
+                    <div key={task.id} className="flex items-center justify-between group bg-gray-50 p-2 rounded border border-gray-100">
+                      <div className="flex items-center gap-2">
                     <input 
                       type="checkbox" 
                       checked={task.is_completed} 
