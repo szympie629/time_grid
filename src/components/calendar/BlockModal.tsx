@@ -8,9 +8,10 @@ interface Props {
   onClose: () => void
   onUpdate: (id: string, updates: Partial<Block>) => void
   onDelete: (id: string) => void
+  onCopy?: (blockData: Partial<Block>) => void // <-- DODANE
 }
 
-export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props) {
+export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy }: Props) {
   // --- Stany formularza głównego ---
   const [title, setTitle] = useState(block.title)
   const [description, setDescription] = useState(block.description || '')
@@ -126,6 +127,19 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       is_completed: isCompleted
     })
     onClose()
+  }
+
+  const handleCopy = () => {
+    if (onCopy) {
+      onCopy({
+        title,
+        description,
+        color_tag: colorTag,
+        start_time: block.start_time,
+        end_time: block.end_time
+      })
+      onClose()
+    }
   }
 
   if (!isMounted) return null
@@ -289,6 +303,9 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
       <div className="flex justify-between mt-4 border-t pt-4">
         <button onClick={() => confirm('Usunąć cały blok?') && onDelete(block.id)} className="text-red-600 text-xs font-bold hover:underline">USUŃ BLOK</button>
         <div className="flex gap-2">
+          {onCopy && block.id !== 'draft' && (
+            <button onClick={handleCopy} className="px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors rounded text-sm font-bold">Kopiuj</button>
+          )}
           <button onClick={onClose} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded text-sm font-medium">Anuluj</button>
           <button onClick={handleSave} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded text-sm font-bold">Zapisz</button>
         </div>

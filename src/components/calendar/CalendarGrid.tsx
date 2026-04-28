@@ -39,6 +39,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
+  const [copiedBlock, setCopiedBlock] = useState<Partial<Block> | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
   const weekDays = getWeekDays(currentDate)
@@ -99,7 +100,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     }
   }*/
 
-    const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
+  const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return alert("Brak sesji!")
 
@@ -107,21 +108,27 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     const start = new Date(day)
     start.setHours(hours, minutes, 0, 0)
     
-    const end = new Date(start)
+    let end = new Date(start)
     end.setHours(hours + 1, minutes, 0, 0)
 
-    // Tworzymy jedynie lokalny obiekt szkicu z fikcyjnym ID
+    // Jeśli mamy skopiowany blok, zachowaj jego oryginalny czas trwania
+    if (copiedBlock && copiedBlock.start_time && copiedBlock.end_time) {
+      const copiedStart = new Date(copiedBlock.start_time).getTime()
+      const copiedEnd = new Date(copiedBlock.end_time).getTime()
+      end = new Date(start.getTime() + (copiedEnd - copiedStart))
+    }
+
     const draft: Block = {
       id: 'draft',
       user_id: user.id,
-      title: 'Nowe zadanie',
-      description: '',
+      title: copiedBlock ? copiedBlock.title! : 'Nowe zadanie',
+      description: copiedBlock ? (copiedBlock.description || '') : '',
       start_time: toLocalISOString(start),
       end_time: toLocalISOString(end),
-      color_tag: '#3b82f6',
+      color_tag: copiedBlock ? copiedBlock.color_tag! : '#3b82f6',
       created_at: new Date().toISOString(),
-      is_completed: false, // <-- DODANE
-      is_deleted: false    // <-- DODANE
+      is_completed: false,
+      is_deleted: false
     }
     setDraftBlock(draft)
   }
@@ -283,6 +290,36 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
         />
       )}
       {/* NOWE: Modal dla szkicu */}
+      {draftBlock && (
+        <BlockModal 
+          block={draftBlock} 
+          onClose={() => setDraftBlock(null)}
+          onUpdate={handleSaveDraft}
+          onDelete={() => setDraftBlock(null)}
+        />
+      )}
+      {/* Pływający pasek trybu wklejania */}
+      {copiedBlock && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-[200] animate-bounce-short">
+          <span className="font-semibold text-sm shadow-sm">Tryb wklejania: {copiedBlock.title}</span>
+          <button 
+            onClick={() => setCopiedBlock(null)} 
+            className="bg-blue-800 px-3 py-1 rounded-full hover:bg-blue-900 transition-colors text-xs font-bold"
+          >
+            Zakończ
+          </button>
+        </div>
+      )}
+
+      {selectedBlockId && (
+        <BlockModal 
+          block={blocks.find(b => b.id === selectedBlockId)!} 
+          onClose={() => setSelectedBlockId(null)}
+          onUpdate={handleUpdateBlockDetails}
+          onDelete={handleDeleteBlock}
+          onCopy={(blockData) => setCopiedBlock(blockData)}
+        />
+      )}
       {draftBlock && (
         <BlockModal 
           block={draftBlock} 
