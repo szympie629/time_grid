@@ -312,6 +312,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
           onCopy={(blockData) => setCopiedBlock(blockData)}
         />
       )}
+      
       {draftBlock && (
         <BlockModal 
           block={draftBlock} 
