@@ -142,7 +142,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         ...style,
         ...transformStyle,
         height: `${currentHeight}px`,
-        backgroundColor: block.color_tag || '#3b82f6',
+        backgroundColor: isDraft ? '#64748b' : (block.color_tag || '#3b82f6'),
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >
