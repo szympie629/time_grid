@@ -8,7 +8,7 @@ interface Props {
   onClose: () => void
   onUpdate: (id: string, updates: Partial<Block>) => void
   onDelete: (id: string) => void
-  onCopy?: (blockData: Partial<Block>) => void // <-- DODANE
+  onCopy?: (block: Block) => void
 }
 
 export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy }: Props) {
@@ -132,11 +132,12 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
   const handleCopy = () => {
     if (onCopy) {
       onCopy({
+        ...block,
         title,
         description,
         color_tag: colorTag,
-        start_time: block.start_time,
-        end_time: block.end_time
+        start_time: `${date}T${startTime}:00`,
+        end_time: `${date}T${endTime}:00`
       })
       onClose()
     }
