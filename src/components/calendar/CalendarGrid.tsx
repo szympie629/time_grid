@@ -206,7 +206,12 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
               {weekDays.map((day) => {
                 const dateKey = format(day, 'yyyy-MM-dd')
                 const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
+                
+                // --- DODANE: Doklejamy szkic do bloków, by wyświetlił się na kalendarzu ---
                 const dayBlocks = blocks.filter(b => b.start_time.startsWith(dateKey))
+                if (draftBlock && draftBlock.start_time.startsWith(dateKey)) {
+                  dayBlocks.push(draftBlock)
+                }
 
                 const blocksWithLayout = dayBlocks.map(block => {
                   const start = new Date(block.start_time.substring(0, 19)).getTime()

@@ -15,14 +15,17 @@ interface Props {
   onClick: (blockId: string) => void;
   onDelete: (blockId: string) => void;
   onUpdate: (blockId: string, updates: Partial<Block>) => void;
-  recentlyDroppedId?: string | null; // NOWE
+  recentlyDroppedId?: string | null;
 }
 
 export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId }: Props) {
-    const type = idPrefix.replace('-', '')
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const isDraft = block.id === 'draft'
+  const type = idPrefix.replace('-', '')
+  
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `${idPrefix}${block.id}`,
-    data: { type, block }
+    data: { type, block },
+    disabled: isDraft
   })
 
   const [isResizing, setIsResizing] = useState(false)
@@ -47,7 +50,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
-  // Ripple Effect wykrywa każdą zmianę pozycji ORAZ sytuację tuż po dropie w nowej kolumnie
   useEffect(() => {
     if (isOverlay || isResizing) return
 
@@ -119,11 +121,11 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const completedTasks = tasks.filter(t => t.is_completed).length
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
-  // Style dynamiczne z animacjami podnoszenia i fali
   const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 transition-transform duration-200 cursor-grabbing' : ''
-  const dragClass = isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing'
+  const dragClass = isDraft ? '' : (isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing')
   const rippleClass = ripple ? 'ripple-effect' : ''
   const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
+  const draftClass = isDraft ? 'opacity-60 border-2 border-dashed border-white pointer-events-none animate-pulse' : 'border border-black/10 hover:shadow-md'
 
   return (
     <div
@@ -133,9 +135,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       {...attributes}
       onClick={(e) => {
         e.stopPropagation();
-        if (!isResizing && !isOverlay) onClick(block.id);
+        if (!isResizing && !isOverlay && !isDraft) onClick(block.id);
       }}
-      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden border border-black/10 hover:shadow-md select-none touch-none flex flex-col ${overlayClass} ${dragClass} ${rippleClass} ${completedClass}`}      
+      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white p-2 text-xs font-medium shadow-sm overflow-hidden select-none touch-none flex flex-col ${draftClass} ${overlayClass} ${dragClass} ${rippleClass} ${completedClass}`}      
       style={{
         ...style,
         ...transformStyle,
@@ -144,32 +146,36 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >
-      <div 
-        className="absolute top-1.5 left-1.5 z-10 flex items-center justify-center"
-        onPointerDown={(e) => e.stopPropagation()} 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <input 
-          type="checkbox"
-          checked={block.is_completed ?? false}
-          onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
-          className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm"
-        />
-      </div>
+      {!isDraft && (
+        <div 
+          className="absolute top-1.5 left-1.5 z-10 flex items-center justify-center"
+          onPointerDown={(e) => e.stopPropagation()} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input 
+            type="checkbox"
+            checked={block.is_completed ?? false}
+            onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
+            className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm"
+          />
+        </div>
+      )}
 
-      <button 
-        onClick={(e) => {
-          e.stopPropagation()
-          if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id)
-        }}
-        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10"
-      >
-        ✕
-      </button>
+      {!isDraft && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id)
+          }}
+          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded hover:bg-black/20 transition-colors z-10"
+        >
+          ✕
+        </button>
+      )}
 
       <div className="pl-5 pr-4 truncate">{block.title}</div>
 
-      {totalTasks > 0 && (
+      {totalTasks > 0 && !isDraft && (
         <div className="absolute bottom-3 left-2 right-2 flex flex-col gap-1 z-10">
           <div className="text-[9px] font-bold opacity-80 text-right">
             {completedTasks}/{totalTasks}
@@ -183,7 +189,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </div>
       )}
 
-      {!isOverlay && (
+      {!isOverlay && !isDraft && (
         <div
           onPointerDown={handlePointerDown}
           onClick={(e) => e.stopPropagation()}
