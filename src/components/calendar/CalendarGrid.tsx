@@ -301,35 +301,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
         </div>
       </div>
 
-      {selectedBlockId && (
-        <BlockModal 
-          block={blocks.find(b => b.id === selectedBlockId)!} 
-          onClose={() => setSelectedBlockId(null)}
-          onUpdate={handleUpdateBlockDetails}
-          onDelete={handleDeleteBlock}
-        />
-      )}
-      {/* NOWE: Modal dla szkicu */}
-      {draftBlock && (
-        <BlockModal 
-          block={draftBlock} 
-          onClose={() => setDraftBlock(null)}
-          onUpdate={handleSaveDraft}
-          onDelete={() => setDraftBlock(null)}
-        />
-      )}
-      {/* Pływający pasek trybu wklejania */}
-      {copiedBlock && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-[200] animate-bounce-short">
-          <span className="font-semibold text-sm shadow-sm">Tryb wklejania: {copiedBlock.title}</span>
-          <button 
-            onClick={() => setCopiedBlock(null)} 
-            className="bg-blue-800 px-3 py-1 rounded-full hover:bg-blue-900 transition-colors text-xs font-bold"
-          >
-            Zakończ
-          </button>
-        </div>
-      )}
+      
 
       {selectedBlockId && (
         <BlockModal 
