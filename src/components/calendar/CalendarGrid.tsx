@@ -119,7 +119,9 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
       start_time: toLocalISOString(start),
       end_time: toLocalISOString(end),
       color_tag: '#3b82f6',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      is_completed: false, // <-- DODANE
+      is_deleted: false    // <-- DODANE
     }
     setDraftBlock(draft)
   }
