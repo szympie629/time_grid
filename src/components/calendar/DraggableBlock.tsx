@@ -160,6 +160,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
             className="w-3.5 h-3.5 cursor-pointer accent-green-500 rounded-sm"
           />
         </div>
+        )}
       {!isDraft && onCopy && (
         <button 
           onClick={(e) => {
