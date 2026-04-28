@@ -253,26 +253,28 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete }: Props
                   tasks.map(task => (
                     <div key={task.id} className="flex items-center justify-between group bg-gray-50 p-2 rounded border border-gray-100">
                       <div className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={task.is_completed} 
-                      onChange={() => handleToggleTask(task.id, task.is_completed)}
-                      className="w-4 h-4 cursor-pointer"
-                    />
-                    <span className={`text-sm ${task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                      {task.title}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => handleDeleteSubTask(task.id)}
-                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1 font-bold"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+                        <input 
+                          type="checkbox" 
+                          checked={task.is_completed} 
+                          onChange={() => handleToggleTask(task.id, task.is_completed)}
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                        <span className={`text-sm ${task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                          {task.title}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteSubTask(task.id)}
+                        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
