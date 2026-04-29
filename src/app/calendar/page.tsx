@@ -214,7 +214,7 @@ export default function CalendarPage() {
                   {/* Pływający przycisk FAB przypięty do okna Backlogu */}
                   <button 
                     onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: '#3b82f6', description: '', is_completed: false } as Block)}
-                    className="absolute bottom-6 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl z-20 transition-transform hover:scale-105"
+                    className="absolute bottom-6 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-3xl leading-none pb-1 z-20 transition-transform hover:scale-105"
                   >
                     +
                   </button>
