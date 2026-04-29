@@ -43,6 +43,7 @@ export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [backlogItems, setBacklogItems] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
+  const [newBacklogTitle, setNewBacklogTitle] = useState('')
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
@@ -58,10 +59,7 @@ export default function CalendarPage() {
   const refreshData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      // Pobieramy wszystko jednym strzałem
       const allBlocks = await blocksApi.getBlocks(supabase, user.id)
-      
-      // Filtrujemy na froncie
       setBlocks(allBlocks.filter(b => b.start_time !== null))
       setBacklogItems(allBlocks.filter(b => b.start_time === null))
     }
@@ -70,6 +68,33 @@ export default function CalendarPage() {
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
   }, [refreshData])
+
+  const handleAddBacklogItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newBacklogTitle.trim()) return
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    try {
+      const newBlock = await blocksApi.createBlock(supabase, {
+        user_id: user.id,
+        title: newBacklogTitle,
+        start_time: null,
+        end_time: null,
+        duration_minutes: 60, // Domyślny czas dla wrzutek
+        color_tag: '#3b82f6', // Domyślny kolor
+        description: '',
+        is_completed: false,
+        is_deleted: false
+      })
+      
+      setBacklogItems(prev => [newBlock, ...prev])
+      setNewBacklogTitle('')
+    } catch (error) {
+      alert("Błąd podczas dodawania zadania do backlogu.")
+    }
+  }
 
   const handleDragStart = (e: DragStartEvent) => {
     document.body.style.overflow = 'hidden'
@@ -112,18 +137,15 @@ export default function CalendarPage() {
     const type = activeData?.type
     const overId = String(over.id)
 
-    // CASE 1: Poruszanie czymś co już było na Kalendarzu
     if (type === 'calendar') {
       const block = activeData?.block as Block
       if (!block || !block.start_time || !block.end_time) return
 
       if (overId === 'droppable-backlog') {
-        // Z Kalendarza do Backlogu (UPDATE zamiast usuwania)
         const sTime = new Date(block.start_time).getTime()
         const eTime = new Date(block.end_time).getTime()
         const durationMin = Math.round((eTime - sTime) / 60000)
 
-        // Optimistic update
         setBlocks(prev => prev.filter(b => b.id !== block.id))
         setBacklogItems(prev => [{ ...block, start_time: null, end_time: null, duration_minutes: durationMin }, ...prev])
         
@@ -134,7 +156,6 @@ export default function CalendarPage() {
           await refreshData()
         }
       } else if (overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Po siatce kalendarza
         if (delta.x === 0 && delta.y === 0) return
         
         const minutesShift = calculateTimeShift(delta.y)
@@ -155,7 +176,6 @@ export default function CalendarPage() {
         }
       }
     } 
-    // CASE 2: Wyciąganie z Backlogu na Kalendarz
     else if (type === 'backlog' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
        const item = activeData?.item as Block
        if (!item) return
@@ -174,7 +194,6 @@ export default function CalendarPage() {
        const endMins = endMinutesTotal % 60;
        const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
 
-       // Optimistic update (UPDATE zamiast kasowania rekordu)
        setBacklogItems(prev => prev.filter(i => i.id !== item.id)); 
        setBlocks(prev => [...prev, { ...item, start_time: startTime, end_time: endTime, duration_minutes: null }])
        setRecentlyDroppedId(item.id);
@@ -202,6 +221,25 @@ export default function CalendarPage() {
                 <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                   <DroppableBacklogContainer>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
+                    
+                    {/* DODANY FORMULARZ DO BACKLOGU */}
+                    <form onSubmit={handleAddBacklogItem} className="flex gap-2 mb-4">
+                      <input 
+                        type="text"
+                        value={newBacklogTitle}
+                        onChange={(e) => setNewBacklogTitle(e.target.value)}
+                        placeholder="Dodaj do backlogu..."
+                        className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 transition-colors"
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={!newBacklogTitle.trim()}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-lg transition-colors"
+                      >
+                        +
+                      </button>
+                    </form>
+
                     <div className="flex flex-col gap-1 min-h-[100px]">
                       {backlogItems.length === 0 ? (
                         <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
