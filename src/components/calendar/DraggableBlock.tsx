@@ -208,7 +208,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
           {pendingTasks.map(task => (
             <div key={task.id} className="text-[9px] leading-tight opacity-85 flex items-start gap-1">
               <span className="mt-[3px] w-1 h-1 rounded-full bg-white/70 shrink-0" />
-              <span className="line-clamp-1">{task.title}</span>
+              <span className="line-clamp-2">{task.title}</span>
             </div>
           ))}
         </div>
