@@ -3,6 +3,7 @@
 import { Panel, Group, Separator } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
 import DraggableBlock from '@/components/calendar/DraggableBlock'
+import BlockModal from '@/components/calendar/BlockModal'
 import { blocksApi, type Block } from '@/lib/api/blocks'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
@@ -18,7 +19,7 @@ function DroppableBacklogContainer({ children }: { children: React.ReactNode }) 
   )
 }
 
-function DraggableBacklogItem({ item }: { item: Block }) {
+function DraggableBacklogItem({ item, onClick }: { item: Block, onClick: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `backlog-${item.id}`,
     data: { type: 'backlog', item }
@@ -30,6 +31,7 @@ function DraggableBacklogItem({ item }: { item: Block }) {
       id={`backlog-${item.id}`}
       {...listeners} 
       {...attributes} 
+      onClick={onClick}
       className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
       style={{ borderLeftColor: item.color_tag || '#3B82F6' }}
     >
@@ -43,12 +45,13 @@ export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [backlogItems, setBacklogItems] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
-  const [newBacklogTitle, setNewBacklogTitle] = useState('')
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
   const [overlayWidth, setOverlayWidth] = useState<number>(200)
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
+  
+  const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,33 +71,6 @@ export default function CalendarPage() {
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
   }, [refreshData])
-
-  const handleAddBacklogItem = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newBacklogTitle.trim()) return
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    try {
-      const newBlock = await blocksApi.createBlock(supabase, {
-        user_id: user.id,
-        title: newBacklogTitle,
-        start_time: null,
-        end_time: null,
-        duration_minutes: 60, // Domyślny czas dla wrzutek
-        color_tag: '#3b82f6', // Domyślny kolor
-        description: '',
-        is_completed: false,
-        is_deleted: false
-      })
-      
-      setBacklogItems(prev => [newBlock, ...prev])
-      setNewBacklogTitle('')
-    } catch (error) {
-      alert("Błąd podczas dodawania zadania do backlogu.")
-    }
-  }
 
   const handleDragStart = (e: DragStartEvent) => {
     document.body.style.overflow = 'hidden'
@@ -218,40 +194,30 @@ export default function CalendarPage() {
             <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
               
               <Panel defaultSize="50%" minSize="20%">
-                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                   <DroppableBacklogContainer>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
-                    
-                    {/* DODANY FORMULARZ DO BACKLOGU */}
-                    <form onSubmit={handleAddBacklogItem} className="flex gap-2 mb-4">
-                      <input 
-                        type="text"
-                        value={newBacklogTitle}
-                        onChange={(e) => setNewBacklogTitle(e.target.value)}
-                        placeholder="Dodaj do backlogu..."
-                        className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 transition-colors"
-                      />
-                      <button 
-                        type="submit" 
-                        disabled={!newBacklogTitle.trim()}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-lg transition-colors"
-                      >
-                        +
-                      </button>
-                    </form>
 
-                    <div className="flex flex-col gap-1 min-h-[100px]">
+                    <div className="flex flex-col gap-1 min-h-[100px] pb-16">
                       {backlogItems.length === 0 ? (
                         <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
                           <p className="text-sm text-gray-600 dark:text-slate-300">Brak zadań.</p>
                         </div>
                       ) : (
                         backlogItems.map(item => (
-                          <DraggableBacklogItem key={item.id} item={item} />
+                          <DraggableBacklogItem key={item.id} item={item} onClick={() => setEditingBacklogBlock(item)} />
                         ))
                       )}
                     </div>
                   </DroppableBacklogContainer>
+                  
+                  {/* Pływający przycisk FAB przypięty do okna Backlogu */}
+                  <button 
+                    onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: '#3b82f6', description: '', is_completed: false } as Block)}
+                    className="absolute bottom-6 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl z-20 transition-transform hover:scale-105"
+                  >
+                    +
+                  </button>
                 </aside>
               </Panel>
 
@@ -298,6 +264,43 @@ export default function CalendarPage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Renderowanie Modala dla Backlogu */}
+      {editingBacklogBlock && (
+        <BlockModal 
+          block={editingBacklogBlock}
+          onClose={() => setEditingBacklogBlock(null)}
+          onUpdate={async (id, updates) => {
+            if (id === 'draft-backlog') {
+              const { data: { user } } = await supabase.auth.getUser()
+              if (!user) return
+              const newBlock = await blocksApi.createBlock(supabase, {
+                user_id: user.id,
+                title: updates.title || 'Nowe zadanie',
+                start_time: null,
+                end_time: null,
+                duration_minutes: updates.duration_minutes || 60,
+                color_tag: updates.color_tag || '#3b82f6',
+                description: updates.description || '',
+                is_completed: false,
+                is_deleted: false
+              })
+              setBacklogItems(prev => [newBlock, ...prev])
+            } else {
+              setBacklogItems(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
+              await blocksApi.updateBlock(supabase, id, updates)
+            }
+            setEditingBacklogBlock(null)
+          }}
+          onDelete={async (id) => {
+            if (id !== 'draft-backlog') {
+              setBacklogItems(prev => prev.filter(b => b.id !== id))
+              await blocksApi.updateBlock(supabase, id, { is_deleted: true })
+            }
+            setEditingBacklogBlock(null)
+          }}
+        />
+      )}
     </main>
   )
 }
