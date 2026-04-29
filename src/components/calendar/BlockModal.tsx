@@ -12,13 +12,18 @@ interface Props {
 }
 
 export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy }: Props) {
+  // Fallbacki dla kafelków z backlogu (które mają null w datach)
+  const defaultDate = new Date().toISOString().split('T')[0]
+  const safeStart = block.start_time || `${defaultDate}T09:00:00`
+  const safeEnd = block.end_time || `${defaultDate}T10:00:00`
+
   // --- Stany formularza głównego ---
   const [title, setTitle] = useState(block.title)
   const [description, setDescription] = useState(block.description || '')
   const [activeTab, setActiveTab] = useState('main')
-  const [date, setDate] = useState(block.start_time.split('T')[0])
-  const [startTime, setStartTime] = useState(block.start_time.split('T')[1].substring(0, 5))
-  const [endTime, setEndTime] = useState(block.end_time.split('T')[1].substring(0, 5))
+  const [date, setDate] = useState(safeStart.split('T')[0])
+  const [startTime, setStartTime] = useState(safeStart.split('T')[1].substring(0, 5))
+  const [endTime, setEndTime] = useState(safeEnd.split('T')[1].substring(0, 5))
   const [colorTag, setColorTag] = useState(block.color_tag || '#3b82f6')
   const [isCompleted, setIsCompleted] = useState(block.is_completed ?? false)
 
@@ -56,7 +61,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // NOWE: Dynamiczne wyliczanie stanu `isCompleted` modala na podstawie sub-zadań
+  // Dynamiczne wyliczanie stanu `isCompleted` modala na podstawie sub-zadań
   useEffect(() => {
     if (tasks.length > 0) {
       const allDone = tasks.every(t => t.is_completed)
@@ -118,32 +123,52 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
   }
 
   const handleSave = () => {
-    onUpdate(block.id, { 
-      title, 
+    const updates: Partial<Block> = {
+      title,
       description,
-      start_time: `${date}T${startTime}:00`,
-      end_time: `${date}T${endTime}:00`,
       color_tag: colorTag,
       is_completed: isCompleted
-    })
+    }
+
+    // Jeśli to kafelek na siatce (ma daty), aktualizujemy je. 
+    // Jeśli z backlogu (null), ignorujemy zmiany w timepickerach, żeby go nie wyrzuciło na kalendarz.
+    if (block.start_time !== null && block.end_time !== null) {
+      updates.start_time = `${date}T${startTime}:00`
+      updates.end_time = `${date}T${endTime}:00`
+    } else {
+      updates.start_time = null
+      updates.end_time = null
+    }
+
+    onUpdate(block.id, updates)
     onClose()
   }
 
   const handleCopy = () => {
     if (onCopy) {
-      onCopy({
+      const copyData: Partial<Block> = {
         ...block,
         title,
         description,
         color_tag: colorTag,
-        start_time: `${date}T${startTime}:00`,
-        end_time: `${date}T${endTime}:00`
-      })
+      }
+
+      if (block.start_time !== null && block.end_time !== null) {
+        copyData.start_time = `${date}T${startTime}:00`
+        copyData.end_time = `${date}T${endTime}:00`
+      } else {
+        copyData.start_time = null
+        copyData.end_time = null
+      }
+
+      onCopy(copyData as Block)
       onClose()
     }
   }
 
   if (!isMounted) return null
+
+  const isBacklogItem = block.start_time === null
 
   return (
     <div 
@@ -209,10 +234,11 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
             <label className="text-[10px] uppercase font-bold text-gray-400">Tytuł</label>
             <input value={title} onChange={e => setTitle(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
           </div>
+          
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Data</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
+            <div className={`flex flex-col gap-1 ${isBacklogItem ? 'opacity-50 pointer-events-none' : ''}`}>
+              <label className="text-[10px] uppercase font-bold text-gray-400">Data {isBacklogItem && '(Backlog)'}</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} disabled={isBacklogItem} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500 disabled:bg-gray-100" />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase font-bold text-gray-400">Kolor</label>
@@ -223,16 +249,18 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className={`grid grid-cols-2 gap-4 ${isBacklogItem ? 'opacity-50 pointer-events-none' : ''}`}>
              <div className="flex flex-col gap-1">
                 <label className="text-[10px] uppercase font-bold text-gray-400">Start</label>
-                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
+                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} disabled={isBacklogItem} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500 disabled:bg-gray-100" />
              </div>
              <div className="flex flex-col gap-1">
                 <label className="text-[10px] uppercase font-bold text-gray-400">Koniec</label>
-                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500" />
+                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} disabled={isBacklogItem} className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500 disabled:bg-gray-100" />
              </div>
           </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase font-bold text-gray-400">Opis</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none focus:border-blue-500" />
