@@ -4,22 +4,11 @@ import { Panel, Group, Separator } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
 import DraggableBlock from '@/components/calendar/DraggableBlock'
 import { blocksApi, type Block } from '@/lib/api/blocks'
-import { backlogApi, type BacklogItem } from '@/lib/api/backlog'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable, defaultDropAnimationSideEffects, defaultDropAnimation } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 
-function getDurationHeight(startTime: string, endTime: string) {
-  const startT = startTime.split('T')[1]
-  const endT = endTime.split('T')[1]
-  const [sHours, sMinutes] = startT.split(':').map(Number)
-  const [eHours, eMinutes] = endT.split(':').map(Number)
-  const duration = (eHours + eMinutes / 60) - (sHours + sMinutes / 60)
-  return `${duration * 80}px`
-}
-
-// Kontener dla Backlogu
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
   return (
@@ -29,8 +18,7 @@ function DroppableBacklogContainer({ children }: { children: React.ReactNode }) 
   )
 }
 
-// Pojedynczy kafelek w Backlogu
-function DraggableBacklogItem({ item }: { item: BacklogItem }) {
+function DraggableBacklogItem({ item }: { item: Block }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `backlog-${item.id}`,
     data: { type: 'backlog', item }
@@ -42,26 +30,24 @@ function DraggableBacklogItem({ item }: { item: BacklogItem }) {
       id={`backlog-${item.id}`}
       {...listeners} 
       {...attributes} 
-      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 ${item.color_tag ? `border-[${item.color_tag}]` : 'border-blue-500'} cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
       style={{ borderLeftColor: item.color_tag || '#3B82F6' }}
     >
       <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block">{item.title}</span>
-      <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes} min</span>
+      <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes || 60} min</span>
     </div>
   )
 }
 
 export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
-  const [backlogItems, setBacklogItems] = useState<BacklogItem[]>([])
+  const [backlogItems, setBacklogItems] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
-  const [overlayWidth, setOverlayWidth] = useState<number>(200) // DODANE
-  const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null) // NOWY STAN
-
-  
+  const [overlayWidth, setOverlayWidth] = useState<number>(200)
+  const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -72,12 +58,12 @@ export default function CalendarPage() {
   const refreshData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const [blocksData, backlogData] = await Promise.all([
-        blocksApi.getBlocks(supabase, user.id, '2024-01-01', '2060-01-01'),
-        backlogApi.getBacklog(supabase, user.id)
-      ])
-      setBlocks(blocksData)
-      setBacklogItems(backlogData)
+      // Pobieramy wszystko jednym strzałem
+      const allBlocks = await blocksApi.getBlocks(supabase, user.id)
+      
+      // Filtrujemy na froncie
+      setBlocks(allBlocks.filter(b => b.start_time !== null))
+      setBacklogItems(allBlocks.filter(b => b.start_time === null))
     }
   }, [])
 
@@ -92,33 +78,23 @@ export default function CalendarPage() {
     const dayColumn = document.querySelector('[id^="20"]') as HTMLElement;
     const defaultColumnWidth = dayColumn ? dayColumn.clientWidth * 0.9 : 200;
 
-    // NOWE: Twarde pobranie pikseli prosto z wyrenderowanego DOM na podstawie ID
     const draggedElement = document.getElementById(String(e.active.id));
     const domWidth = draggedElement ? draggedElement.getBoundingClientRect().width : null;
 
     const data = e.active.data.current
     if (data?.type === 'calendar') {
       setActiveBlock(data.block as Block)
-      // Wymuszamy domWidth, jeśli nie znajdzie, odpali fallbacki
       const actualWidth = domWidth || e.active.rect.current.initial?.width || defaultColumnWidth;
       setOverlayWidth(actualWidth);
     } else if (data?.type === 'backlog') {
-      // Dla backlogu zostawiamy 90% kolumny
       setOverlayWidth(defaultColumnWidth)
       
-      const item = data.item as BacklogItem
+      const item = data.item as Block
       const duration = item.duration_minutes || 60
       const dummyBlock: Block = {
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        color_tag: item.color_tag,
+        ...item,
         start_time: `2024-01-01T09:00:00`,
         end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
-        is_completed: item.is_completed || false,
-        created_at: item.created_at,
-        is_deleted: false
       }
       setActiveBlock(dummyBlock)
     }
@@ -139,24 +115,26 @@ export default function CalendarPage() {
     // CASE 1: Poruszanie czymś co już było na Kalendarzu
     if (type === 'calendar') {
       const block = activeData?.block as Block
-      if (!block) return
+      if (!block || !block.start_time || !block.end_time) return
 
       if (overId === 'droppable-backlog') {
-        // Z Kalendarza do Backlogu
+        // Z Kalendarza do Backlogu (UPDATE zamiast usuwania)
         const sTime = new Date(block.start_time).getTime()
         const eTime = new Date(block.end_time).getTime()
         const durationMin = Math.round((eTime - sTime) / 60000)
 
-        setBlocks(prev => prev.filter(b => b.id !== block.id)) // Optimistic remove
+        // Optimistic update
+        setBlocks(prev => prev.filter(b => b.id !== block.id))
+        setBacklogItems(prev => [{ ...block, start_time: null, end_time: null, duration_minutes: durationMin }, ...prev])
+        
         try {
-          await backlogApi.moveToBacklog(supabase, block, durationMin)
-          await refreshData()
+          await blocksApi.updateBlock(supabase, block.id, { start_time: null, end_time: null, duration_minutes: durationMin })
         } catch (err) {
-          alert("Błąd zapisu!")
+          alert("Błąd zapisu do backlogu!")
           await refreshData()
         }
       } else if (overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Po siatce kalendarza (standard)
+        // Po siatce kalendarza
         if (delta.x === 0 && delta.y === 0) return
         
         const minutesShift = calculateTimeShift(delta.y)
@@ -179,12 +157,12 @@ export default function CalendarPage() {
     } 
     // CASE 2: Wyciąganie z Backlogu na Kalendarz
     else if (type === 'backlog' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
-       const item = activeData?.item as BacklogItem
+       const item = activeData?.item as Block
        if (!item) return
 
-       // Obliczanie czasu na podstawie pozycji Y myszki względem kolumny
-const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       let dropMinutes = Math.floor((yOffset / 80) * 60);
-       dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15); // snap do 15 min
+       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       
+       let dropMinutes = Math.floor((yOffset / 80) * 60);
+       dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15);
 
        const startHours = Math.floor(dropMinutes / 60);
        const startMins = dropMinutes % 60;
@@ -196,29 +174,27 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
        const endMins = endMinutesTotal % 60;
        const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
 
+       // Optimistic update (UPDATE zamiast kasowania rekordu)
        setBacklogItems(prev => prev.filter(i => i.id !== item.id)); 
+       setBlocks(prev => [...prev, { ...item, start_time: startTime, end_time: endTime, duration_minutes: null }])
+       setRecentlyDroppedId(item.id);
+       setTimeout(() => setRecentlyDroppedId(null), 1000);
+
        try {
-         const newBlock = await backlogApi.moveToCalendar(supabase, item, startTime, endTime);
-         setRecentlyDroppedId(newBlock.id); // Ustawiamy NOWE ID z kalendarza
-         setTimeout(() => setRecentlyDroppedId(null), 1000);
-         await refreshData();
+         await blocksApi.updateBlock(supabase, item.id, { start_time: startTime, end_time: endTime, duration_minutes: null });
        } catch (err) {
-         alert("Błąd zapisu!");
+         alert("Błąd przenoszenia na kalendarz!");
          await refreshData();
        }
     }
   }
+
   if (loading) return null
 
   return (
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <Group 
-          orientation="horizontal" 
-          autoSave="calendar-layout-v1" 
-          id="calendar-layout"
-          className="flex h-full w-full"
-        >
+        <Group orientation="horizontal" autoSave="calendar-layout-v1" id="calendar-layout" className="flex h-full w-full">
           <Panel defaultSize="25%" minSize="15%">
             <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
               
@@ -273,19 +249,12 @@ const yOffset = active.rect.current.translated && over.rect ? active.rect.curren
 
         </Group>
 
-        <DragOverlay 
-          zIndex={1000} 
-          dropAnimation={null}
-            // dropAnimation={{ sideEffects: defaultDropAnimationSideEffects, ...defaultDropAnimation, duration: 300 }} 
-        >
+        <DragOverlay zIndex={1000} dropAnimation={null}>
           {activeBlock ? (
             <DraggableBlock 
               block={activeBlock} 
               isOverlay={true}
-              style={{ 
-                width: `${overlayWidth}px`, 
-                margin: 0
-              }}
+              style={{ width: `${overlayWidth}px`, margin: 0 }}
               onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
             />
           ) : null}

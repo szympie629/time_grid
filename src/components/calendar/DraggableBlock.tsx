@@ -123,7 +123,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
   const pendingTasks = tasks.filter(t => !t.is_completed)
 
-  // Wyliczanie czasu trwania (80px = 60m)
   const durationMinutes = Math.round((currentHeight / 80) * 60)
   const hours = Math.floor(durationMinutes / 60)
   const mins = durationMinutes % 60
@@ -154,7 +153,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >
-      {/* Top Bar: Checkbox, Czas trwania, Akcje */}
       <div className="flex items-start justify-between gap-1 w-full z-10 shrink-0">
         <div className="flex items-center gap-1.5">
           {!isDraft && (
@@ -201,12 +199,10 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </div>
       </div>
 
-      {/* Tytuł */}
       <div className="mt-0.5 font-bold text-[11px] leading-tight line-clamp-2 z-10 w-full pr-1 shrink-0">
         {block.title}
       </div>
 
-      {/* Aktywne Sub-zadania */}
       {!isDraft && pendingTasks.length > 0 && (
         <div className="mt-1 flex flex-col gap-px z-10 overflow-hidden shrink-0">
           {pendingTasks.map(task => (
@@ -220,7 +216,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
       <div className="flex-1 min-h-[2px]" />
 
-      {/* Pasek postępu */}
       {totalTasks > 0 && !isDraft && (
         <div className="flex flex-col gap-0.5 z-10 w-full mb-0.5 shrink-0">
           <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden">
@@ -232,7 +227,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </div>
       )}
 
-      {/* Uchwyt zmiany rozmiaru */}
       {!isOverlay && !isDraft && (
         <div
           onPointerDown={handlePointerDown}

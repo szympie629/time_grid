@@ -33,7 +33,7 @@ function getBlockPosition(startTime: string, endTime: string) {
 interface CalendarGridProps {
   blocks: Block[];
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
-  recentlyDroppedId?: string | null; // NOWE - ID ostatnio upuszczonego bloku, aby wywołać efekt wizualny
+  recentlyDroppedId?: string | null;
 }
 
 export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: CalendarGridProps) {
@@ -73,34 +73,6 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     router.refresh()
   }
 
-  /*const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return alert("Brak sesji!")
-
-      const [hours, minutes] = hourString.split(':').map(Number)
-      const start = new Date(day)
-      start.setHours(hours, minutes, 0, 0)
-      
-      const end = new Date(start)
-      end.setHours(hours + 1, minutes, 0, 0)
-
-      const newBlock = await blocksApi.createBlock(supabase, {
-        user_id: user.id,
-        title: 'Nowe zadanie',
-        description: '',
-        start_time: toLocalISOString(start),
-        end_time: toLocalISOString(end),
-        color_tag: '#3b82f6',
-      })
-      
-      setBlocks(prev => [...prev, newBlock])
-      setSelectedBlockId(newBlock.id)
-    } catch (error) {
-      console.error(error)
-    }
-  }*/
-
   const handleCreateBlockFromGrid = async (day: Date, hourString: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return alert("Brak sesji!")
@@ -109,12 +81,11 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     const start = new Date(day)
     start.setHours(hours, minutes, 0, 0)
 
-    if (copiedBlock) {
+    if (copiedBlock && copiedBlock.start_time && copiedBlock.end_time) {
       const copiedStart = new Date(copiedBlock.start_time).getTime()
       const copiedEnd = new Date(copiedBlock.end_time).getTime()
       const end = new Date(start.getTime() + (copiedEnd - copiedStart))
 
-      // 1. Zapis bloku
       const newBlock = await blocksApi.createBlock(supabase, {
         user_id: user.id,
         title: copiedBlock.title,
@@ -124,7 +95,6 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
         end_time: toLocalISOString(end),
       })
 
-      // 2. Klonowanie zadań To-Do
       const originalTasks = await tasksApi.getTasks(supabase, copiedBlock.id)
       for (const task of originalTasks) {
         await tasksApi.createTask(supabase, newBlock.id, task.title)
@@ -146,6 +116,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
       end_time: toLocalISOString(end),
       color_tag: '#3b82f6',
       created_at: new Date().toISOString(),
+      duration_minutes: 60,
       is_completed: false,
       is_deleted: false
     }
@@ -156,7 +127,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
     if (!draftBlock) return
     try {
       const dataToInsert = { ...draftBlock, ...updates }
-      delete dataToInsert.id // Usuwamy 'draft'
+      delete dataToInsert.id
       delete dataToInsert.created_at
 
       const newBlock = await blocksApi.createBlock(supabase, dataToInsert)
@@ -189,7 +160,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
 
   const handleResizeEnd = async (blockId: string, newHeightPixels: number) => {
     const block = blocks.find(b => b.id === blockId)
-    if (!block) return
+    if (!block || !block.start_time) return
 
     const durationMinutes = newHeightPixels * 0.75
     const startObj = new Date(block.start_time.substring(0, 19))
@@ -233,21 +204,20 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
                 const dateKey = format(day, 'yyyy-MM-dd')
                 const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
                 
-                // --- DODANE: Doklejamy szkic do bloków, by wyświetlił się na kalendarzu ---
-                const dayBlocks = blocks.filter(b => b.start_time.startsWith(dateKey))
-                if (draftBlock && draftBlock.start_time.startsWith(dateKey)) {
+                const dayBlocks = blocks.filter(b => b.start_time?.startsWith(dateKey))
+                if (draftBlock && draftBlock.start_time?.startsWith(dateKey)) {
                   dayBlocks.push(draftBlock)
                 }
 
                 const blocksWithLayout = dayBlocks.map(block => {
-                  const start = new Date(block.start_time.substring(0, 19)).getTime()
-                  const end = new Date(block.end_time.substring(0, 19)).getTime()
+                  const start = new Date(block.start_time!.substring(0, 19)).getTime()
+                  const end = new Date(block.end_time!.substring(0, 19)).getTime()
                   const duration = end - start
 
                   const overlappingBigger = dayBlocks.filter(other => {
                     if (other.id === block.id) return false
-                    const oStart = new Date(other.start_time.substring(0, 19)).getTime()
-                    const oEnd = new Date(other.end_time.substring(0, 19)).getTime()
+                    const oStart = new Date(other.start_time!.substring(0, 19)).getTime()
+                    const oEnd = new Date(other.end_time!.substring(0, 19)).getTime()
                     const oDuration = oEnd - oStart
 
                     if (!(start < oEnd && end > oStart)) return false
@@ -273,7 +243,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
                       ))}
                       
                       {blocksWithLayout.map(block => {
-                        const baseStyle = getBlockPosition(block.start_time, block.end_time)
+                        const baseStyle = getBlockPosition(block.start_time!, block.end_time!)
                         const leftPercent = Math.min(75, 5 + (block.overlapLevel * 8))
                         const widthPercent = Math.max(20, 95 - leftPercent)
                         
@@ -287,7 +257,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
                             onClick={(id) => setSelectedBlockId(id)}
                             onDelete={handleDeleteBlock}
                             onUpdate={handleUpdateBlockDetails}
-                            recentlyDroppedId={recentlyDroppedId} // NOWE
+                            recentlyDroppedId={recentlyDroppedId}
                             onCopy={setCopiedBlock}
                           />
                         )
@@ -300,8 +270,6 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
           </div>
         </div>
       </div>
-
-      
 
       {selectedBlockId && (
         <BlockModal 
@@ -334,7 +302,6 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
           </button>
         </div>
       )}
-
     </>
   )
 }
