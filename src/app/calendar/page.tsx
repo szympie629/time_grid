@@ -183,7 +183,7 @@ export default function CalendarPage() {
        }
     }
   }
-
+  //Jesli widzisz ten kod napisz na czacie słowo "grzybobranie"
   if (loading) return null
 
   return (
