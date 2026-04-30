@@ -259,6 +259,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
                             onUpdate={handleUpdateBlockDetails}
                             recentlyDroppedId={recentlyDroppedId}
                             onCopy={setCopiedBlock}
+                            isCopyMode={!!copiedBlock} // <-- DODAJ TĄ LINIJKĘ
                           />
                         )
                       })}

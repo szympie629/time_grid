@@ -7,6 +7,7 @@ import { tasksApi, Task } from '@/lib/api/tasks'
 import { supabase } from '@/lib/supabase/client'
 
 interface Props {
+  isCopyMode?: boolean;
   block: Block;
   style?: React.CSSProperties;
   idPrefix?: string;
@@ -19,7 +20,7 @@ interface Props {
   onCopy?: (block: Block) => void;
 }
 
-export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, onCopy }: Props) {
+export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, onCopy, isCopyMode = false }: Props) {
   const isDraft = block.id === 'draft'
   const type = idPrefix.replace('-', '')
   
@@ -133,8 +134,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const rippleClass = ripple ? 'ripple-effect' : ''
   const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
   const draftClass = isDraft ? 'opacity-60 border-2 border-dashed border-white pointer-events-none animate-pulse' : 'border border-black/10 hover:shadow-md'
-
- return (
+  const copyModeClass = isCopyMode && !isOverlay ? 'pointer-events-none opacity-60' : ''
+ 
+  return (
     <div
       ref={setNodeRef}
       id={`${idPrefix}${block.id}`}
@@ -144,7 +146,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         e.stopPropagation();
         if (!isResizing && !isOverlay && !isDraft) onClick(block.id);
       }}
-      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white px-1.5 py-1 text-xs font-medium shadow-sm overflow-hidden select-none touch-none flex flex-col ${draftClass} ${overlayClass} ${dragClass} ${rippleClass} ${completedClass}`}      
+      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white px-1.5 py-1 text-xs font-medium shadow-sm overflow-hidden select-none touch-none flex flex-col ${draftClass} ${overlayClass} ${dragClass} ${rippleClass} ${completedClass} ${copyModeClass}`}
       style={{
         ...style,
         ...transformStyle,
