@@ -317,7 +317,17 @@ export default function CalendarPage() {
         </svg>
       </button>
 
-      <TrashPanel isOpen={trashOpen} onClose={() => setTrashOpen(false)} />
+      <TrashPanel 
+        isOpen={trashOpen} 
+        onClose={() => setTrashOpen(false)}
+        onRestore={(block) => {
+          if (block.start_time) {
+            setBlocks(prev => [...prev, { ...block, is_deleted: false }])
+          } else {
+            setBacklogItems(prev => [{ ...block, is_deleted: false }, ...prev])
+          }
+        }}
+      />
     </main>
   )
 }

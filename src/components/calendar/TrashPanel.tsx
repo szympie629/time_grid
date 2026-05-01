@@ -7,9 +7,10 @@ import { supabase } from '@/lib/supabase/client'
 interface Props {
   isOpen: boolean
   onClose: () => void
+  onRestore: (block: Block) => void  // dodaj
 }
 
-export default function TrashPanel({ isOpen, onClose }: Props) {
+export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
   const [deletedBlocks, setDeletedBlocks] = useState<Block[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -25,6 +26,7 @@ export default function TrashPanel({ isOpen, onClose }: Props) {
   const handleRestore = async (block: Block) => {
     await blocksApi.updateBlock(supabase, block.id, { is_deleted: false })
     setDeletedBlocks(prev => prev.filter(b => b.id !== block.id))
+    onRestore(block)  // dodaj
   }
 
   const handleHardDelete = async (id: string) => {
@@ -50,7 +52,7 @@ export default function TrashPanel({ isOpen, onClose }: Props) {
 
       {/* Panel */}
       <div
-        className={`fixed bottom-20 right-6 z-[160] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden transition-all duration-300 ${
+        className={`fixed bottom-20 right-6 z-[160] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden transition-[opacity,transform] duration-300 ${
           isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
