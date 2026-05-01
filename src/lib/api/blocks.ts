@@ -51,5 +51,30 @@ export const blocksApi = {
 
     if (error) throw new Error(error.message)
     return true
+  },
+
+  async getDeletedBlocks(supabase: SupabaseClient<Database>) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data, error } = await supabase
+      .from('blocks')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_deleted', true)
+      .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return data as Block[]
+  },
+
+  async hardDeleteBlock(supabase: SupabaseClient<Database>, id: string) {
+    const { error } = await supabase
+      .from('blocks')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return true
   }
 }

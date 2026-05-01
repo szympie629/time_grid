@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+import TrashPanel from '@/components/calendar/TrashPanel'
 
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
@@ -45,6 +46,7 @@ export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [backlogItems, setBacklogItems] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
+  const [trashOpen, setTrashOpen] = useState(false)
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
@@ -301,6 +303,21 @@ export default function CalendarPage() {
           }}
         />
       )}
+      {/* Przycisk FAB kosza */}
+      <button
+        onClick={() => setTrashOpen(prev => !prev)}
+        className="fixed bottom-6 right-6 z-[140] w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+        title="Kosz"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
+
+      <TrashPanel isOpen={trashOpen} onClose={() => setTrashOpen(false)} />
     </main>
   )
 }
