@@ -52,10 +52,14 @@ export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
 
       {/* Panel */}
       <div
-        className={`fixed bottom-20 right-6 z-[160] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden transition-[opacity,transform] duration-300 ${
-          isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
-      >
+        className="fixed bottom-20 right-6 z-[160] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden"
+        style={{
+            transition: 'opacity 200ms ease, transform 200ms ease',
+            opacity: isOpen ? 1 : 0,
+            transform: isOpen ? 'translateY(0)' : 'translateY(10px)',
+            pointerEvents: isOpen ? 'auto' : 'none',
+        }}
+        >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
