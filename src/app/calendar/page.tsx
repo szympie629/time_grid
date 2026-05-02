@@ -138,7 +138,7 @@ export default function CalendarPage() {
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
   
   const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
-  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true)
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -353,7 +353,7 @@ export default function CalendarPage() {
         <Group orientation="horizontal" autoSave="calendar-layout-v3" id="calendar-layout" className="flex h-full w-full">
           {isLeftPanelOpen && (
             <>
-              <Panel defaultSize={25} minSize={15} id="left-sidebar">
+              <Panel defaultSize={15} minSize={10} id="left-sidebar">
                 <Group orientation="vertical" autoSave="left-panel-layout-v3" id="left-panel-layout" className="flex flex-col h-full">
                   
                   <Panel defaultSize={50} minSize={20} id="backlog-panel">
