@@ -108,9 +108,10 @@ interface Props {
   onUpdate: (id: string, updates: Partial<Block>) => void
   onDelete: (id: string) => void
   onCopy?: (block: Block) => void
+  onChangePreview?: (updates: Partial<Block>) => void
 }
 
-export default function BlockModal({ block, categories = [], onClose, onUpdate, onDelete, onCopy }: Props) {
+export default function BlockModal({ block, categories = [], onClose, onUpdate, onDelete, onCopy, onChangePreview }: Props) {
   const isBacklogItem = block.start_time === null
   const defaultDate = new Date().toISOString().split('T')[0]
   const safeStart = block.start_time || `${defaultDate}T09:00:00`
@@ -478,7 +479,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                     <ul className="absolute top-full left-0 right-0 mt-1 z-[160] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto max-h-48 py-1">
                       <li
                         className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
-                        onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); }}
+                        onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: null }); }}
                       >
                         <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
                         <span>Brak kategorii</span>
@@ -487,7 +488,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                         <li
                           key={c.id}
                           className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
-                          onClick={() => { setCategoryId(c.id); setIsCategoryDropdownOpen(false); }}
+                          onClick={() => { setCategoryId(c.id); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: c.id }); }}
                         >
                           <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                           <span className="truncate">{c.name}</span>

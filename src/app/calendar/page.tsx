@@ -38,8 +38,8 @@ function DraggableBacklogItem({ item, categories, onClick }: { item: Block, cate
       {...listeners} 
       {...attributes} 
       onClick={onClick}
-      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
-      style={{ borderLeftColor: itemColor }}
+      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-r-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+      style={{ borderRightColor: itemColor }}
     >
       <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block">{item.title}</span>
       <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes || 60} min</span>
@@ -319,6 +319,7 @@ export default function CalendarPage() {
             }
             setEditingBacklogBlock(null)
           }}
+          onChangePreview={(updates) => setEditingBacklogBlock({ ...editingBacklogBlock, ...updates } as Block)}
         />
       )}
       {/* Przycisk FAB kosza */}

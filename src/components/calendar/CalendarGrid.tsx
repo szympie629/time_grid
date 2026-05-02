@@ -270,6 +270,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                             key={`calendar-${block.id}`} 
                             idPrefix="calendar-"
                             block={block as Block} 
+                            categories={categories}
                             style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }} 
                             onResizeEnd={handleResizeEnd}
                             onClick={(id) => setSelectedBlockId(id)}
@@ -277,7 +278,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                             onUpdate={handleUpdateBlockDetails}
                             recentlyDroppedId={recentlyDroppedId}
                             onCopy={setCopiedBlock}
-                            isCopyMode={!!copiedBlock} // <-- DODAJ TĄ LINIJKĘ
+                            isCopyMode={!!copiedBlock}
                           />
                         )
                       })}
@@ -308,6 +309,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
           onClose={() => setDraftBlock(null)}
           onUpdate={handleSaveDraft}
           onDelete={() => setDraftBlock(null)}
+          onChangePreview={(updates) => setDraftBlock({ ...draftBlock, ...updates })}
         />
       )}
 

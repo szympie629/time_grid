@@ -139,7 +139,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const copyModeClass = isCopyMode && !isOverlay ? 'pointer-events-none opacity-60' : ''
 
   const categoryColor = categories.find(c => c.id === block.category_id)?.color;
-  const blockColor = isDraft ? '#64748b' : (categoryColor || '#64748b');
+  const blockColor = categoryColor || '#64748b';
  
   return (
     <div
