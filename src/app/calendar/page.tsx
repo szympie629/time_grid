@@ -14,6 +14,8 @@ import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
 import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
+import { RITUAL_ICONS } from '@/components/calendar/RitualManagerModal'
+import { formatTaskCount } from '@/utils/grammar'
 
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
@@ -55,19 +57,45 @@ function DraggableRitualItem({ ritual, onClick }: { ritual: Ritual, onClick: () 
     data: { type: 'ritual', ritual }
   })
 
+  const iconObj = RITUAL_ICONS.find(i => i.id === ritual.icon) || RITUAL_ICONS[0];
+
   return (
     <div 
       ref={setNodeRef} 
       {...listeners} 
       {...attributes} 
       onClick={onClick}
-      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 ${isDragging ? 'opacity-50' : ''}`}
+      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 relative overflow-hidden group ${isDragging ? 'opacity-50' : ''}`}
     >
+      {ritual.color && (
+        <div className="absolute right-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: ritual.color }}></div>
+      )}
       <div className="flex items-center gap-2 mb-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <div style={{ color: ritual.color || '#3b82f6' }}>{iconObj.svg}</div>
         <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.name}</span>
       </div>
-      <span className="text-xs text-gray-500 font-medium">{ritual.items?.length || 0} zadań • {ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
+      <span className="text-xs text-gray-500 font-medium">{formatTaskCount(ritual.items?.length || 0)} • {ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
+    </div>
+  )
+}
+
+function RitualDragOverlay({ ritual, categories, width }: { ritual: Ritual, categories: Category[], width: number }) {
+  if (!ritual || !ritual.items || ritual.items.length === 0) return null;
+
+  return (
+    <div style={{ width: `${width}px`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      {ritual.items.map((item, i) => {
+        const cat = categories.find(c => c.id === item.category_id);
+        const color = cat?.color || '#64748b';
+        const height = Math.max(20, (item.duration_minutes / 60) * 80);
+        
+        return (
+          <div key={i} className="rounded-md shadow-sm border border-white/20 p-1.5 overflow-hidden relative" style={{ backgroundColor: color, height: `${height}px`, opacity: 0.9 }}>
+            <span className="text-[10px] font-bold text-white block truncate leading-tight">{item.title}</span>
+            {height >= 30 && <span className="text-[9px] text-white/80 block truncate leading-none">{item.duration_minutes} min</span>}
+          </div>
+        );
+      })}
     </div>
   )
 }
@@ -84,6 +112,7 @@ export default function CalendarPage() {
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
+  const [activeRitual, setActiveRitual] = useState<Ritual | null>(null)
   const [overlayWidth, setOverlayWidth] = useState<number>(200)
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
   
@@ -144,22 +173,8 @@ export default function CalendarPage() {
     } else if (data?.type === 'ritual') {
       setOverlayWidth(defaultColumnWidth)
       const ritual = data.ritual as Ritual
-      const duration = ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 60
-      const dummyBlock: Block = {
-        id: `draft-ritual-${ritual.id}`,
-        title: `Rytuał: ${ritual.name}`,
-        start_time: `2024-01-01T09:00:00`,
-        end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
-        duration_minutes: duration,
-        user_id: ritual.user_id,
-        category_id: null,
-        color_tag: null,
-        description: '',
-        is_completed: false,
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-      }
-      setActiveBlock(dummyBlock)
+      setActiveRitual(ritual)
+      setActiveBlock(null)
     }
   }
 
@@ -167,6 +182,7 @@ export default function CalendarPage() {
     document.body.style.overflow = ''
     setActiveId(null)
     setActiveBlock(null)
+    setActiveRitual(null)
     
     const { active, over, delta } = event
     if (!over) return
@@ -293,11 +309,11 @@ export default function CalendarPage() {
   return (
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <Group orientation="horizontal" autoSave="calendar-layout-v1" id="calendar-layout" className="flex h-full w-full">
+        <Group orientation="horizontal" autoSave="calendar-layout-v2" id="calendar-layout" className="flex h-full w-full">
           {isLeftPanelOpen && (
             <>
               <Panel defaultSize={25} minSize={15} id="left-sidebar">
-                <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
+                <Group orientation="vertical" autoSave="left-panel-layout-v2" id="left-panel-layout" className="flex flex-col h-full">
                   
                   <Panel defaultSize={50} minSize={20} id="backlog-panel">
                     <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
@@ -386,7 +402,9 @@ export default function CalendarPage() {
         </Group>
 
         <DragOverlay zIndex={1000} dropAnimation={null}>
-          {activeBlock ? (
+          {activeRitual ? (
+            <RitualDragOverlay ritual={activeRitual} categories={categories} width={overlayWidth} />
+          ) : activeBlock ? (
             <DraggableBlock 
               block={activeBlock} 
               categories={categories}
