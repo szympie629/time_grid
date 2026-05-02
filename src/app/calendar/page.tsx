@@ -580,6 +580,26 @@ export default function CalendarPage() {
       )}
 
 
+      <TrashPanel 
+        isOpen={trashOpen} 
+        onClose={() => setTrashOpen(false)}
+        onRestore={(block) => {
+          if (block.start_time) {
+            setBlocks(prev => [...prev, { ...block, is_deleted: false }])
+          } else {
+            setBacklogItems(prev => [{ ...block, is_deleted: false }, ...prev])
+          }
+        }}
+      />
+
+      <CategoryManagerModal
+        isOpen={categoriesOpen}
+        onClose={() => setCategoriesOpen(false)}
+        categories={categories}
+        onCategoryCreated={cat => setCategories(prev => [...prev, cat])}
+        onCategoryDeleted={id => setCategories(prev => prev.filter(c => c.id !== id))}
+      />
+
       <RitualManagerModal
         isOpen={isRitualsModalOpen}
         onClose={() => setIsRitualsModalOpen(false)}
