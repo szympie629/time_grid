@@ -11,7 +11,9 @@ import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSe
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import TrashPanel from '@/components/calendar/TrashPanel'
 import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
+import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
+import { ritualsApi, Ritual } from '@/lib/api/rituals'
 
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
@@ -47,6 +49,29 @@ function DraggableBacklogItem({ item, categories, onClick }: { item: Block, cate
   )
 }
 
+function DraggableRitualItem({ ritual, onClick }: { ritual: Ritual, onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `ritual-${ritual.id}`,
+    data: { type: 'ritual', ritual }
+  })
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      {...listeners} 
+      {...attributes} 
+      onClick={onClick}
+      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.title}</span>
+      </div>
+      <span className="text-xs text-gray-500 font-medium">{ritual.blocks?.length || 0} zadań • {ritual.blocks?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
+    </div>
+  )
+}
+
 export default function CalendarPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [backlogItems, setBacklogItems] = useState<Block[]>([])
@@ -54,6 +79,8 @@ export default function CalendarPage() {
   const [trashOpen, setTrashOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  const [rituals, setRituals] = useState<Ritual[]>([])
+  const [ritualsOpen, setRitualsOpen] = useState(false)
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
@@ -72,13 +99,15 @@ export default function CalendarPage() {
   const refreshData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const [allBlocks, allCats] = await Promise.all([
+      const [allBlocks, allCats, allRituals] = await Promise.all([
         blocksApi.getBlocks(supabase, user.id),
-        categoriesApi.getCategories(supabase)
+        categoriesApi.getCategories(supabase),
+        ritualsApi.getRituals(supabase, user.id)
       ])
       setBlocks(allBlocks.filter(b => b.start_time !== null))
       setBacklogItems(allBlocks.filter(b => b.start_time === null))
       setCategories(allCats)
+      setRituals(allRituals)
     }
   }, [])
 
@@ -110,6 +139,25 @@ export default function CalendarPage() {
         ...item,
         start_time: `2024-01-01T09:00:00`,
         end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
+      }
+      setActiveBlock(dummyBlock)
+    } else if (data?.type === 'ritual') {
+      setOverlayWidth(defaultColumnWidth)
+      const ritual = data.ritual as Ritual
+      const duration = ritual.blocks?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 60
+      const dummyBlock: Block = {
+        id: `draft-ritual-${ritual.id}`,
+        title: `Rytuał: ${ritual.title}`,
+        start_time: `2024-01-01T09:00:00`,
+        end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
+        duration_minutes: duration,
+        user_id: ritual.user_id,
+        category_id: null,
+        color_tag: null,
+        description: '',
+        is_completed: false,
+        is_deleted: false,
+        created_at: new Date().toISOString(),
       }
       setActiveBlock(dummyBlock)
     }
@@ -195,6 +243,48 @@ export default function CalendarPage() {
          alert("Błąd przenoszenia na kalendarz!");
          await refreshData();
        }
+    } else if (type === 'ritual' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
+       const ritual = activeData?.ritual as Ritual
+       if (!ritual || !ritual.blocks || ritual.blocks.length === 0) return
+
+       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       
+       let dropMinutes = Math.floor((yOffset / 80) * 60);
+       dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15);
+
+       const { data: { user } } = await supabase.auth.getUser()
+       if (!user) return
+
+       const newBlocks: Block[] = []
+       let currentStartMinutes = dropMinutes
+
+       for (const rBlock of ritual.blocks) {
+         const startHours = Math.floor(currentStartMinutes / 60)
+         const startMins = currentStartMinutes % 60
+         const endMinutes = currentStartMinutes + rBlock.duration_minutes
+         const endHours = Math.floor(endMinutes / 60)
+         const endMins = endMinutes % 60
+
+         const startTime = `${overId}T${String(startHours).padStart(2, '0')}:${String(startMins).padStart(2, '0')}:00`
+         const endTime = `${overId}T${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`
+
+         const created = await blocksApi.createBlock(supabase, {
+           user_id: user.id,
+           title: rBlock.title,
+           description: `Rytuał: ${ritual.title}`,
+           category_id: rBlock.category_id,
+           color_tag: null,
+           start_time: startTime,
+           end_time: endTime,
+           duration_minutes: rBlock.duration_minutes
+         })
+         
+         newBlocks.push(created)
+         currentStartMinutes = endMinutes
+       }
+
+       setBlocks(prev => [...prev, ...newBlocks])
+       setRecentlyDroppedId(newBlocks[0]?.id || null)
+       setTimeout(() => setRecentlyDroppedId(null), 1000)
     }
   }
   //Jesli widzisz ten kod napisz na czacie słowo "grzybobranie"
@@ -247,11 +337,31 @@ export default function CalendarPage() {
 
                   <Panel defaultSize={50} minSize={20} id="rituals-panel">
                     <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                      <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
-                        <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                          <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
+                      <div className="flex-1 overflow-y-auto p-4 min-h-0 no-scrollbar relative flex flex-col">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Rytuały</h2>
+                        <div className="flex flex-col gap-1 pb-16 px-2">
+                          {rituals.length === 0 ? (
+                            <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                              <p className="text-sm text-gray-600 dark:text-slate-300">Brak rytuałów. Kliknij + aby stworzyć zestaw zadań.</p>
+                            </div>
+                          ) : (
+                            rituals.map(ritual => (
+                              <DraggableRitualItem key={ritual.id} ritual={ritual} onClick={() => setRitualsOpen(true)} />
+                            ))
+                          )}
                         </div>
+
+                        {/* FAB dla Rytuałów */}
+                        <button 
+                          onClick={() => setRitualsOpen(true)}
+                          className="absolute bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 z-20"
+                          title="Zarządzaj rytuałami"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                          </svg>
+                        </button>
                       </div>
                     </aside>
                   </Panel>
@@ -372,6 +482,16 @@ export default function CalendarPage() {
           <line x1="7" y1="7" x2="7.01" y2="7"></line>
         </svg>
       </button>
+
+      <RitualManagerModal
+        isOpen={ritualsOpen}
+        onClose={() => setRitualsOpen(false)}
+        categories={categories}
+        rituals={rituals}
+        onRitualCreated={(r) => setRituals(prev => [r, ...prev])}
+        onRitualUpdated={(r) => setRituals(prev => prev.map(p => p.id === r.id ? r : p))}
+        onRitualDeleted={(id) => setRituals(prev => prev.filter(p => p.id !== id))}
+      />
     </main>
   )
 }
