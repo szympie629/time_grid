@@ -5,15 +5,15 @@ export type RitualRow = Database['public']['Tables']['rituals']['Row']
 export type RitualInsert = Database['public']['Tables']['rituals']['Insert']
 
 // Define the structure of a single task block inside a ritual
-export interface RitualBlock {
+export interface RitualItem {
   id: string
   title: string
   duration_minutes: number
   category_id: string | null
 }
 
-export interface Ritual extends Omit<RitualRow, 'blocks'> {
-  blocks: RitualBlock[]
+export interface Ritual extends Omit<RitualRow, 'items'> {
+  items: RitualItem[]
 }
 
 export const ritualsApi = {
@@ -29,7 +29,7 @@ export const ritualsApi = {
     // Parse JSON safely
     return data.map(row => ({
       ...row,
-      blocks: Array.isArray(row.blocks) ? (row.blocks as any[]) : []
+      items: Array.isArray(row.items) ? (row.items as any[]) : []
     }))
   },
 
@@ -43,7 +43,7 @@ export const ritualsApi = {
     if (error) throw new Error(error.message)
     return {
       ...data,
-      blocks: Array.isArray(data.blocks) ? (data.blocks as any[]) : []
+      items: Array.isArray(data.items) ? (data.items as any[]) : []
     }
   },
 

@@ -65,9 +65,9 @@ function DraggableRitualItem({ ritual, onClick }: { ritual: Ritual, onClick: () 
     >
       <div className="flex items-center gap-2 mb-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.title}</span>
+        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.name}</span>
       </div>
-      <span className="text-xs text-gray-500 font-medium">{ritual.blocks?.length || 0} zadań • {ritual.blocks?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
+      <span className="text-xs text-gray-500 font-medium">{ritual.items?.length || 0} zadań • {ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
     </div>
   )
 }
@@ -144,10 +144,10 @@ export default function CalendarPage() {
     } else if (data?.type === 'ritual') {
       setOverlayWidth(defaultColumnWidth)
       const ritual = data.ritual as Ritual
-      const duration = ritual.blocks?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 60
+      const duration = ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 60
       const dummyBlock: Block = {
         id: `draft-ritual-${ritual.id}`,
-        title: `Rytuał: ${ritual.title}`,
+        title: `Rytuał: ${ritual.name}`,
         start_time: `2024-01-01T09:00:00`,
         end_time: `2024-01-01T${String(9 + Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}:00`,
         duration_minutes: duration,
@@ -245,7 +245,7 @@ export default function CalendarPage() {
        }
     } else if (type === 'ritual' && overId.match(/^\d{4}-\d{2}-\d{2}$/)) {
        const ritual = activeData?.ritual as Ritual
-       if (!ritual || !ritual.blocks || ritual.blocks.length === 0) return
+       if (!ritual || !ritual.items || ritual.items.length === 0) return
 
        const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       
        let dropMinutes = Math.floor((yOffset / 80) * 60);
@@ -257,7 +257,7 @@ export default function CalendarPage() {
        const newBlocks: Block[] = []
        let currentStartMinutes = dropMinutes
 
-       for (const rBlock of ritual.blocks) {
+       for (const rBlock of ritual.items) {
          const startHours = Math.floor(currentStartMinutes / 60)
          const startMins = currentStartMinutes % 60
          const endMinutes = currentStartMinutes + rBlock.duration_minutes
@@ -270,7 +270,7 @@ export default function CalendarPage() {
          const created = await blocksApi.createBlock(supabase, {
            user_id: user.id,
            title: rBlock.title,
-           description: `Rytuał: ${ritual.title}`,
+           description: `Rytuał: ${ritual.name}`,
            category_id: rBlock.category_id,
            color_tag: null,
            start_time: startTime,
