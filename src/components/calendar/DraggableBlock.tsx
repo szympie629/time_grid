@@ -25,7 +25,7 @@ interface Props {
 export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, categories = [], onCopy, isCopyMode = false }: Props) {
   const isDraft = block.id === 'draft'
   const type = idPrefix.replace('-', '')
-  
+
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `${idPrefix}${block.id}`,
     data: { type, block },
@@ -36,7 +36,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const [resizeHeight, setResizeHeight] = useState<number | null>(null)
   const initialHeightRef = useRef<number>(0)
   const startYRef = useRef<number>(0)
-  
+
   const [tasks, setTasks] = useState<Task[]>([])
   const [ripple, setRipple] = useState(false)
   const posKey = `${block.start_time || 'backlog'}-${style?.top || 0}-${style?.left || 0}`
@@ -81,7 +81,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
     fetchTasks()
     const handleTasksUpdate = () => fetchTasks()
     window.addEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
-    return () => { 
+    return () => {
       isMounted = false
       window.removeEventListener(`tasks-updated-${block.id}`, handleTasksUpdate)
     }
@@ -89,7 +89,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (isOverlay) return;
-    e.stopPropagation() 
+    e.stopPropagation()
     e.preventDefault()
     setIsResizing(true)
     startYRef.current = e.clientY
@@ -100,14 +100,14 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
     if (!isResizing) return
     const handlePointerMove = (e: PointerEvent) => {
       const deltaY = e.clientY - startYRef.current
-      const newHeight = Math.max(20, initialHeightRef.current + deltaY) 
+      const newHeight = Math.max(20, initialHeightRef.current + deltaY)
       const snappedHeight = Math.round(newHeight / 20) * 20
       setResizeHeight(snappedHeight)
     }
     const handlePointerUp = () => {
       setIsResizing(false)
       if (resizeHeight !== null && resizeHeight !== initialHeightRef.current) {
-         onResizeEnd(block.id, resizeHeight)
+        onResizeEnd(block.id, resizeHeight)
       }
       setResizeHeight(null)
     }
@@ -140,7 +140,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
   const categoryColor = categories.find(c => c.id === block.category_id)?.color;
   const blockColor = categoryColor || '#64748b';
- 
+
   return (
     <div
       ref={setNodeRef}
@@ -163,12 +163,12 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       <div className="flex items-start justify-between gap-1 w-full z-10 shrink-0">
         <div className="flex items-center gap-1.5">
           {!isDraft && (
-            <div 
-              onPointerDown={(e) => e.stopPropagation()} 
+            <div
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
               className="flex items-center"
             >
-              <input 
+              <input
                 type="checkbox"
                 checked={block.is_completed ?? false}
                 onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
@@ -185,15 +185,15 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
         <div className="flex items-center gap-0.5 shrink-0">
           {!isDraft && onCopy && (
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); onCopy(block); }}
               className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-white"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
             </button>
           )}
           {!isDraft && (
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id);
@@ -226,7 +226,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       {totalTasks > 0 && !isDraft && (
         <div className="flex flex-col gap-0.5 z-10 w-full mb-0.5 shrink-0">
           <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-white transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
@@ -244,5 +244,6 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         </div>
       )}
     </div>
+
   )
 }
