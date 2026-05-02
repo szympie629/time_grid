@@ -456,6 +456,7 @@ export default function CalendarPage() {
                   <div className="absolute bottom-6 right-6 z-[140] flex flex-col gap-3">
                     <button
                       onClick={() => setCategoriesOpen(true)}
+                      onPointerDown={(e) => e.stopPropagation()}
                       className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
                       title="Kategorie"
                     >
@@ -467,6 +468,7 @@ export default function CalendarPage() {
 
                     <button
                       onClick={() => setTrashOpen(prev => !prev)}
+                      onPointerDown={(e) => e.stopPropagation()}
                       className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                       title="Kosz"
                     >
@@ -480,13 +482,21 @@ export default function CalendarPage() {
 
                     <button
                       onClick={() => setIsBudgetPanelOpen(prev => !prev)}
+                      onPointerDown={(e) => e.stopPropagation()}
                       className={`w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all ${isBudgetPanelOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400'}`}
                       title={isBudgetPanelOpen ? "Zwiń panel budżetowy" : "Rozwiń panel budżetowy"}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${!isBudgetPanelOpen ? 'rotate-180' : ''}`}>
-                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                        <line x1="3" y1="15" x2="21" y2="15"></line>
-                        <polyline points="9 10 12 13 15 10"></polyline>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {isBudgetPanelOpen ? (
+                          // Jest rozwinięty -> po kliknięciu będzie zwinięty (sam prostokąt)
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        ) : (
+                          // Jest zwinięty -> po kliknięciu będzie rozwinięty (prostokąt + dolny panel)
+                          <>
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                          </>
+                        )}
                       </svg>
                     </button>
                   </div>
