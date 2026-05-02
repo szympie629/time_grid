@@ -10,6 +10,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import TrashPanel from '@/components/calendar/TrashPanel'
+import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
+import { Category, categoriesApi } from '@/lib/api/categories'
 
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
@@ -47,6 +49,8 @@ export default function CalendarPage() {
   const [backlogItems, setBacklogItems] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
   const [trashOpen, setTrashOpen] = useState(false)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
@@ -64,9 +68,13 @@ export default function CalendarPage() {
   const refreshData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const allBlocks = await blocksApi.getBlocks(supabase, user.id)
+      const [allBlocks, allCats] = await Promise.all([
+        blocksApi.getBlocks(supabase, user.id),
+        categoriesApi.getCategories(supabase)
+      ])
       setBlocks(allBlocks.filter(b => b.start_time !== null))
       setBacklogItems(allBlocks.filter(b => b.start_time === null))
+      setCategories(allCats)
     }
   }, [])
 
@@ -248,7 +256,7 @@ export default function CalendarPage() {
           <Panel minSize="40%">
             <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden min-h-0 relative">
-                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} />
+                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} />
               </div>
             </section>
           </Panel>
@@ -259,6 +267,7 @@ export default function CalendarPage() {
           {activeBlock ? (
             <DraggableBlock 
               block={activeBlock} 
+              categories={categories}
               isOverlay={true}
               style={{ width: `${overlayWidth}px`, margin: 0 }}
               onResizeEnd={() => {}} onClick={() => {}} onDelete={() => {}} onUpdate={() => {}} 
@@ -271,6 +280,7 @@ export default function CalendarPage() {
       {editingBacklogBlock && (
         <BlockModal 
           block={editingBacklogBlock}
+          categories={categories}
           onClose={() => setEditingBacklogBlock(null)}
           onUpdate={async (id, updates) => {
             if (id === 'draft-backlog') {
@@ -328,6 +338,26 @@ export default function CalendarPage() {
           }
         }}
       />
+
+      <CategoryManagerModal
+        isOpen={categoriesOpen}
+        onClose={() => setCategoriesOpen(false)}
+        categories={categories}
+        onCategoryCreated={cat => setCategories(prev => [...prev, cat])}
+        onCategoryDeleted={id => setCategories(prev => prev.filter(c => c.id !== id))}
+      />
+
+      {/* Przycisk FAB kategorii */}
+      <button
+        onClick={() => setCategoriesOpen(true)}
+        className="fixed bottom-[88px] right-6 z-[140] w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
+        title="Kategorie"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+          <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+      </button>
     </main>
   )
 }

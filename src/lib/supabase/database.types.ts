@@ -52,6 +52,7 @@ export type Database = {
       }
       blocks: {
         Row: {
+          category_id: string | null
           color_tag: string | null
           created_at: string | null
           description: string | null
@@ -65,6 +66,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category_id?: string | null
           color_tag?: string | null
           created_at?: string | null
           description?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category_id?: string | null
           color_tag?: string | null
           created_at?: string | null
           description?: string | null
@@ -88,6 +91,38 @@ export type Database = {
           is_deleted?: boolean | null
           start_time?: string | null
           title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      categories: {
+        Row: {
+          color: string
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color: string
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          id?: string
+          name?: string
           user_id?: string
         }
         Relationships: []

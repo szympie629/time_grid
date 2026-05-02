@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Block, blocksApi } from '@/lib/api/blocks'
+import { Category } from '@/lib/api/categories'
 import { supabase } from '@/lib/supabase/client'
 import DraggableBlock from './DraggableBlock'
 import DroppableDay from './DroppableDay'
@@ -34,9 +35,10 @@ interface CalendarGridProps {
   blocks: Block[];
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
   recentlyDroppedId?: string | null;
+  categories?: Category[];
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [] }: CalendarGridProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
@@ -90,7 +92,8 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId }: C
         user_id: user.id,
         title: copiedBlock.title,
         description: copiedBlock.description,
-        color_tag: copiedBlock.color_tag,
+        category_id: copiedBlock.category_id,
+        color_tag: null,
         start_time: toLocalISOString(start),
         end_time: toLocalISOString(end),
       })

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Block } from '@/lib/api/blocks'
+import { Category } from '@/lib/api/categories'
 import { tasksApi, Task } from '@/lib/api/tasks'
 import { supabase } from '@/lib/supabase/client'
 import {
@@ -102,13 +103,14 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
 // ─── Główny modal ─────────────────────────────────────────────────────────────
 interface Props {
   block: Block
+  categories?: Category[]
   onClose: () => void
   onUpdate: (id: string, updates: Partial<Block>) => void
   onDelete: (id: string) => void
   onCopy?: (block: Block) => void
 }
 
-export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy }: Props) {
+export default function BlockModal({ block, categories = [], onClose, onUpdate, onDelete, onCopy }: Props) {
   const isBacklogItem = block.start_time === null
   const defaultDate = new Date().toISOString().split('T')[0]
   const safeStart = block.start_time || `${defaultDate}T09:00:00`
@@ -130,7 +132,7 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
   const [date, setDate] = useState(safeStart.split('T')[0])
   const [startTime, setStartTime] = useState(safeStart.split('T')[1].substring(0, 5))
   const [endTime, setEndTime] = useState(safeEnd.split('T')[1].substring(0, 5))
-  const [colorTag, setColorTag] = useState(block.color_tag || '#3b82f6')
+  const [categoryId, setCategoryId] = useState<string | null>(block.category_id || null)
   const [isCompleted, setIsCompleted] = useState(block.is_completed ?? false)
   const [durationMins, setDurationMins] = useState(getInitialDuration())
   const [hours, setHours] = useState(Math.floor(getInitialDuration() / 60))
@@ -298,7 +300,8 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
     const updates: Partial<Block> = {
       title,
       description,
-      color_tag: colorTag,
+      category_id: categoryId,
+      color_tag: null, // Clear old color
       is_completed: isCompleted,
       duration_minutes: durationMins,
     }
@@ -446,16 +449,20 @@ export default function BlockModal({ block, onClose, onUpdate, onDelete, onCopy 
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Kolor</label>
+              <label className="text-[10px] uppercase font-bold text-gray-400">Kategoria</label>
               <div className="flex gap-2 items-center h-10">
-                {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'].map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setColorTag(c)}
-                    className={`w-6 h-6 rounded-full border-2 ${colorTag === c ? 'border-black' : 'border-transparent'}`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
+                <select
+                  value={categoryId || ''}
+                  onChange={e => setCategoryId(e.target.value || null)}
+                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2 rounded text-sm outline-none focus:border-blue-500 text-gray-900 dark:text-white"
+                >
+                  <option value="">⚪ Brak kategorii (Szary)</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
