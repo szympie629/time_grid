@@ -52,7 +52,7 @@ export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
 
       {/* Panel */}
       <div
-        className="fixed bottom-20 right-6 z-[160] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden"
+        className="fixed bottom-20 right-6 z-[160] w-80 h-[380px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden"
         style={{
             transition: 'opacity 200ms ease, transform 200ms ease',
             opacity: isOpen ? 1 : 0,
@@ -85,13 +85,13 @@ export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
         </div>
 
         {/* Lista */}
-        <div className="flex-1 overflow-y-auto h-72 no-scrollbar flex flex-col">
+        <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-center text-gray-400 text-xs">Ładowanie...</p>
+              <p className="text-gray-400 text-xs animate-pulse">Ładowanie...</p>
             </div>
           ) : deletedBlocks.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-slate-600">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
