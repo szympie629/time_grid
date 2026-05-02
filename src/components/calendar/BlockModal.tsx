@@ -133,6 +133,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   const [startTime, setStartTime] = useState(safeStart.split('T')[1].substring(0, 5))
   const [endTime, setEndTime] = useState(safeEnd.split('T')[1].substring(0, 5))
   const [categoryId, setCategoryId] = useState<string | null>(block.category_id || null)
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(block.is_completed ?? false)
   const [durationMins, setDurationMins] = useState(getInitialDuration())
   const [hours, setHours] = useState(Math.floor(getInitialDuration() / 60))
@@ -450,19 +451,51 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Kategoria</label>
-              <div className="flex gap-2 items-center h-10">
-                <select
-                  value={categoryId || ''}
-                  onChange={e => setCategoryId(e.target.value || null)}
-                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2 rounded text-sm outline-none focus:border-blue-500 text-gray-900 dark:text-white"
+              <div className="relative h-10">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className="w-full h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 px-3 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white flex items-center justify-between transition-all"
                 >
-                  <option value="">⚪ Brak kategorii</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  {categoryId ? (
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: categories.find(c => c.id === categoryId)?.color || '#64748b' }} />
+                      <span className="truncate">{categories.find(c => c.id === categoryId)?.name || 'Nieznana kategoria'}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
+                      <span>Brak kategorii</span>
+                    </div>
+                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0 ml-2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {isCategoryDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[150]" onClick={() => setIsCategoryDropdownOpen(false)} />
+                    <ul className="absolute top-full left-0 right-0 mt-1 z-[160] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto max-h-48 py-1">
+                      <li
+                        className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
+                        onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); }}
+                      >
+                        <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
+                        <span>Brak kategorii</span>
+                      </li>
+                      {categories.map(c => (
+                        <li
+                          key={c.id}
+                          className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
+                          onClick={() => { setCategoryId(c.id); setIsCategoryDropdownOpen(false); }}
+                        >
+                          <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                          <span className="truncate">{c.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
