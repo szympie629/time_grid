@@ -447,9 +447,48 @@ export default function CalendarPage() {
           <Panel minSize={40} id="calendar-and-budget-container">
             <Group orientation="vertical" id="calendar-vertical-layout" className="flex flex-col h-full w-full">
               <Panel minSize={40} defaultSize={75} id="calendar-panel">
-                <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col relative">
                   <div className="flex-1 overflow-hidden min-h-0 relative">
                     <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} isSidebarOpen={isLeftPanelOpen} onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
+                  </div>
+                  
+                  {/* Grupa przycisków FAB (Kategorie, Kosz, Budżet) wewnątrz panelu kalendarza */}
+                  <div className="absolute bottom-6 right-6 z-[140] flex flex-col gap-3">
+                    <button
+                      onClick={() => setCategoriesOpen(true)}
+                      className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
+                      title="Kategorie"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={() => setTrashOpen(prev => !prev)}
+                      className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+                      title="Kosz"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={() => setIsBudgetPanelOpen(prev => !prev)}
+                      className={`w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all ${isBudgetPanelOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400'}`}
+                      title={isBudgetPanelOpen ? "Zwiń panel budżetowy" : "Rozwiń panel budżetowy"}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${!isBudgetPanelOpen ? 'rotate-180' : ''}`}>
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                        <line x1="3" y1="15" x2="21" y2="15"></line>
+                        <polyline points="9 10 12 13 15 10"></polyline>
+                      </svg>
+                    </button>
                   </div>
                 </section>
               </Panel>
@@ -529,46 +568,7 @@ export default function CalendarPage() {
           onChangePreview={(updates) => setEditingBacklogBlock({ ...editingBacklogBlock, ...updates } as Block)}
         />
       )}
-      {/* Grupa przycisków FAB (Kategorie, Kosz, Budżet) */}
-      <div className="fixed bottom-6 right-6 z-[140] flex flex-col gap-3">
-        <button
-          onClick={() => setCategoriesOpen(true)}
-          className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
-          title="Kategorie"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-          </svg>
-        </button>
 
-        <button
-          onClick={() => setTrashOpen(prev => !prev)}
-          className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-          title="Kosz"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M10 11v6M14 11v6"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-          </svg>
-        </button>
-
-        <button
-          onClick={() => setIsBudgetPanelOpen(prev => !prev)}
-          className={`w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all ${isBudgetPanelOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400'}`}
-          title={isBudgetPanelOpen ? "Zwiń panel budżetowy" : "Rozwiń panel budżetowy"}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {isBudgetPanelOpen ? (
-              <polyline points="18 15 12 9 6 15"></polyline>
-            ) : (
-              <polyline points="6 9 12 15 18 9"></polyline>
-            )}
-          </svg>
-        </button>
-      </div>
 
       <RitualManagerModal
         isOpen={isRitualsModalOpen}
