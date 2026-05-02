@@ -86,9 +86,9 @@ export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
 
         {/* Lista */}
         <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
-          {loading ? (
+          {loading && deletedBlocks.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-400 text-xs animate-pulse">Ładowanie...</p>
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-400 rounded-full animate-spin dark:border-slate-700 dark:border-t-slate-400"></div>
             </div>
           ) : deletedBlocks.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
