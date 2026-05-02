@@ -61,6 +61,7 @@ export default function CalendarPage() {
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
   
   const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -203,67 +204,71 @@ export default function CalendarPage() {
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <Group orientation="horizontal" autoSave="calendar-layout-v1" id="calendar-layout" className="flex h-full w-full">
-          <Panel defaultSize="25%" minSize="15%">
-            <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
-              
-              <Panel defaultSize="50%" minSize="20%">
-                <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                  <DroppableBacklogContainer>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
-
-                    <div className="flex flex-col gap-1 min-h-[100px] pb-16">
-                      {backlogItems.length === 0 ? (
-                        <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                          <p className="text-sm text-gray-600 dark:text-slate-300">Brak zadań.</p>
-                        </div>
-                      ) : (
-                        backlogItems.map(item => (
-                          <DraggableBacklogItem key={item.id} item={item} categories={categories} onClick={() => setEditingBacklogBlock(item)} />
-                        ))
-                      )}
-                    </div>
-                  </DroppableBacklogContainer>
+          {isLeftPanelOpen && (
+            <>
+              <Panel defaultSize={25} minSize={15} id="left-sidebar">
+                <Group orientation="vertical" autoSave="left-panel-layout-v1" id="left-panel-layout" className="flex flex-col h-full">
                   
-                  {/* Pływający przycisk FAB przypięty do okna Backlogu */}
-                  <button 
-                    onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: null, category_id: null, description: '', is_completed: false } as Block)}
-                    className="absolute bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 z-20"
-                    title="Dodaj zadanie"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19"/>
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                  </button>
-                </aside>
+                  <Panel defaultSize={50} minSize={20} id="backlog-panel">
+                    <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                      <DroppableBacklogContainer>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
+
+                        <div className="flex flex-col gap-1 min-h-[100px] pb-16">
+                          {backlogItems.length === 0 ? (
+                            <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                              <p className="text-sm text-gray-600 dark:text-slate-300">Brak zadań.</p>
+                            </div>
+                          ) : (
+                            backlogItems.map(item => (
+                              <DraggableBacklogItem key={item.id} item={item} categories={categories} onClick={() => setEditingBacklogBlock(item)} />
+                            ))
+                          )}
+                        </div>
+                      </DroppableBacklogContainer>
+                      
+                      {/* Pływający przycisk FAB przypięty do okna Backlogu */}
+                      <button 
+                        onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: null, category_id: null, description: '', is_completed: false } as Block)}
+                        className="absolute bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 z-20"
+                        title="Dodaj zadanie"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/>
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                      </button>
+                    </aside>
+                  </Panel>
+
+                  <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10" id="v-sep">
+                    <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                  </Separator>
+
+                  <Panel defaultSize={50} minSize={20} id="rituals-panel">
+                    <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                      <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
+                        <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                          <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
+                        </div>
+                      </div>
+                    </aside>
+                  </Panel>
+
+                </Group>
               </Panel>
 
-              <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10">
-                <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+              <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10" id="h-sep">
+                <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
               </Separator>
+            </>
+          )}
 
-              <Panel defaultSize="50%" minSize="20%">
-                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rytuały</h2>
-                    <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                      <p className="text-sm text-gray-600 dark:text-slate-300">Tu będą Twoje zestawy zadań.</p>
-                    </div>
-                  </div>
-                </aside>
-              </Panel>
-
-            </Group>
-          </Panel>
-
-          <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10">
-            <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-          </Separator>
-
-          <Panel minSize="40%">
+          <Panel minSize={40} id="calendar-panel">
             <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden min-h-0 relative">
-                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} />
+                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} isSidebarOpen={isLeftPanelOpen} onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
               </div>
             </section>
           </Panel>

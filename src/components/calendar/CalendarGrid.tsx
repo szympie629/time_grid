@@ -36,9 +36,11 @@ interface CalendarGridProps {
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
   recentlyDroppedId?: string | null;
   categories?: Category[];
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [] }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar }: CalendarGridProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
@@ -182,7 +184,21 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
     <>
       <div className="flex flex-col h-full bg-white dark:bg-slate-950 text-black dark:text-slate-100 transition-colors">
         <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
-          <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
+          <div className="flex items-center gap-4">
+            {onToggleSidebar && (
+              <button 
+                onClick={onToggleSidebar} 
+                title={isSidebarOpen ? "Zwiń panel boczny" : "Rozwiń panel boczny"}
+                className="w-9 h-9 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isSidebarOpen ? '' : 'rotate-180'}`}>
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+              </button>
+            )}
+            <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
+          </div>
           <div className="flex gap-2 items-center">
             <button onClick={toggleTheme} title={theme === 'light' ? 'Tryb ciemny' : 'Tryb jasny'} className="w-9 h-9 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm">
               {theme === 'light' ? (
