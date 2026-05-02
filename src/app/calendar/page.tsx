@@ -443,12 +443,29 @@ export default function CalendarPage() {
             </>
           )}
 
-          <Panel minSize={40} id="calendar-panel">
-            <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
-              <div className="flex-1 overflow-hidden min-h-0 relative">
-                <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} isSidebarOpen={isLeftPanelOpen} onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
-              </div>
-            </section>
+          <Panel minSize={40} id="calendar-and-budget-container">
+            <Group orientation="vertical" id="calendar-vertical-layout" className="flex flex-col h-full w-full">
+              <Panel minSize={40} defaultSize={75} id="calendar-panel">
+                <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
+                  <div className="flex-1 overflow-hidden min-h-0 relative">
+                    <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} isSidebarOpen={isLeftPanelOpen} onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
+                  </div>
+                </section>
+              </Panel>
+
+              <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10" id="h-sep-budget">
+                <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+              </Separator>
+
+              <Panel minSize={10} defaultSize={25} id="budget-panel">
+                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Budżet czasu i Tagi</h2>
+                  <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl m-2">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">System limitów i tagowania (Wkrótce)</p>
+                  </div>
+                </aside>
+              </Panel>
+            </Group>
           </Panel>
 
         </Group>
