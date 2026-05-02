@@ -22,12 +22,15 @@ function DroppableBacklogContainer({ children }: { children: React.ReactNode }) 
   )
 }
 
-function DraggableBacklogItem({ item, onClick }: { item: Block, onClick: () => void }) {
+function DraggableBacklogItem({ item, categories, onClick }: { item: Block, categories: Category[], onClick: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `backlog-${item.id}`,
     data: { type: 'backlog', item }
   })
   
+  const categoryColor = categories.find(c => c.id === item.category_id)?.color;
+  const itemColor = categoryColor || '#64748b';
+
   return (
     <div 
       ref={setNodeRef} 
@@ -36,7 +39,7 @@ function DraggableBacklogItem({ item, onClick }: { item: Block, onClick: () => v
       {...attributes} 
       onClick={onClick}
       className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
-      style={{ borderLeftColor: item.color_tag || '#3B82F6' }}
+      style={{ borderLeftColor: itemColor }}
     >
       <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block">{item.title}</span>
       <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes || 60} min</span>
@@ -215,7 +218,7 @@ export default function CalendarPage() {
                         </div>
                       ) : (
                         backlogItems.map(item => (
-                          <DraggableBacklogItem key={item.id} item={item} onClick={() => setEditingBacklogBlock(item)} />
+                          <DraggableBacklogItem key={item.id} item={item} categories={categories} onClick={() => setEditingBacklogBlock(item)} />
                         ))
                       )}
                     </div>
@@ -223,7 +226,7 @@ export default function CalendarPage() {
                   
                   {/* Pływający przycisk FAB przypięty do okna Backlogu */}
                   <button 
-                    onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: '#3b82f6', description: '', is_completed: false } as Block)}
+                    onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: null, category_id: null, description: '', is_completed: false } as Block)}
                     className="absolute bottom-6 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-3xl leading-none pb-1 z-20 transition-transform hover:scale-105"
                   >
                     +
@@ -292,7 +295,8 @@ export default function CalendarPage() {
                 start_time: null,
                 end_time: null,
                 duration_minutes: updates.duration_minutes || 60,
-                color_tag: updates.color_tag || '#3b82f6',
+                color_tag: null,
+                category_id: updates.category_id || null,
                 description: updates.description || '',
                 is_completed: false,
                 is_deleted: false

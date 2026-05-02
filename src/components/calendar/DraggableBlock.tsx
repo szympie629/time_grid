@@ -2,6 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core'
 import { Block } from '@/lib/api/blocks'
+import { Category } from '@/lib/api/categories'
 import { useState, useRef, useEffect } from 'react'
 import { tasksApi, Task } from '@/lib/api/tasks'
 import { supabase } from '@/lib/supabase/client'
@@ -17,10 +18,11 @@ interface Props {
   onDelete: (blockId: string) => void;
   onUpdate: (blockId: string, updates: Partial<Block>) => void;
   recentlyDroppedId?: string | null;
+  categories?: Category[];
   onCopy?: (block: Block) => void;
 }
 
-export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, onCopy, isCopyMode = false }: Props) {
+export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, categories = [], onCopy, isCopyMode = false }: Props) {
   const isDraft = block.id === 'draft'
   const type = idPrefix.replace('-', '')
   
@@ -135,6 +137,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
   const draftClass = isDraft ? 'opacity-60 border-2 border-dashed border-white pointer-events-none animate-pulse' : 'border border-black/10 hover:shadow-md'
   const copyModeClass = isCopyMode && !isOverlay ? 'pointer-events-none opacity-60' : ''
+
+  const categoryColor = categories.find(c => c.id === block.category_id)?.color;
+  const blockColor = isDraft ? '#64748b' : (categoryColor || '#64748b');
  
   return (
     <div
@@ -151,7 +156,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         ...style,
         ...transformStyle,
         height: `${currentHeight}px`,
-        backgroundColor: isDraft ? '#64748b' : (block.color_tag || '#3b82f6'),
+        backgroundColor: blockColor,
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >

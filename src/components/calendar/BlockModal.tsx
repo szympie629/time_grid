@@ -318,7 +318,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   const handleCopy = () => {
     if (!onCopy) return
-    const copyData: Partial<Block> = { ...block, title, description, color_tag: colorTag, duration_minutes: durationMins }
+    const copyData: Partial<Block> = { ...block, title, description, category_id: categoryId, color_tag: null, duration_minutes: durationMins }
     if (!isBacklogItem) {
       copyData.start_time = `${date}T${startTime}:00`
       copyData.end_time = `${date}T${endTime}:00`
