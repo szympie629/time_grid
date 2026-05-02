@@ -350,11 +350,11 @@ export default function CalendarPage() {
   return (
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <Group orientation="horizontal" autoSave="calendar-layout-v2" id="calendar-layout" className="flex h-full w-full">
+        <Group orientation="horizontal" autoSave="calendar-layout-v3" id="calendar-layout" className="flex h-full w-full">
           {isLeftPanelOpen && (
             <>
               <Panel defaultSize={25} minSize={15} id="left-sidebar">
-                <Group orientation="vertical" autoSave="left-panel-layout-v2" id="left-panel-layout" className="flex flex-col h-full">
+                <Group orientation="vertical" autoSave="left-panel-layout-v3" id="left-panel-layout" className="flex flex-col h-full">
                   
                   <Panel defaultSize={50} minSize={20} id="backlog-panel">
                     <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
