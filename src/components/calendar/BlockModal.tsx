@@ -504,7 +504,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
                   />
                 </div>
               )}
@@ -519,7 +519,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   type="time"
                   value={startTime}
                   onChange={(e) => handleTimeChange('start', e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -528,7 +528,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   type="time"
                   value={endTime}
                   onChange={(e) => handleTimeChange('end', e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
                 />
               </div>
             </div>
