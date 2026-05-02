@@ -9,8 +9,10 @@ import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
+import { getWeekDays } from '@/utils/dateHelpers'
 import TrashPanel from '@/components/calendar/TrashPanel'
 import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
+import BudgetPanel from '@/components/calendar/BudgetPanel'
 import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
@@ -140,6 +142,9 @@ export default function CalendarPage() {
   const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false)
   const [isBudgetPanelOpen, setIsBudgetPanelOpen] = useState(true)
+  
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [highlightedCategoryId, setHighlightedCategoryId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -449,7 +454,17 @@ export default function CalendarPage() {
               <Panel minSize={40} defaultSize={75} id="calendar-panel">
                 <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col relative">
                   <div className="flex-1 overflow-hidden min-h-0 relative">
-                    <CalendarGrid blocks={blocks} setBlocks={setBlocks} recentlyDroppedId={recentlyDroppedId} categories={categories} isSidebarOpen={isLeftPanelOpen} onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
+                    <CalendarGrid 
+                      blocks={blocks} 
+                      setBlocks={setBlocks} 
+                      recentlyDroppedId={recentlyDroppedId} 
+                      categories={categories} 
+                      isSidebarOpen={isLeftPanelOpen} 
+                      onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} 
+                      currentDate={currentDate}
+                      setCurrentDate={setCurrentDate}
+                      highlightedCategoryId={highlightedCategoryId}
+                    />
                   </div>
                   
                   {/* Grupa przycisków FAB (Kategorie, Kosz, Budżet) wewnątrz panelu kalendarza */}
@@ -525,10 +540,13 @@ export default function CalendarPage() {
 
                   <Panel minSize={10} defaultSize={25} id="budget-panel">
                     <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Budżet czasu i Tagi</h2>
-                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl m-2">
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">System limitów i tagowania (Wkrótce)</p>
-                      </div>
+                      <BudgetPanel 
+                        blocks={blocks}
+                        categories={categories}
+                        weekDays={getWeekDays(currentDate)}
+                        onHoverCategory={setHighlightedCategoryId}
+                        onEditCategory={(cat) => setCategoriesOpen(true)}
+                      />
                     </aside>
                   </Panel>
                 </>
@@ -602,6 +620,7 @@ export default function CalendarPage() {
         categories={categories}
         onCategoryCreated={cat => setCategories(prev => [...prev, cat])}
         onCategoryDeleted={id => setCategories(prev => prev.filter(c => c.id !== id))}
+        onCategoryUpdated={cat => setCategories(prev => prev.map(c => c.id === cat.id ? cat : c))}
       />
 
       <RitualManagerModal

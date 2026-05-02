@@ -20,9 +20,10 @@ interface Props {
   recentlyDroppedId?: string | null;
   categories?: Category[];
   onCopy?: (block: Block) => void;
+  isFaded?: boolean;
 }
 
-export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, categories = [], onCopy, isCopyMode = false }: Props) {
+export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, categories = [], onCopy, isCopyMode = false, isFaded = false }: Props) {
   const isDraft = block.id === 'draft'
   const type = idPrefix.replace('-', '')
 
@@ -137,6 +138,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
   const draftClass = isDraft ? 'opacity-60 border-2 border-dashed border-white pointer-events-none animate-pulse' : 'border border-black/10 hover:shadow-md'
   const copyModeClass = isCopyMode && !isOverlay ? 'pointer-events-none opacity-60' : ''
+  const fadedClass = isFaded ? 'opacity-30' : ''
 
   const categoryColor = categories.find(c => c.id === block.category_id)?.color;
   const blockColor = categoryColor || '#64748b';
@@ -151,7 +153,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         e.stopPropagation();
         if (!isResizing && !isOverlay && !isDraft) onClick(block.id);
       }}
-      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white px-1.5 py-1 text-xs font-medium shadow-sm overflow-hidden select-none touch-none flex flex-col ${draftClass} ${overlayClass} ${dragClass} ${rippleClass} ${completedClass} ${copyModeClass}`}
+      className={`${isOverlay ? 'relative' : 'absolute'} rounded-md text-white px-1.5 py-1 text-xs font-medium shadow-sm overflow-hidden select-none touch-none flex flex-col ${draftClass} ${overlayClass} ${dragClass} ${rippleClass} ${completedClass} ${copyModeClass} ${fadedClass}`}
       style={{
         ...style,
         ...transformStyle,

@@ -38,10 +38,12 @@ interface CalendarGridProps {
   categories?: Category[];
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  currentDate: Date;
+  setCurrentDate: (date: Date) => void;
+  highlightedCategoryId?: string | null;
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar }: CalendarGridProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, currentDate, setCurrentDate, highlightedCategoryId }: CalendarGridProps) {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
   const [copiedBlock, setCopiedBlock] = useState<Block | null>(null)
@@ -303,6 +305,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                             recentlyDroppedId={recentlyDroppedId}
                             onCopy={setCopiedBlock}
                             isCopyMode={!!copiedBlock}
+                            isFaded={highlightedCategoryId ? block.category_id !== highlightedCategoryId : false}
                           />
                         )
                       })}
