@@ -26,8 +26,8 @@ function getBlockPosition(startTime: string, endTime: string) {
   const duration = endDecimal - startDecimal
 
   return {
-    top: `${startDecimal * 80}px`,
-    height: `${duration * 80}px`,
+    top: `${startDecimal * 60}px`,
+    height: `${duration * 60}px`,
   }
 }
 
@@ -168,7 +168,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
     const block = blocks.find(b => b.id === blockId)
     if (!block || !block.start_time) return
 
-    const durationMinutes = newHeightPixels * 0.75
+    const durationMinutes = newHeightPixels * 1
     const startObj = new Date(block.start_time.substring(0, 19))
     const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
@@ -229,7 +229,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
             <div className="w-16 flex-none border-r border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 transition-colors">
               <div className="h-14 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-30 transition-colors"></div>
               {HOURS.map(hour => (
-                <div key={hour} className="h-20 text-xs text-right pr-2 pt-2 border-b border-gray-200 dark:border-slate-800 text-gray-400 dark:text-slate-500 box-border transition-colors">{hour}</div>
+                <div key={hour} className="h-[60px] text-sm text-center pt-2 border-b border-gray-200 dark:border-slate-800 text-gray-500 dark:text-slate-400 font-medium box-border transition-colors">{hour}</div>
               ))}
             </div>
 
@@ -269,9 +269,9 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
 
                 return (
                   <DroppableDay key={dateKey} day={day} isToday={isToday}>
-                    <div className="relative bg-white dark:bg-slate-950 h-[1920px] transition-colors">
+                    <div className="relative bg-white dark:bg-slate-950 h-[1440px] transition-colors">
                       {HOURS.map(hour => (
-                        <div key={hour} onClick={() => handleCreateBlockFromGrid(day, hour)} className="h-20 border-b border-gray-100 dark:border-slate-800 box-border group hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center justify-center transition-colors">
+                        <div key={hour} onClick={() => handleCreateBlockFromGrid(day, hour)} className="h-[60px] border-b border-gray-100 dark:border-slate-800 box-border group hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center justify-center transition-colors">
                           <span className="opacity-0 group-hover:opacity-100 text-blue-400 dark:text-blue-500 font-bold text-xl">+</span>
                         </div>
                       ))}

@@ -107,7 +107,7 @@ function RitualDragOverlay({ ritual, categories, width }: { ritual: Ritual, cate
       {ritual.items.map((item, i) => {
         const cat = categories.find(c => c.id === item.category_id);
         const color = cat?.color || '#64748b';
-        const height = Math.max(20, (item.duration_minutes / 60) * 80);
+        const height = Math.max(20, (item.duration_minutes / 60) * 60);
         
         return (
           <div key={i} className="rounded-md shadow-sm border border-white/20 p-1.5 overflow-hidden relative" style={{ backgroundColor: color, height: `${height}px`, opacity: 0.9 }}>
@@ -139,6 +139,7 @@ export default function CalendarPage() {
   
   const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false)
+  const [isBudgetPanelOpen, setIsBudgetPanelOpen] = useState(true)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -275,8 +276,8 @@ export default function CalendarPage() {
        const item = activeData?.item as Block
        if (!item) return
 
-       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       
-       let dropMinutes = Math.floor((yOffset / 80) * 60);
+       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 60;       
+       let dropMinutes = Math.floor((yOffset / 60) * 60);
        dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15);
 
        const startHours = Math.floor(dropMinutes / 60);
@@ -304,8 +305,8 @@ export default function CalendarPage() {
        const ritual = activeData?.ritual as Ritual
        if (!ritual || !ritual.items || ritual.items.length === 0) return
 
-       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 80;       
-       let dropMinutes = Math.floor((yOffset / 80) * 60);
+       const yOffset = active.rect.current.translated && over.rect ? active.rect.current.translated.top - over.rect.top - 56 : 9 * 60;       
+       let dropMinutes = Math.floor((yOffset / 60) * 60);
        dropMinutes = Math.max(0, Math.round(dropMinutes / 15) * 15);
 
        const { data: { user } } = await supabase.auth.getUser()
@@ -453,18 +454,22 @@ export default function CalendarPage() {
                 </section>
               </Panel>
 
-              <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10" id="h-sep-budget">
-                <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-              </Separator>
+              {isBudgetPanelOpen && (
+                <>
+                  <Separator className="h-4 my-1 group flex items-center justify-center cursor-row-resize z-10" id="h-sep-budget">
+                    <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                  </Separator>
 
-              <Panel minSize={10} defaultSize={25} id="budget-panel">
-                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Budżet czasu i Tagi</h2>
-                  <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl m-2">
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">System limitów i tagowania (Wkrótce)</p>
-                  </div>
-                </aside>
-              </Panel>
+                  <Panel minSize={10} defaultSize={25} id="budget-panel">
+                    <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Budżet czasu i Tagi</h2>
+                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl m-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">System limitów i tagowania (Wkrótce)</p>
+                      </div>
+                    </aside>
+                  </Panel>
+                </>
+              )}
             </Group>
           </Panel>
 
@@ -524,51 +529,46 @@ export default function CalendarPage() {
           onChangePreview={(updates) => setEditingBacklogBlock({ ...editingBacklogBlock, ...updates } as Block)}
         />
       )}
-      {/* Przycisk FAB kosza */}
-      <button
-        onClick={() => setTrashOpen(prev => !prev)}
-        className="fixed bottom-6 right-6 z-[140] w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-        title="Kosz"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6M14 11v6"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      </button>
+      {/* Grupa przycisków FAB (Kategorie, Kosz, Budżet) */}
+      <div className="fixed bottom-6 right-6 z-[140] flex flex-col gap-3">
+        <button
+          onClick={() => setCategoriesOpen(true)}
+          className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
+          title="Kategorie"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+        </button>
 
-      <TrashPanel 
-        isOpen={trashOpen} 
-        onClose={() => setTrashOpen(false)}
-        onRestore={(block) => {
-          if (block.start_time) {
-            setBlocks(prev => [...prev, { ...block, is_deleted: false }])
-          } else {
-            setBacklogItems(prev => [{ ...block, is_deleted: false }, ...prev])
-          }
-        }}
-      />
+        <button
+          onClick={() => setTrashOpen(prev => !prev)}
+          className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+          title="Kosz"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
 
-      <CategoryManagerModal
-        isOpen={categoriesOpen}
-        onClose={() => setCategoriesOpen(false)}
-        categories={categories}
-        onCategoryCreated={cat => setCategories(prev => [...prev, cat])}
-        onCategoryDeleted={id => setCategories(prev => prev.filter(c => c.id !== id))}
-      />
-
-      {/* Przycisk FAB kategorii */}
-      <button
-        onClick={() => setCategoriesOpen(true)}
-        className="fixed bottom-[88px] right-6 z-[140] w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
-        title="Kategorie"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-          <line x1="7" y1="7" x2="7.01" y2="7"></line>
-        </svg>
-      </button>
+        <button
+          onClick={() => setIsBudgetPanelOpen(prev => !prev)}
+          className={`w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all ${isBudgetPanelOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400'}`}
+          title={isBudgetPanelOpen ? "Zwiń panel budżetowy" : "Rozwiń panel budżetowy"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {isBudgetPanelOpen ? (
+              <polyline points="18 15 12 9 6 15"></polyline>
+            ) : (
+              <polyline points="6 9 12 15 18 9"></polyline>
+            )}
+          </svg>
+        </button>
+      </div>
 
       <RitualManagerModal
         isOpen={isRitualsModalOpen}

@@ -2,8 +2,8 @@ import { addMinutes, set } from 'date-fns'
 import { toLocalISOString } from './dateHelpers'
 
 export function calculateTimeShift(pixelsY: number): number {
-  const snappedPixels = Math.round(pixelsY / 20) * 20
-  return snappedPixels * 0.75
+  const snappedPixels = Math.round(pixelsY / 15) * 15
+  return snappedPixels * 1 // 1px = 1min
 }
 
 export function getNewTimes(startTime: string, endTime: string, minutesShift: number, targetDateStr?: string) {
