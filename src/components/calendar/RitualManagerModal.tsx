@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Category } from '@/lib/api/categories'
 import { supabase } from '@/lib/supabase/client'
 import { ritualsApi, Ritual, RitualItem, RitualInsert } from '@/lib/api/rituals'
@@ -158,16 +158,13 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   categories: Category[]
-  rituals: Ritual[]
+  editingRitual?: Ritual | null
   onRitualCreated: (ritual: Ritual) => void
   onRitualUpdated: (ritual: Ritual) => void
-  onRitualDeleted: (id: string) => void
 }
 
-export default function RitualManagerModal({ isOpen, onClose, categories, rituals, onRitualCreated, onRitualUpdated, onRitualDeleted }: Props) {
-  const [view, setView] = useState<'list' | 'edit'>('list')
+export default function RitualManagerModal({ isOpen, onClose, categories, editingRitual, onRitualCreated, onRitualUpdated }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
-  
   const [name, setName] = useState('')
   const [icon, setIcon] = useState<string | null>(null)
   const [color, setColor] = useState<string | null>(null)
@@ -180,27 +177,29 @@ export default function RitualManagerModal({ isOpen, onClose, categories, ritual
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
 
-  if (!isOpen) return null
-
-  const handleOpenEdit = (ritual?: Ritual) => {
-    if (ritual) {
-      setEditingId(ritual.id)
-      setName(ritual.name)
-      setIcon(ritual.icon || null)
-      setColor(ritual.color || null)
-      setItems(ritual.items)
-    } else {
-      setEditingId(null)
-      setName('')
-      setIcon('document')
-      setColor('#3b82f6')
-      setItems([
-        { id: crypto.randomUUID(), title: 'Nowe zadanie', duration_minutes: 30, category_id: null }
-      ])
+  useEffect(() => {
+    if (isOpen) {
+      if (editingRitual) {
+        setEditingId(editingRitual.id)
+        setName(editingRitual.name)
+        setIcon(editingRitual.icon || null)
+        setColor(editingRitual.color || null)
+        setItems(editingRitual.items)
+      } else {
+        setEditingId(null)
+        setName('')
+        setIcon('document')
+        setColor('#3b82f6')
+        setItems([
+          { id: crypto.randomUUID(), title: 'Nowe zadanie', duration_minutes: 30, category_id: null }
+        ])
+      }
+      setOpenCategoryIndex(null)
+      setIsIconPickerOpen(false)
     }
-    setView('edit')
-    setOpenCategoryIndex(null)
-  }
+  }, [isOpen, editingRitual])
+
+  if (!isOpen) return null
 
   const handleSave = async () => {
     if (!name.trim() || items.length === 0) return
@@ -224,21 +223,11 @@ export default function RitualManagerModal({ isOpen, onClose, categories, ritual
         const newRitual = await ritualsApi.createRitual(supabase, payload)
         onRitualCreated(newRitual)
       }
-      setView('list')
+      onClose()
     } catch (e) {
       console.error(e)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten rytuał?')) return
-    try {
-      await ritualsApi.deleteRitual(supabase, id)
-      onRitualDeleted(id)
-    } catch (e) {
-      console.error(e)
     }
   }
 
@@ -273,169 +262,114 @@ export default function RitualManagerModal({ isOpen, onClose, categories, ritual
         
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {view === 'list' ? 'Zarządzaj Rytuałami' : (editingId ? 'Edytuj Rytuał' : 'Nowy Rytuał')}
+            {editingId ? 'Edytuj Rytuał' : 'Nowy Rytuał'}
           </h3>
           <button 
-            onClick={() => view === 'edit' ? setView('list') : onClose()} 
+            onClick={onClose} 
             className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
           >
-            {view === 'edit' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            )}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
-        {view === 'list' ? (
-          <div className="flex flex-col flex-1 min-h-[300px] overflow-hidden">
-            <div className="p-4 flex-1 overflow-y-auto">
-              {rituals.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 dark:text-slate-400 text-sm">
-                  Nie masz jeszcze żadnych rytuałów.<br/>Stwórz swój pierwszy zestaw zadań!
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {rituals.map(ritual => {
-                    const iconObj = RITUAL_ICONS.find(i => i.id === ritual.icon) || RITUAL_ICONS[0];
-                    return (
-                      <li key={ritual.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden relative group">
-                        {ritual.color && (
-                          <div className="absolute right-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: ritual.color }}></div>
-                        )}
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-300" style={{ color: ritual.color || undefined }}>
-                            {iconObj.svg}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-slate-200 text-sm">{ritual.name}</span>
-                            <span className="text-xs text-gray-500 dark:text-slate-400">{formatTaskCount(ritual.items?.length || 0)}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mr-2">
-                          <button onClick={() => handleOpenEdit(ritual)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                          </button>
-                          <button onClick={() => handleDelete(ritual.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+        <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Nazwa Rytuału</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="np. Poranna Rutyna"
+                className="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+              />
             </div>
-            <div className="p-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 mt-auto">
+            <div className="relative">
+              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Wygląd</label>
               <button 
-                onClick={() => handleOpenEdit()}
-                className="w-full py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl font-medium transition-colors border border-blue-200 dark:border-blue-900/50 flex items-center justify-center gap-2"
+                onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
+                className="h-[42px] px-3 bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-lg flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Stwórz Nowy Rytuał
+                <div className="text-gray-600 dark:text-slate-300" style={{ color: color || undefined }}>
+                  {(RITUAL_ICONS.find(i => i.id === icon) || RITUAL_ICONS[0]).svg}
+                </div>
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color || '#3b82f6' }}></div>
               </button>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Nazwa Rytuału</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="np. Poranna Rutyna"
-                  className="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-                />
-              </div>
-              <div className="relative">
-                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Wygląd</label>
-                <button 
-                  onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
-                  className="h-[42px] px-3 bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-lg flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <div className="text-gray-600 dark:text-slate-300" style={{ color: color || undefined }}>
-                    {(RITUAL_ICONS.find(i => i.id === icon) || RITUAL_ICONS[0]).svg}
-                  </div>
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color || '#3b82f6' }}></div>
-                </button>
-                
-                {isIconPickerOpen && (
-                  <>
-                    <div className="fixed inset-0 z-[210]" onClick={() => setIsIconPickerOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl rounded-xl p-3 z-[220] w-64">
-                      <div className="mb-3">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Ikona</label>
-                        <div className="grid grid-cols-4 gap-2">
-                          {RITUAL_ICONS.map(i => (
-                            <button
-                              key={i.id}
-                              onClick={() => setIcon(i.id)}
-                              className={`p-2 rounded-lg flex items-center justify-center transition-colors ${icon === i.id ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400'}`}
-                            >
-                              {i.svg}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Kolor</label>
-                        <div className="grid grid-cols-5 gap-2">
-                          {RITUAL_COLORS.map(c => (
-                            <button
-                              key={c}
-                              onClick={() => setColor(c)}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${color === c ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : 'hover:scale-110'}`}
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
-                        </div>
+              
+              {isIconPickerOpen && (
+                <>
+                  <div className="fixed inset-0 z-[210]" onClick={() => setIsIconPickerOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl rounded-xl p-3 z-[220] w-64">
+                    <div className="mb-3">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Ikona</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {RITUAL_ICONS.map(i => (
+                          <button
+                            key={i.id}
+                            onClick={() => setIcon(i.id)}
+                            className={`p-2 rounded-lg flex items-center justify-center transition-colors ${icon === i.id ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400'}`}
+                          >
+                            {i.svg}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Zadania ({items.length})</label>
-              <div className="flex flex-col gap-3">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                    {items.map((item, idx) => (
-                      <SortableRitualItem
-                        key={item.id}
-                        item={item}
-                        idx={idx}
-                        categories={categories}
-                        openCategoryIndex={openCategoryIndex}
-                        setOpenCategoryIndex={setOpenCategoryIndex}
-                        updateItem={updateItem}
-                        removeItem={removeItem}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </div>
-              <button 
-                onClick={addItem}
-                className="mt-3 w-full py-2 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 transition-colors"
-              >
-                + Dodaj zadanie
-              </button>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-gray-200 dark:border-slate-800">
-              <button 
-                onClick={handleSave}
-                disabled={loading || !name.trim() || items.length === 0}
-                className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Zapisywanie...' : 'Zapisz Rytuał'}
-              </button>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Kolor</label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {RITUAL_COLORS.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => setColor(c)}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${color === c ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : 'hover:scale-110'}`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        )}
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Zadania ({items.length})</label>
+            <div className="flex flex-col gap-3">
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                  {items.map((item, idx) => (
+                    <SortableRitualItem
+                      key={item.id}
+                      item={item}
+                      idx={idx}
+                      categories={categories}
+                      openCategoryIndex={openCategoryIndex}
+                      setOpenCategoryIndex={setOpenCategoryIndex}
+                      updateItem={updateItem}
+                      removeItem={removeItem}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
+            <button 
+              onClick={addItem}
+              className="mt-3 w-full py-2 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 transition-colors"
+            >
+              + Dodaj zadanie
+            </button>
+          </div>
+
+          <div className="mt-auto pt-4 border-t border-gray-200 dark:border-slate-800">
+            <button 
+              onClick={handleSave}
+              disabled={loading || !name.trim() || items.length === 0}
+              className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Zapisywanie...' : 'Zapisz Rytuał'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

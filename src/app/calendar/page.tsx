@@ -26,7 +26,7 @@ function DroppableBacklogContainer({ children }: { children: React.ReactNode }) 
   )
 }
 
-function DraggableBacklogItem({ item, categories, onClick }: { item: Block, categories: Category[], onClick: () => void }) {
+function DraggableBacklogItem({ item, categories, onEdit, onDelete }: { item: Block, categories: Category[], onEdit: () => void, onDelete: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `backlog-${item.id}`,
     data: { type: 'backlog', item }
@@ -41,17 +41,28 @@ function DraggableBacklogItem({ item, categories, onClick }: { item: Block, cate
       id={`backlog-${item.id}`}
       {...listeners} 
       {...attributes} 
-      onClick={onClick}
-      className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-r-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+      className={`p-2 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border-r-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isDragging ? 'opacity-50' : ''}`}
       style={{ borderRightColor: itemColor }}
     >
-      <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block">{item.title}</span>
-      <span className="text-xs text-gray-500 font-medium mt-1 block">{item.duration_minutes || 60} min</span>
+      <div className="flex justify-between items-start gap-2">
+         <div className="flex-1 min-w-0">
+           <span className="font-semibold text-xs text-gray-800 dark:text-gray-200 block truncate">{item.title}</span>
+           <span className="text-[10px] text-gray-500 font-medium mt-0.5 block">{item.duration_minutes || 60} min</span>
+         </div>
+         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+           <button onPointerDown={(e) => e.stopPropagation()} onClick={onEdit} className="p-1 text-gray-400 hover:text-blue-500 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+           </button>
+           <button onPointerDown={(e) => e.stopPropagation()} onClick={onDelete} className="p-1 text-gray-400 hover:text-red-500 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+           </button>
+         </div>
+      </div>
     </div>
   )
 }
 
-function DraggableRitualItem({ ritual, onClick }: { ritual: Ritual, onClick: () => void }) {
+function DraggableRitualItem({ ritual, onEdit, onDelete }: { ritual: Ritual, onEdit: () => void, onDelete: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `ritual-${ritual.id}`,
     data: { type: 'ritual', ritual }
@@ -64,15 +75,24 @@ function DraggableRitualItem({ ritual, onClick }: { ritual: Ritual, onClick: () 
       ref={setNodeRef} 
       {...listeners} 
       {...attributes} 
-      onClick={onClick}
       className={`p-3 mb-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all border border-gray-200 dark:border-slate-700 relative overflow-hidden group ${isDragging ? 'opacity-50' : ''}`}
     >
       {ritual.color && (
         <div className="absolute right-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: ritual.color }}></div>
       )}
-      <div className="flex items-center gap-2 mb-1.5">
-        <div style={{ color: ritual.color || '#3b82f6' }}>{iconObj.svg}</div>
-        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.name}</span>
+      <div className="flex justify-between items-start gap-2 mb-1.5">
+        <div className="flex items-center gap-2">
+          <div style={{ color: ritual.color || '#3b82f6' }}>{iconObj.svg}</div>
+          <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{ritual.name}</span>
+        </div>
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 relative">
+           <button onPointerDown={(e) => e.stopPropagation()} onClick={onEdit} className="p-1 text-gray-400 hover:text-blue-500 transition-colors">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+           </button>
+           <button onPointerDown={(e) => e.stopPropagation()} onClick={onDelete} className="p-1 text-gray-400 hover:text-red-500 transition-colors">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+           </button>
+        </div>
       </div>
       <span className="text-xs text-gray-500 font-medium">{formatTaskCount(ritual.items?.length || 0)} • {ritual.items?.reduce((acc, b) => acc + (b.duration_minutes || 0), 0) || 0} min</span>
     </div>
@@ -108,7 +128,8 @@ export default function CalendarPage() {
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [rituals, setRituals] = useState<Ritual[]>([])
-  const [ritualsOpen, setRitualsOpen] = useState(false)
+  const [isRitualsModalOpen, setIsRitualsModalOpen] = useState(false)
+  const [editingRitual, setEditingRitual] = useState<Ritual | null>(null)
   
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
@@ -124,6 +145,26 @@ export default function CalendarPage() {
       activationConstraint: { distance: 5 },
     })
   )
+
+  const handleRitualDelete = async (id: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć ten rytuał?')) return
+    try {
+      await ritualsApi.deleteRitual(supabase, id)
+      setRituals(prev => prev.filter(r => r.id !== id))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleBacklogDelete = async (id: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć to zadanie z backlogu?')) return
+    setBacklogItems(prev => prev.filter(b => b.id !== id))
+    try {
+      await blocksApi.updateBlock(supabase, id, { is_deleted: true })
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const refreshData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -327,7 +368,13 @@ export default function CalendarPage() {
                             </div>
                           ) : (
                             backlogItems.map(item => (
-                              <DraggableBacklogItem key={item.id} item={item} categories={categories} onClick={() => setEditingBacklogBlock(item)} />
+                              <DraggableBacklogItem 
+                                key={item.id} 
+                                item={item} 
+                                categories={categories} 
+                                onEdit={() => setEditingBacklogBlock(item)}
+                                onDelete={() => handleBacklogDelete(item.id)} 
+                              />
                             ))
                           )}
                         </div>
@@ -362,16 +409,21 @@ export default function CalendarPage() {
                             </div>
                           ) : (
                             rituals.map(ritual => (
-                              <DraggableRitualItem key={ritual.id} ritual={ritual} onClick={() => setRitualsOpen(true)} />
+                              <DraggableRitualItem 
+                                key={ritual.id} 
+                                ritual={ritual} 
+                                onEdit={() => { setEditingRitual(ritual); setIsRitualsModalOpen(true); }}
+                                onDelete={() => handleRitualDelete(ritual.id)}
+                              />
                             ))
                           )}
                         </div>
 
                         {/* FAB dla Rytuałów */}
                         <button 
-                          onClick={() => setRitualsOpen(true)}
+                          onClick={() => { setEditingRitual(null); setIsRitualsModalOpen(true); }}
                           className="absolute bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 z-20"
-                          title="Zarządzaj rytuałami"
+                          title="Nowy rytuał"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -502,13 +554,12 @@ export default function CalendarPage() {
       </button>
 
       <RitualManagerModal
-        isOpen={ritualsOpen}
-        onClose={() => setRitualsOpen(false)}
+        isOpen={isRitualsModalOpen}
+        onClose={() => setIsRitualsModalOpen(false)}
         categories={categories}
-        rituals={rituals}
+        editingRitual={editingRitual}
         onRitualCreated={(r) => setRituals(prev => [r, ...prev])}
         onRitualUpdated={(r) => setRituals(prev => prev.map(p => p.id === r.id ? r : p))}
-        onRitualDeleted={(id) => setRituals(prev => prev.filter(p => p.id !== id))}
       />
     </main>
   )
