@@ -456,7 +456,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   onChange={e => setCategoryId(e.target.value || null)}
                   className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2 rounded text-sm outline-none focus:border-blue-500 text-gray-900 dark:text-white"
                 >
-                  <option value="">⚪ Brak kategorii (Szary)</option>
+                  <option value="">⚪ Brak kategorii</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.name}

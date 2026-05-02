@@ -279,6 +279,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
       {selectedBlockId && (
         <BlockModal 
           block={blocks.find(b => b.id === selectedBlockId)!} 
+          categories={categories}
           onClose={() => setSelectedBlockId(null)}
           onUpdate={handleUpdateBlockDetails}
           onDelete={handleDeleteBlock}
@@ -289,6 +290,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
       {draftBlock && (
         <BlockModal 
           block={draftBlock} 
+          categories={categories}
           onClose={() => setDraftBlock(null)}
           onUpdate={handleSaveDraft}
           onDelete={() => setDraftBlock(null)}
