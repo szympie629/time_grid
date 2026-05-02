@@ -350,7 +350,7 @@ export default function CalendarPage() {
   return (
     <main className="h-screen w-full overflow-hidden bg-aurora p-4 transition-colors">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <Group orientation="horizontal" id="calendar-layout" className="flex h-full w-full">
+        <Group orientation="horizontal" id="calendar-layout" className="flex h-full w-full" key={isLeftPanelOpen ? 'layout-open' : 'layout-closed'}>
           {isLeftPanelOpen && (
             <>
               <Panel defaultSize={15} minSize={10} id="left-sidebar">
