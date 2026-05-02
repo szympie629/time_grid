@@ -61,14 +61,14 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between group bg-gray-50 hover:bg-gray-100 p-2 rounded border border-gray-100 transition-colors"
+      className="flex items-center justify-between group bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 p-2.5 rounded-lg border border-gray-100 dark:border-slate-700 transition-colors"
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {/* Drag handle — tylko ten element inicjuje przeciąganie */}
         <button
           {...listeners}
           {...attributes}
-          className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none p-0.5 rounded hover:bg-gray-200 transition-colors"
+          className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing shrink-0 touch-none p-1 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
           tabIndex={-1}
           title="Przeciągnij, by zmienić kolejność"
         >
@@ -79,11 +79,11 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
           type="checkbox"
           checked={task.is_completed}
           onChange={() => onToggle(task.id, task.is_completed)}
-          className="w-4 h-4 cursor-pointer shrink-0"
+          className={`w-4 h-4 cursor-pointer shrink-0 accent-green-500 rounded`}
         />
         <span
           className={`text-sm truncate ${
-            task.is_completed ? 'line-through text-gray-400' : 'text-gray-700'
+            task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'
           }`}
         >
           {task.title}
@@ -92,7 +92,7 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
 
       <button
         onClick={() => onDelete(task.id)}
-        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all px-1 font-bold shrink-0 ml-1"
+        className="text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all px-1.5 font-bold shrink-0 ml-1"
       >
         ✕
       </button>
@@ -334,18 +334,18 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   return (
     <div
-      className="fixed z-[100] bg-white p-6 rounded-lg w-[400px] shadow-2xl flex flex-col gap-4 text-black border border-gray-200"
+      className="fixed z-[100] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[400px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
     >
       {/* ── Header ── */}
       <div
-        className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
+        className="flex justify-between items-center border-b border-gray-100 dark:border-slate-800 pb-3 cursor-grab active:cursor-grabbing"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold select-none">
+          <h2 className="text-xl font-bold select-none text-gray-900 dark:text-white">
             {block.id.startsWith('draft') ? 'Nowy blok' : 'Edytuj blok'}
           </h2>
           <label
@@ -356,22 +356,22 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               type="checkbox"
               checked={isCompleted}
               onChange={(e) => setIsCompleted(e.target.checked)}
-              className="w-4 h-4 cursor-pointer accent-green-600"
+              className="w-4 h-4 cursor-pointer accent-green-500 rounded block"
             />
-            <span className="text-sm text-gray-500 font-semibold select-none">Wykonano</span>
+            <span className="text-sm text-gray-500 dark:text-slate-400 font-semibold select-none">Wykonano</span>
           </label>
         </div>
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
-          className="text-gray-400 hover:text-red-500 font-bold px-2 py-1 transition-colors"
+          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 font-bold px-2 py-1 transition-colors"
         >
           ✕
         </button>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex border-b border-gray-100 mb-2 overflow-x-auto no-scrollbar">
+      <div className="flex border-b border-gray-100 dark:border-slate-800 mb-2 overflow-x-auto no-scrollbar">
         {[
           { id: 'main', label: 'Główne' },
           { id: 'todo', label: 'To-Do' },
@@ -381,10 +381,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300'
             }`}
           >
             {tab.label}
@@ -395,39 +395,39 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       {/* ── Tab: Główne ── */}
       {activeTab === 'main' && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase font-bold text-gray-400">Tytuł</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Tytuł</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+              className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Czas trwania</label>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Czas trwania</label>
               <div className="flex gap-2">
-                <div className="flex border border-gray-200 rounded overflow-hidden">
+                <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
                   <input
                     type="number"
                     min="0"
                     value={hours}
                     onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
-                    className="w-12 p-2 text-sm text-center outline-none bg-white"
+                    className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
                   />
-                  <span className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 border-l border-gray-200">h</span>
+                  <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
                 </div>
-                <div className="flex border border-gray-200 rounded overflow-hidden">
+                <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
                   <input
                     type="number"
                     min="0"
                     max="59"
                     value={minutes}
                     onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
-                    className="w-12 p-2 text-sm text-center outline-none bg-white"
+                    className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
                   />
-                  <span className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 border-l border-gray-200">m</span>
+                  <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-1 mt-1">
@@ -436,10 +436,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                     type="button"
                     key={mins}
                     onClick={() => handleDurationChange(mins)}
-                    className={`text-[10px] py-1 rounded border transition-colors ${
+                    className={`text-[10px] py-1 rounded-lg border transition-colors ${
                       durationMins === mins
-                        ? 'bg-blue-100 border-blue-500 text-blue-700'
-                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                        ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
                     {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
@@ -448,8 +448,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase font-bold text-gray-400">Kategoria</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Kategoria</label>
               <div className="flex gap-2 items-center h-10">
                 <select
                   value={categoryId || ''}
@@ -466,12 +466,12 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               </div>
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-400">Data</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Data</label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                   />
                 </div>
               )}
@@ -480,33 +480,33 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
           {!isBacklogItem && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase font-bold text-gray-400">Start</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Start</label>
                 <input
                   type="time"
                   value={startTime}
                   onChange={(e) => handleTimeChange('start', e.target.value)}
-                  className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                 />
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase font-bold text-gray-400">Koniec</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Koniec</label>
                 <input
                   type="time"
                   value={endTime}
                   onChange={(e) => handleTimeChange('end', e.target.value)}
-                  className="border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                 />
               </div>
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase font-bold text-gray-400">Opis</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Opis</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="border border-gray-200 p-2 rounded h-20 resize-none text-sm outline-none focus:border-blue-500"
+              className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-3 rounded-lg h-24 resize-none text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
             />
           </div>
         </div>
@@ -516,7 +516,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       {activeTab === 'todo' && (
         <div className="flex flex-col gap-3 h-[310px]">
           {block.id.startsWith('draft') ? (
-            <div className="flex-1 flex items-center justify-center text-center text-gray-500 text-sm italic">
+            <div className="flex-1 flex items-center justify-center text-center text-gray-500 dark:text-slate-400 text-sm italic">
               Najpierw zapisz blok, aby móc dodawać do niego zadania To-Do.
             </div>
           ) : (
@@ -526,11 +526,11 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
                   placeholder="Dodaj zadanie..."
-                  className="flex-1 border border-gray-200 p-2 rounded text-sm outline-none focus:border-blue-500"
+                  className="flex-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                 />
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-3 py-1 rounded text-sm font-bold"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors text-white px-4 rounded-lg text-lg font-bold shadow-sm"
                 >
                   +
                 </button>
@@ -546,9 +546,9 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
               <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5 min-h-0">
                 {loadingTasks ? (
-                  <p className="text-center text-gray-400 text-xs py-4">Ładowanie...</p>
+                  <p className="text-center text-gray-400 dark:text-slate-500 text-xs py-4">Ładowanie...</p>
                 ) : tasks.length === 0 ? (
-                  <p className="text-center text-gray-400 text-xs py-4">
+                  <p className="text-center text-gray-400 dark:text-slate-500 text-xs py-4">
                     Brak zadań. Dodaj pierwsze!
                   </p>
                 ) : (
@@ -580,16 +580,16 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
       {/* ── Inne zakładki ── */}
       {activeTab !== 'main' && activeTab !== 'todo' && (
-        <div className="py-10 text-center text-gray-400 text-sm italic h-[310px] flex items-center justify-center">
+        <div className="py-10 text-center text-gray-400 dark:text-slate-500 text-sm italic h-[310px] flex items-center justify-center">
           Sekcja {activeTab === 'notes' ? 'Notatki' : 'Skupienie'} będzie dostępna wkrótce...
         </div>
       )}
 
       {/* ── Footer ── */}
-      <div className="flex justify-between mt-4 border-t pt-4">
+      <div className="flex justify-between mt-4 border-t border-gray-100 dark:border-slate-800 pt-5">
         <button
           onClick={() => confirm('Usunąć cały blok?') && onDelete(block.id)}
-          className="text-red-600 text-xs font-bold hover:underline"
+          className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold hover:underline transition-colors"
         >
           USUŃ BLOK
         </button>
@@ -597,20 +597,20 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {onCopy && !block.id.startsWith('draft') && (
             <button
               onClick={handleCopy}
-              className="px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors rounded text-sm font-bold"
+              className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors rounded-lg text-sm font-bold"
             >
               Kopiuj
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded text-sm font-medium"
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 transition-colors rounded-lg text-sm font-medium"
           >
             Anuluj
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded text-sm font-bold"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors text-white rounded-lg text-sm font-bold shadow-sm"
           >
             Zapisz
           </button>
