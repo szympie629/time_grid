@@ -52,7 +52,7 @@ export default function TrashPanel({ isOpen, onClose, onRestore }: Props) {
 
       {/* Panel */}
       <div
-        className="fixed bottom-20 right-6 z-[160] w-80 h-[380px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden"
+        className="absolute bottom-0 right-[calc(100%+16px)] z-[160] w-80 h-[380px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden origin-bottom-right"
         style={{
             transition: 'opacity 200ms ease, transform 200ms ease',
             opacity: isOpen ? 1 : 0,
