@@ -14,6 +14,8 @@ import TrashPanel from '@/components/calendar/TrashPanel'
 import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
 import BudgetPanel from '@/components/calendar/BudgetPanel'
 import TodoPanel from '@/components/calendar/TodoPanel'
+import MindDumpPanel from '@/components/calendar/MindDumpPanel'
+import StickyNotesPanel from '@/components/calendar/StickyNotesPanel'
 import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
@@ -143,6 +145,7 @@ export default function CalendarPage() {
   const [editingBacklogBlock, setEditingBacklogBlock] = useState<Block | null>(null)
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false)
   const [isBudgetPanelOpen, setIsBudgetPanelOpen] = useState(true)
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false)
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [highlightedCategoryId, setHighlightedCategoryId] = useState<string | null>(null)
@@ -461,7 +464,9 @@ export default function CalendarPage() {
                       recentlyDroppedId={recentlyDroppedId} 
                       categories={categories} 
                       isSidebarOpen={isLeftPanelOpen} 
-                      onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)} 
+                      onToggleSidebar={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+                      isRightPanelOpen={isRightPanelOpen}
+                      onToggleRightPanel={() => setIsRightPanelOpen(!isRightPanelOpen)}
                       currentDate={currentDate}
                       setCurrentDate={setCurrentDate}
                       highlightedCategoryId={highlightedCategoryId}
@@ -541,7 +546,7 @@ export default function CalendarPage() {
 
                   <Panel minSize={10} defaultSize={25} id="budget-todo-panel">
                     <Group orientation="horizontal" id="budget-todo-layout" className="flex h-full w-full">
-                      <Panel defaultSize={60} minSize={30} id="budget-panel">
+                      <Panel defaultSize={40} minSize={20} id="budget-panel">
                         <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
                           <BudgetPanel 
                             blocks={blocks}
@@ -557,9 +562,19 @@ export default function CalendarPage() {
                         <div className="w-1 h-12 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
                       </Separator>
 
-                      <Panel defaultSize={40} minSize={20} id="todo-panel">
+                      <Panel defaultSize={30} minSize={15} id="todo-panel">
                         <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
                           <TodoPanel />
+                        </aside>
+                      </Panel>
+
+                      <Separator className="w-4 mx-1 group flex items-center justify-center cursor-col-resize z-10" id="todo-minddump-sep">
+                        <div className="w-1 h-12 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                      </Separator>
+
+                      <Panel defaultSize={30} minSize={15} id="minddump-panel">
+                        <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                          <MindDumpPanel />
                         </aside>
                       </Panel>
                     </Group>
@@ -568,6 +583,21 @@ export default function CalendarPage() {
               )}
             </Group>
           </Panel>
+
+          {/* Prawy panel — Sticky Notes */}
+          {isRightPanelOpen && (
+            <>
+              <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10" id="right-sep">
+                <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+              </Separator>
+
+              <Panel defaultSize={20} minSize={12} maxSize={35} id="right-panel">
+                <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                  <StickyNotesPanel />
+                </aside>
+              </Panel>
+            </>
+          )}
 
         </Group>
 

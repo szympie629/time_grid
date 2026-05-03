@@ -38,12 +38,14 @@ interface CalendarGridProps {
   categories?: Category[];
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  isRightPanelOpen?: boolean;
+  onToggleRightPanel?: () => void;
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
   highlightedCategoryId?: string | null;
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, currentDate, setCurrentDate, highlightedCategoryId }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, isRightPanelOpen = false, onToggleRightPanel, currentDate, setCurrentDate, highlightedCategoryId }: CalendarGridProps) {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
   const [copiedBlock, setCopiedBlock] = useState<Block | null>(null)
@@ -228,6 +230,26 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
             </div>
+            {onToggleRightPanel && (
+              <button
+                onClick={onToggleRightPanel}
+                title={isRightPanelOpen ? 'Zwiń prawy panel' : 'Rozwiń prawy panel'}
+                className="w-9 h-9 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm ml-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {isRightPanelOpen ? (
+                    // Wysunięty -> przyszły stan: zwinięty (sam prostokąt)
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  ) : (
+                    // Zwinięty -> przyszły stan: wysunięty (prostokąt z prawym panelem)
+                    <>
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="15" y1="3" x2="15" y2="21"></line>
+                    </>
+                  )}
+                </svg>
+              </button>
+            )}
             <button onClick={handleLogout} title="Wyloguj się" className="w-9 h-9 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100 dark:border-red-900/50 transition-colors rounded-lg flex items-center justify-center text-red-600 dark:text-red-400 shadow-sm ml-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
