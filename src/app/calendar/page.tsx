@@ -13,6 +13,7 @@ import { getWeekDays } from '@/utils/dateHelpers'
 import TrashPanel from '@/components/calendar/TrashPanel'
 import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
 import BudgetPanel from '@/components/calendar/BudgetPanel'
+import TodoPanel from '@/components/calendar/TodoPanel'
 import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
@@ -538,16 +539,30 @@ export default function CalendarPage() {
                     <div className="h-1 w-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
                   </Separator>
 
-                  <Panel minSize={10} defaultSize={25} id="budget-panel">
-                    <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
-                      <BudgetPanel 
-                        blocks={blocks}
-                        categories={categories}
-                        weekDays={getWeekDays(currentDate)}
-                        onHoverCategory={setHighlightedCategoryId}
-                        onEditCategory={(cat) => setCategoriesOpen(true)}
-                      />
-                    </aside>
+                  <Panel minSize={10} defaultSize={25} id="budget-todo-panel">
+                    <Group orientation="horizontal" id="budget-todo-layout" className="flex h-full w-full">
+                      <Panel defaultSize={60} minSize={30} id="budget-panel">
+                        <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                          <BudgetPanel 
+                            blocks={blocks}
+                            categories={categories}
+                            weekDays={getWeekDays(currentDate)}
+                            onHoverCategory={setHighlightedCategoryId}
+                            onEditCategory={(cat) => setCategoriesOpen(true)}
+                          />
+                        </aside>
+                      </Panel>
+
+                      <Separator className="w-4 mx-1 group flex items-center justify-center cursor-col-resize z-10" id="budget-todo-sep">
+                        <div className="w-1 h-12 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                      </Separator>
+
+                      <Panel defaultSize={40} minSize={20} id="todo-panel">
+                        <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
+                          <TodoPanel />
+                        </aside>
+                      </Panel>
+                    </Group>
                   </Panel>
                 </>
               )}

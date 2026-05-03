@@ -48,81 +48,78 @@ export default function BudgetPanel({ blocks, categories, weekDays, onHoverCateg
 
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-      <div className="flex flex-col gap-3 px-2 py-1 flex-1 justify-center">
-        {/* Kategorie z limitami — gradient bars */}
-        {withLimits.map(cat => {
-          const limit = cat.time_limit_minutes!
-          const spent = minutesByCategory[cat.id] || 0
-          const rawPercentage = Math.round((spent / limit) * 100)
-          const isOver = spent > limit
-          // For the bar: limit portion is always max 100%, overflow is extra
-          const barPercent = Math.min(100, rawPercentage)
-          // How much overflow beyond 100% (as percent of limit)
-          const overflowPercent = isOver ? rawPercentage - 100 : 0
-          // Scale: the total bar area represents max(100%, rawPercentage)
-          // limit portion width = 100 / max(100, rawPercentage) %
-          // overflow portion width = overflowPercent / max(100, rawPercentage) %
-          const totalScale = Math.max(100, rawPercentage)
-          const limitPortionWidth = (100 / totalScale) * 100 // percent of container for the limit area
-          const overflowPortionWidth = isOver ? (overflowPercent / totalScale) * 100 : 0
+      <div className="flex items-center gap-2 mb-3 shrink-0">
+        <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Budżet czasu</h3>
+      </div>
 
-          return (
-            <div
-              key={cat.id}
-              className="cursor-pointer group transition-all"
-              onMouseEnter={() => onHoverCategory(cat.id)}
-              onMouseLeave={() => onHoverCategory(null)}
-              onClick={() => onEditCategory(cat)}
-            >
-              {/* Top row: name + time info */}
-              <div className="flex justify-between items-center mb-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                  <span className="font-semibold text-xs text-gray-700 dark:text-slate-300 truncate">{cat.name}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-xs font-bold ${isOver ? 'text-red-400' : 'text-gray-600 dark:text-slate-400'}`}>
-                    {formatTime(spent)}
-                  </span>
-                  <span className="text-[10px] text-gray-500 dark:text-slate-500">/ {formatTime(limit)}</span>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isOver ? 'text-red-400 bg-red-500/10' : 'text-gray-500 dark:text-slate-500 bg-gray-100 dark:bg-slate-800'}`}>
-                    {rawPercentage}%
-                  </span>
-                </div>
-              </div>
+      <div className="flex-1 flex flex-col gap-2 justify-start">
+        {/* Kategorie z limitami — 2-column grid */}
+        {withLimits.length > 0 && (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            {withLimits.map(cat => {
+              const limit = cat.time_limit_minutes!
+              const spent = minutesByCategory[cat.id] || 0
+              const rawPercentage = Math.round((spent / limit) * 100)
+              const isOver = spent > limit
+              const barPercent = Math.min(100, rawPercentage)
+              const overflowPercent = isOver ? rawPercentage - 100 : 0
+              const totalScale = Math.max(100, rawPercentage)
+              const limitPortionWidth = (100 / totalScale) * 100
+              const overflowPortionWidth = isOver ? (overflowPercent / totalScale) * 100 : 0
 
-              {/* Progress bar with overflow */}
-              <div className="flex w-full h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-slate-700/50 group-hover:h-2.5 transition-all">
-                {/* Limit portion */}
+              return (
                 <div
-                  className="h-full transition-all duration-500 rounded-l-full"
-                  style={{
-                    width: `${isOver ? limitPortionWidth : barPercent}%`,
-                    backgroundColor: cat.color,
-                  }}
-                />
-                {/* Overflow portion — red striped */}
-                {isOver && (
-                  <div
-                    className="h-full transition-all duration-500 rounded-r-full"
-                    style={{
-                      width: `${overflowPortionWidth}%`,
-                      backgroundColor: '#ef4444',
-                      backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.2) 3px, rgba(255,255,255,0.2) 6px)',
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          )
-        })}
+                  key={cat.id}
+                  className="cursor-pointer group transition-all max-w-[360px]"
+                  onMouseEnter={() => onHoverCategory(cat.id)}
+                  onMouseLeave={() => onHoverCategory(null)}
+                  onClick={() => onEditCategory(cat)}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                      <span className="font-semibold text-xs text-gray-700 dark:text-slate-300 truncate">{cat.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs font-bold ${isOver ? 'text-red-400' : 'text-gray-600 dark:text-slate-400'}`}>
+                        {formatTime(spent)}
+                      </span>
+                      <span className="text-[10px] text-gray-500 dark:text-slate-500">/ {formatTime(limit)}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isOver ? 'text-red-400 bg-red-500/10' : 'text-gray-500 dark:text-slate-500 bg-gray-100 dark:bg-slate-800'}`}>
+                        {rawPercentage}%
+                      </span>
+                    </div>
+                  </div>
 
-        {/* Separator */}
+                  <div className="flex w-full h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-slate-700/50 group-hover:h-2.5 transition-all">
+                    <div
+                      className="h-full transition-all duration-500 rounded-l-full"
+                      style={{
+                        width: `${isOver ? limitPortionWidth : barPercent}%`,
+                        backgroundColor: cat.color,
+                      }}
+                    />
+                    {isOver && (
+                      <div
+                        className="h-full transition-all duration-500 rounded-r-full"
+                        style={{
+                          width: `${overflowPortionWidth}%`,
+                          backgroundColor: '#ef4444',
+                          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.2) 3px, rgba(255,255,255,0.2) 6px)',
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {withLimits.length > 0 && withoutLimits.some(c => minutesByCategory[c.id]) && (
           <div className="h-px w-full bg-gray-200 dark:bg-slate-700/50 my-1" />
         )}
 
-        {/* Kategorie bez limitu — inline */}
         {withoutLimits.some(c => minutesByCategory[c.id]) && (
           <div className="flex flex-wrap gap-x-5 gap-y-1">
             {withoutLimits.map(cat => {
@@ -154,7 +151,7 @@ export default function BudgetPanel({ blocks, categories, weekDays, onHoverCateg
 
         {categories.length > 0 && withLimits.length === 0 && !withoutLimits.some(c => minutesByCategory[c.id]) && (
           <div className="flex-1 flex items-center justify-start opacity-50 px-2">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Nie wykorzystano jeszcze czasu z kategorii w tym tygodniu. Kliknij przycisk kategorii z prawej, by nadać limity.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Nie wykorzystano jeszcze czasu z kategorii w tym tygodniu.</p>
           </div>
         )}
       </div>
