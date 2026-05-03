@@ -26,6 +26,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<string>('')
   const [editingId, setEditingId] = useState<string | null>(null)
 
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   // 1. Deklaracja funkcji wyciągnięta NAJPIERW
@@ -35,6 +36,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
     setSelectedColor(PALETTE[0])
     setTimeLimitHours('')
     setTimeLimitMinutes('')
+    setError(null)
   }
 
   // 2. DOPIERO POTEM użycie jej w useEffect
@@ -63,6 +65,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   const handleSave = async () => {
     if (!name.trim()) return
     setLoading(true)
+    setError(null)
     try {
       const hrs = parseInt(timeLimitHours) || 0
       const mins = parseInt(timeLimitMinutes) || 0
@@ -82,8 +85,9 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
         onCategoryCreated(newCat)
       }
       handleCancelEdit()
-    } catch (e) {
-      console.error(e)
+    } catch (e: any) {
+      console.error('Category save error:', e)
+      setError(e?.message || 'Wystąpił nieznany błąd przy zapisie kategorii.')
     } finally {
       setLoading(false)
     }
@@ -197,6 +201,10 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
             >
               {loading ? 'Zapisywanie...' : editingId ? 'Zapisz zmiany' : 'Dodaj kategorię'}
             </button>
+
+            {error && (
+              <p className="text-xs text-red-500 mt-1 px-1">{error}</p>
+            )}
           </div>
 
           {/* List */}

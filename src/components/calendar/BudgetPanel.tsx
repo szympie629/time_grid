@@ -22,7 +22,14 @@ export default function BudgetPanel({ blocks, categories, weekDays, onHoverCateg
     if (!block.start_time || !block.category_id || block.is_deleted) return
     const dateStr = block.start_time.substring(0, 10)
     if (weekDateStrings.includes(dateStr)) {
-      minutesByCategory[block.category_id] = (minutesByCategory[block.category_id] || 0) + (block.duration_minutes || 0)
+      // duration_minutes is null for calendar blocks — calculate from start/end times
+      let minutes = block.duration_minutes
+      if (!minutes && block.start_time && block.end_time) {
+        const start = new Date(block.start_time).getTime()
+        const end = new Date(block.end_time).getTime()
+        minutes = Math.round((end - start) / 60000)
+      }
+      minutesByCategory[block.category_id] = (minutesByCategory[block.category_id] || 0) + (minutes || 0)
     }
   })
 
