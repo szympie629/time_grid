@@ -42,10 +42,12 @@
 }
 
 .bg-aurora {
-  /* Tło zorzy: czerń, fiolet, ciemna czerwień i głęboki granat */
-  background: linear-gradient(-45deg, #000000, #2b0b3f, #4a0024, #0b0726);
-  background-size: 400% 400%;
-  animation: aurora 15s ease infinite;
+  background-color: #0f172a;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
 }
 
 /* Ukrycie paska przewijania, ale zachowanie funkcjonalności */
