@@ -5,8 +5,8 @@ import { Category, categoriesApi } from '@/lib/api/categories'
 import { supabase } from '@/lib/supabase/client'
 
 const PALETTE = [
-  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
-  '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1', 
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1',
   '#f97316', '#84cc16'
 ]
 
@@ -25,9 +25,19 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   const [timeLimitHours, setTimeLimitHours] = useState<string>('')
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<string>('')
   const [editingId, setEditingId] = useState<string | null>(null)
-  
+
   const [loading, setLoading] = useState(false)
 
+  // 1. Deklaracja funkcji wyciągnięta NAJPIERW
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setName('')
+    setSelectedColor(PALETTE[0])
+    setTimeLimitHours('')
+    setTimeLimitMinutes('')
+  }
+
+  // 2. DOPIERO POTEM użycie jej w useEffect
   // Reset form when opened or editingId changes
   useEffect(() => {
     if (!isOpen) {
@@ -36,14 +46,6 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   }, [isOpen])
 
   if (!isOpen) return null
-
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setName('')
-    setSelectedColor(PALETTE[0])
-    setTimeLimitHours('')
-    setTimeLimitMinutes('')
-  }
 
   const handleEditInit = (cat: Category) => {
     setEditingId(cat.id)
@@ -65,7 +67,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
       const hrs = parseInt(timeLimitHours) || 0
       const mins = parseInt(timeLimitMinutes) || 0
       const totalMinutes = (hrs * 60) + mins
-      
+
       const payload = {
         name: name.trim(),
         color: selectedColor,
@@ -101,14 +103,14 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">Zarządzaj Kategoriami</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -122,7 +124,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                 <button onClick={handleCancelEdit} className="text-xs text-blue-500 hover:text-blue-600">Anuluj edycję</button>
               )}
             </div>
-            
+
             <div className="flex flex-col gap-2">
               <input
                 type="text"
@@ -170,8 +172,8 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                   title={c}
                 />
               ))}
-              
-              <label 
+
+              <label
                 className={`relative w-6 h-6 rounded-full border-2 transition-transform cursor-pointer flex items-center justify-center hover:scale-110 ${!PALETTE.includes(selectedColor) ? 'border-gray-900 dark:border-white scale-110' : 'border-dashed border-gray-400 dark:border-slate-500'}`}
                 style={{ backgroundColor: !PALETTE.includes(selectedColor) ? selectedColor : 'transparent', background: !PALETTE.includes(selectedColor) ? undefined : 'conic-gradient(red, yellow, green, cyan, blue, magenta, red)' }}
                 title="Wybierz własny kolor z palety"
@@ -234,8 +236,8 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                         title="Usuń kategorię"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"/>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
                       </button>
                     </div>
