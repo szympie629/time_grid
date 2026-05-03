@@ -127,7 +127,18 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
   const pendingTasks = tasks.filter(t => !t.is_completed)
 
-  const durationMinutes = Math.round((currentHeight / 80) * 60)
+  // Calculate duration from actual times, not pixel height
+  let durationMinutes: number
+  if (block.start_time && block.end_time) {
+    const start = new Date(block.start_time).getTime()
+    const end = new Date(block.end_time).getTime()
+    durationMinutes = Math.round((end - start) / 60000)
+  } else if (block.duration_minutes) {
+    durationMinutes = block.duration_minutes
+  } else {
+    // Fallback for drafts / resize preview
+    durationMinutes = Math.round((currentHeight / 80) * 60)
+  }
   const hours = Math.floor(durationMinutes / 60)
   const mins = durationMinutes % 60
   const durationText = hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`
@@ -162,55 +173,110 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
         zIndex: isResizing || transform || isOverlay ? 50 : 10,
       }}
     >
-      <div className="flex items-start justify-between gap-1 w-full z-10 shrink-0">
-        <div className="flex items-center gap-1.5">
-          {!isDraft && (
-            <div
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center"
-            >
-              <input
-                type="checkbox"
-                checked={block.is_completed ?? false}
-                onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
-                className="w-3 h-3 cursor-pointer accent-green-500 rounded-sm block"
-              />
-            </div>
-          )}
-          {!isDraft && (
-            <span className="text-[10px] font-medium opacity-90 leading-none block">
-              {durationText}
+      {durationMinutes <= 30 ? (
+        /* Compact layout for short blocks: everything in one row */
+        <div className="flex items-center justify-between gap-1 w-full z-10 shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {!isDraft && (
+              <div
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center shrink-0"
+              >
+                <input
+                  type="checkbox"
+                  checked={block.is_completed ?? false}
+                  onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
+                  className="w-3 h-3 cursor-pointer accent-green-500 rounded-sm block"
+                />
+              </div>
+            )}
+            {!isDraft && (
+              <span className="text-[10px] font-medium opacity-90 leading-none shrink-0">
+                {durationText}
+              </span>
+            )}
+            <span className="font-bold text-[11px] leading-none truncate min-w-0">
+              {block.title}
             </span>
-          )}
-        </div>
+          </div>
 
-        <div className="flex items-center gap-0.5 shrink-0">
-          {!isDraft && onCopy && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onCopy(block); }}
-              className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
-            </button>
-          )}
-          {!isDraft && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id);
-              }}
-              className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-[10px]"
-            >
-              ✕
-            </button>
-          )}
+          <div className="flex items-center gap-0.5 shrink-0">
+            {!isDraft && onCopy && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onCopy(block); }}
+                className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
+              </button>
+            )}
+            {!isDraft && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id);
+                }}
+                className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-[10px]"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Standard layout for longer blocks: title on separate line */
+        <>
+          <div className="flex items-start justify-between gap-1 w-full z-10 shrink-0">
+            <div className="flex items-center gap-1.5">
+              {!isDraft && (
+                <div
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center"
+                >
+                  <input
+                    type="checkbox"
+                    checked={block.is_completed ?? false}
+                    onChange={(e) => onUpdate(block.id, { is_completed: e.target.checked })}
+                    className="w-3 h-3 cursor-pointer accent-green-500 rounded-sm block"
+                  />
+                </div>
+              )}
+              {!isDraft && (
+                <span className="text-[10px] font-medium opacity-90 leading-none block">
+                  {durationText}
+                </span>
+              )}
+            </div>
 
-      <div className="mt-0.5 font-bold text-[11px] leading-tight line-clamp-2 z-10 w-full pr-1 shrink-0">
-        {block.title}
-      </div>
+            <div className="flex items-center gap-0.5 shrink-0">
+              {!isDraft && onCopy && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onCopy(block); }}
+                  className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-white"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
+                </button>
+              )}
+              {!isDraft && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isOverlay && confirm('Usunąć ten blok?')) onDelete(block.id);
+                  }}
+                  className="w-4 h-4 flex items-center justify-center rounded hover:bg-black/20 transition-colors text-[10px]"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-0.5 font-bold text-[11px] leading-tight line-clamp-2 z-10 w-full pr-1 shrink-0">
+            {block.title}
+          </div>
+        </>
+      )}
 
       {!isDraft && pendingTasks.length > 0 && (
         <div className="mt-1 flex flex-col gap-px z-10 overflow-hidden shrink-0">
