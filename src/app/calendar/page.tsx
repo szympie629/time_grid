@@ -458,9 +458,9 @@ export default function CalendarPage() {
               
               {/* Poziomy group: kalendarz + sticky notes */}
               <Panel minSize={40} defaultSize={75} id="calendar-row-panel">
-                <Group orientation="horizontal" id="calendar-row-layout" className="flex h-full w-full">
+                <Group orientation="horizontal" id="calendar-row-layout" key={isRightPanelOpen ? 'row-open' : 'row-closed'}>
                   
-                  <Panel minSize={40} id="calendar-panel">
+                  <Panel minSize={20} defaultSize={isRightPanelOpen ? 75 : 100} id="calendar-panel">
                     <section className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col relative">
                       <div className="flex-1 overflow-hidden min-h-0 relative">
                         <CalendarGrid 
