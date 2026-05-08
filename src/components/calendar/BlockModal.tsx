@@ -39,9 +39,10 @@ interface SortableTaskItemProps {
   task: Task
   onToggle: (id: string, current: boolean) => void
   onDelete: (id: string) => void
+  onEdit: (id: string, newTitle: string) => void // Dodany prop do edycji
 }
 
-function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
+function SortableTaskItem({ task, onToggle, onDelete, onEdit }: SortableTaskItemProps) {
   const {
     attributes,
     listeners,
@@ -50,6 +51,26 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
     transition,
     isDragging,
   } = useSortable({ id: task.id })
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(task.title)
+
+  const handleSaveEdit = () => {
+    if (editValue.trim() && editValue !== task.title) {
+      onEdit(task.id, editValue.trim())
+    } else {
+      setEditValue(task.title) // Cofnij, jeśli puste
+    }
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSaveEdit()
+    if (e.key === 'Escape') {
+      setEditValue(task.title)
+      setIsEditing(false)
+    }
+  }
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -65,7 +86,7 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
       className="flex items-center justify-between group bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 p-2.5 rounded-lg border border-gray-100 dark:border-slate-700 transition-colors"
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        {/* Drag handle — tylko ten element inicjuje przeciąganie */}
+        {/* Drag handle */}
         <button
           {...listeners}
           {...attributes}
@@ -82,20 +103,46 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
           onChange={() => onToggle(task.id, task.is_completed)}
           className={`w-4 h-4 cursor-pointer shrink-0 accent-green-500 rounded`}
         />
-        <span
-          className={`text-sm truncate ${task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'
-            }`}
-        >
-          {task.title}
-        </span>
+
+        {/* Przełączanie między tekstem a trybem edycji */}
+        {isEditing ? (
+          <input
+            autoFocus
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSaveEdit}
+            onKeyDown={handleKeyDown}
+            className="flex-1 bg-white dark:bg-slate-900 border border-blue-500 rounded px-2 py-0.5 text-sm text-gray-900 dark:text-white outline-none"
+          />
+        ) : (
+          <span
+            onDoubleClick={() => setIsEditing(true)}
+            className={`text-sm truncate flex-1 ${task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'}`}
+          >
+            {task.title}
+          </span>
+        )}
       </div>
 
-      <button
-        onClick={() => onDelete(task.id)}
-        className="text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all px-1.5 font-bold shrink-0 ml-1"
-      >
-        ✕
-      </button>
+      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1">
+        {/* Ikona Edycji */}
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-gray-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 px-1.5 transition-colors"
+          title="Edytuj"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </button>
+
+        {/* Ikona Usuwania */}
+        <button
+          onClick={() => onDelete(task.id)}
+          className="text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 px-1.5 font-bold transition-colors"
+          title="Usuń"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   )
 }
@@ -232,6 +279,16 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       notifyTasksChanged()
     } catch {
       alert('Błąd dodawania zadania')
+    }
+  }
+
+  const handleEditSubTask = async (taskId: string, newTitle: string) => {
+    try {
+      const updated = await tasksApi.updateTask(supabase, taskId, newTitle)
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)))
+      notifyTasksChanged()
+    } catch {
+      alert('Błąd edycji zadania')
     }
   }
 
@@ -385,8 +442,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === tab.id
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300'
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300'
               }`}
           >
             {tab.label}
@@ -439,8 +496,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                     key={mins}
                     onClick={() => handleDurationChange(mins)}
                     className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
-                        ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
-                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+                      ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
                       }`}
                   >
                     {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
@@ -600,6 +657,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                           task={task}
                           onToggle={handleToggleTask}
                           onDelete={handleDeleteSubTask}
+                          onEdit={handleEditSubTask} // <-- DODAJ TĘ LINIJKĘ
                         />
                       ))}
                     </SortableContext>

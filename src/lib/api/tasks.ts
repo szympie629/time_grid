@@ -50,6 +50,20 @@ export const tasksApi = {
     return data as Task
   },
 
+  // --- DODAJ TĘ FUNKCJĘ ---
+  async updateTask(supabase: SupabaseClient<Database>, id: string, title: string) {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ title })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as Task
+  },
+  // -------------------------
+
   async deleteTask(supabase: SupabaseClient<Database>, id: string) {
     const { error } = await supabase.from('tasks').delete().eq('id', id)
     if (error) throw error
