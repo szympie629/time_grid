@@ -3,6 +3,7 @@ import { Block } from '@/lib/api/blocks'
 import { Category } from '@/lib/api/categories'
 import { tasksApi, Task } from '@/lib/api/tasks'
 import { supabase } from '@/lib/supabase/client'
+import { createPortal } from 'react-dom'
 import {
   DndContext,
   closestCenter,
@@ -82,9 +83,8 @@ function SortableTaskItem({ task, onToggle, onDelete }: SortableTaskItemProps) {
           className={`w-4 h-4 cursor-pointer shrink-0 accent-green-500 rounded`}
         />
         <span
-          className={`text-sm truncate ${
-            task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'
-          }`}
+          className={`text-sm truncate ${task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'
+            }`}
         >
           {task.title}
         </span>
@@ -334,10 +334,11 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   if (!isMounted) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed z-[100] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[400px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800"
+      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[400px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {/* ── Header ── */}
       <div
@@ -383,11 +384,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === tab.id
+            className={`px-4 py-2 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === tab.id
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -438,11 +438,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                     type="button"
                     key={mins}
                     onClick={() => handleDurationChange(mins)}
-                    className={`text-[10px] py-1 rounded-lg border transition-colors ${
-                      durationMins === mins
+                    className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
                         ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
                         : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
-                    }`}
+                      }`}
                   >
                     {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
                   </button>
@@ -650,6 +649,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
