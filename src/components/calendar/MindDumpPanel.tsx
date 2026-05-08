@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { mindDumpApi, type MindDump } from '@/lib/api/mindDump'
 import { globalTodosApi } from '@/lib/api/globalTodos'
 import { stickyNotesApi } from '@/lib/api/stickyNotes'
+import { Tooltip } from '../ui/Tooltip'
 
 type TagId = 'idea' | 'worry' | 'question' | 'todo' | 'note'
 const TAGS: { id: TagId, label: string, color: string, bg: string }[] = [
@@ -58,13 +59,9 @@ export default function MindDumpPanel() {
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mind Dump</h3>
-        <div className="group relative flex items-center z-50">
+        <Tooltip content="Bufor na luźne myśli i pomysły. Wrzucaj tu wszystko, co odrywa Cię od pracy, a wieczorem zadecyduj, co z tym zrobić.">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-52 p-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[10px] rounded shadow-xl z-50 font-normal normal-case tracking-normal">
-            Bufor na luźne myśli i pomysły. Wrzucaj tu wszystko, co odrywa Cię od pracy, a wieczorem zadecyduj, co z tym zrobić.
-            <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
-          </div>
-        </div>
+        </Tooltip>
       </div>
 
       <div className="flex gap-1.5 mb-2 shrink-0">

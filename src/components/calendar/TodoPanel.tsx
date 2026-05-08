@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { globalTodosApi, type GlobalTodo } from '@/lib/api/globalTodos'
+import { Tooltip } from '../ui/Tooltip'
+
 
 export default function TodoPanel() {
   const [todos, setTodos] = useState<GlobalTodo[]>([])
@@ -70,10 +72,9 @@ export default function TodoPanel() {
           <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">To-Do</h3>
           <div className="group relative flex items-center z-50">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[10px] rounded shadow-xl z-50 font-normal normal-case tracking-normal">
-              Szybkie zadania i drobne obowiązki. Lista rzeczy do zrobienia w tzw. międzyczasie, które nie wymagają rezerwacji bloku w kalendarzu.
-              <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
-            </div>
+            <Tooltip content="Szybkie zadania i drobne obowiązki. Lista rzeczy do zrobienia w tzw. międzyczasie, które nie wymagają rezerwacji bloku w kalendarzu.">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </Tooltip>
           </div>
         </div>
         <div className="flex-1" />
