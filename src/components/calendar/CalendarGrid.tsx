@@ -50,14 +50,14 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
   const [copiedBlock, setCopiedBlock] = useState<Block | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
-  
+
   const weekDays = getWeekDays(currentDate)
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 560 
+      scrollContainerRef.current.scrollTop = 560
     }
     const stored = localStorage.getItem('theme') || 'light'
     setTheme(stored as 'light' | 'dark')
@@ -157,7 +157,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
       console.error(error)
     }
   }
-  
+
   const handleDeleteBlock = async (id: string) => {
     setBlocks(prev => prev.filter(b => b.id !== id))
     setSelectedBlockId(null)
@@ -190,8 +190,8 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
         <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4">
             {onToggleSidebar && (
-              <button 
-                onClick={onToggleSidebar} 
+              <button
+                onClick={onToggleSidebar}
                 title={isSidebarOpen ? "Zwiń panel boczny" : "Rozwiń panel boczny"}
                 className="w-9 h-9 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm"
               >
@@ -209,7 +209,12 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                 </svg>
               </button>
             )}
-            <h2 className="text-xl font-bold capitalize">{format(weekDays[0], 'MMMM yyyy')}</h2>
+            <h2 className="text-xl font-bold capitalize flex items-baseline gap-2">
+              {format(weekDays[0], 'MMMM yyyy')}
+              <span className="text-sm font-medium text-gray-500 dark:text-slate-400 lowercase">
+                (tydzień {format(weekDays[0], 'I')})
+              </span>
+            </h2>
           </div>
           <div className="flex gap-2 items-center">
             <button onClick={toggleTheme} title={theme === 'light' ? 'Tryb ciemny' : 'Tryb jasny'} className="w-9 h-9 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm">
@@ -269,7 +274,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
               {weekDays.map((day) => {
                 const dateKey = format(day, 'yyyy-MM-dd')
                 const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
-                
+
                 const dayBlocks = blocks.filter(b => b.start_time?.startsWith(dateKey))
                 if (draftBlock && draftBlock.start_time?.startsWith(dateKey)) {
                   dayBlocks.push(draftBlock)
@@ -296,7 +301,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
 
                   return { ...block, duration, overlapLevel: overlappingBigger.length }
                 })
-                
+
                 blocksWithLayout.sort((a, b) => b.duration - a.duration)
 
                 return (
@@ -307,19 +312,19 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                           <span className="opacity-0 group-hover:opacity-100 text-blue-400 dark:text-blue-500 font-bold text-xl">+</span>
                         </div>
                       ))}
-                      
+
                       {blocksWithLayout.map(block => {
                         const baseStyle = getBlockPosition(block.start_time!, block.end_time!)
                         const leftPercent = Math.min(75, 5 + (block.overlapLevel * 8))
                         const widthPercent = Math.max(20, 95 - leftPercent)
-                        
+
                         return (
-                          <DraggableBlock 
-                            key={`calendar-${block.id}`} 
+                          <DraggableBlock
+                            key={`calendar-${block.id}`}
                             idPrefix="calendar-"
-                            block={block as Block} 
+                            block={block as Block}
                             categories={categories}
-                            style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }} 
+                            style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }}
                             onResizeEnd={handleResizeEnd}
                             onClick={(id) => setSelectedBlockId(id)}
                             onDelete={handleDeleteBlock}
@@ -341,8 +346,8 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
       </div>
 
       {selectedBlockId && (
-        <BlockModal 
-          block={blocks.find(b => b.id === selectedBlockId)!} 
+        <BlockModal
+          block={blocks.find(b => b.id === selectedBlockId)!}
           categories={categories}
           onClose={() => setSelectedBlockId(null)}
           onUpdate={handleUpdateBlockDetails}
@@ -350,10 +355,10 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
           onCopy={(blockData) => setCopiedBlock(blockData)}
         />
       )}
-      
+
       {draftBlock && (
-        <BlockModal 
-          block={draftBlock} 
+        <BlockModal
+          block={draftBlock}
           categories={categories}
           onClose={() => setDraftBlock(null)}
           onUpdate={handleSaveDraft}
@@ -364,10 +369,10 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
 
       {copiedBlock && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-[200] border-2 border-white/20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
           <span className="font-semibold text-sm">Malujesz: {copiedBlock.title}</span>
-          <button 
-            onClick={() => setCopiedBlock(null)} 
+          <button
+            onClick={() => setCopiedBlock(null)}
             className="bg-indigo-800 px-3 py-1 rounded-full hover:bg-indigo-900 transition-colors text-xs font-bold"
           >
             Zakończ
