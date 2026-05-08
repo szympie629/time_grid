@@ -43,14 +43,14 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const posKey = `${block.start_time || 'backlog'}-${style?.top || 0}-${style?.left || 0}`
   const posRef = useRef(posKey)
 
-  let baseHeight = style?.height ? parseInt(style.height as string) : 80;
+  let baseHeight = style?.height ? parseInt(style.height as string) : 60;
   if (isOverlay && block.start_time && block.end_time) {
     const startT = block.start_time.split('T')[1];
     const endT = block.end_time.split('T')[1];
     if (startT && endT) {
       const [sHours, sMinutes] = startT.split(':').map(Number);
       const [eHours, eMinutes] = endT.split(':').map(Number);
-      baseHeight = ((eHours + eMinutes / 60) - (sHours + sMinutes / 60)) * 80;
+      baseHeight = ((eHours + eMinutes / 60) - (sHours + sMinutes / 60)) * 60;
     }
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
@@ -101,8 +101,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
     if (!isResizing) return
     const handlePointerMove = (e: PointerEvent) => {
       const deltaY = e.clientY - startYRef.current
-      const newHeight = Math.max(20, initialHeightRef.current + deltaY)
-      const snappedHeight = Math.round(newHeight / 20) * 20
+      const newHeight = Math.max(15, initialHeightRef.current + deltaY)
+      const snappedHeight = Math.round(newHeight / 15) * 15
       setResizeHeight(snappedHeight)
     }
     const handlePointerUp = () => {
@@ -137,7 +137,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
     durationMinutes = block.duration_minutes
   } else {
     // Fallback for drafts / resize preview
-    durationMinutes = Math.round((currentHeight / 80) * 60)
+    durationMinutes = currentHeight // bo 1px = 1min
   }
   const hours = Math.floor(durationMinutes / 60)
   const mins = durationMinutes % 60
