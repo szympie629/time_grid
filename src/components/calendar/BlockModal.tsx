@@ -117,7 +117,10 @@ function SortableTaskItem({ task, onToggle, onDelete, onEdit }: SortableTaskItem
         ) : (
           <span
             onDoubleClick={() => setIsEditing(true)}
-            className={`text-sm truncate flex-1 ${task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'}`}
+            title={task.title} // <-- Dodany atrybut title
+            className={`text-sm truncate flex-1 cursor-help ${ // <-- Dodana klasa cursor-help
+              task.is_completed ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-slate-200'
+              }`}
           >
             {task.title}
           </span>
