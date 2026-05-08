@@ -1,42 +1,70 @@
 'use client'
 
-import { useState } from 'react'
-
-interface TodoItem {
-  id: string
-  text: string
-  completed: boolean
-}
+import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { globalTodosApi, type GlobalTodo } from '@/lib/api/globalTodos'
 
 export default function TodoPanel() {
-  const [todos, setTodos] = useState<TodoItem[]>([])
+  const [todos, setTodos] = useState<GlobalTodo[]>([])
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  const addTodo = () => {
+  const fetchTodos = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      try {
+        const data = await globalTodosApi.getTodos(supabase, user.id)
+        setTodos(data)
+      } catch (e) {
+        console.error('Błąd pobierania:', e)
+      }
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    fetchTodos()
+  }, [fetchTodos])
+
+  const addTodo = async () => {
     if (!input.trim()) return
-    setTodos(prev => [
-      ...prev,
-      { id: crypto.randomUUID(), text: input.trim(), completed: false }
-    ])
-    setInput('')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    try {
+      const newTodo = await globalTodosApi.createTodo(supabase, user.id, input.trim())
+      setTodos(prev => [newTodo, ...prev])
+      setInput('')
+    } catch (e) {
+      alert("Błąd dodawania")
+    }
   }
 
-  const toggleTodo = (id: string) => {
-    setTodos(prev =>
-      prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
-    )
+  const toggleTodo = async (id: string, currentStatus: boolean) => {
+    try {
+      await globalTodosApi.toggleTodo(supabase, id, !currentStatus)
+      setTodos(prev => prev.map(t => t.id === id ? { ...t, is_completed: !currentStatus } : t))
+    } catch (e) {
+      alert("Błąd zmiany statusu")
+    }
   }
 
-  const deleteTodo = (id: string) => {
-    setTodos(prev => prev.filter(t => t.id !== id))
+  const deleteTodo = async (id: string) => {
+    try {
+      await globalTodosApi.deleteTodo(supabase, id)
+      setTodos(prev => prev.filter(t => t.id !== id))
+    } catch (e) {
+      alert("Błąd usuwania")
+    }
   }
 
-  const pending = todos.filter(t => !t.completed)
-  const completed = todos.filter(t => t.completed)
+  const pending = todos.filter(t => !t.is_completed)
+  const completed = todos.filter(t => t.is_completed)
+
+  if (loading) return <div className="p-4 text-xs text-gray-400">Ładowanie...</div>
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header + Input */}
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">To-Do</h3>
         <div className="flex-1" />
@@ -63,32 +91,25 @@ export default function TodoPanel() {
         </button>
       </div>
 
-      {/* Todo list */}
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-1">
         {todos.length === 0 && (
           <div className="flex-1 flex items-center justify-center opacity-40">
-            <p className="text-xs text-gray-500 dark:text-slate-500">Brak zadań. Dodaj pierwsze powyżej.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">Brak zadań.</p>
           </div>
         )}
 
         {pending.map(todo => (
-          <div
-            key={todo.id}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/50 group transition-colors"
-          >
+          <div key={todo.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/50 group transition-colors">
             <input
               type="checkbox"
               checked={false}
-              onChange={() => toggleTodo(todo.id)}
+              onChange={() => toggleTodo(todo.id, todo.is_completed)}
               className="w-3.5 h-3.5 cursor-pointer accent-blue-500 rounded shrink-0"
             />
             <span className="text-xs text-gray-800 dark:text-slate-200 flex-1 min-w-0 truncate">
               {todo.text}
             </span>
-            <button
-              onClick={() => deleteTodo(todo.id)}
-              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all p-0.5"
-            >
+            <button onClick={() => deleteTodo(todo.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all p-0.5">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -98,27 +119,19 @@ export default function TodoPanel() {
 
         {completed.length > 0 && (
           <>
-            {pending.length > 0 && (
-              <div className="h-px w-full bg-gray-200 dark:bg-slate-700/50 my-1" />
-            )}
+            <div className="h-px w-full bg-gray-200 dark:bg-slate-700/50 my-1" />
             {completed.map(todo => (
-              <div
-                key={todo.id}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg opacity-40 hover:opacity-60 group transition-all"
-              >
+              <div key={todo.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg opacity-40 hover:opacity-60 group transition-all">
                 <input
                   type="checkbox"
                   checked={true}
-                  onChange={() => toggleTodo(todo.id)}
+                  onChange={() => toggleTodo(todo.id, todo.is_completed)}
                   className="w-3.5 h-3.5 cursor-pointer accent-blue-500 rounded shrink-0"
                 />
                 <span className="text-xs text-gray-500 dark:text-slate-500 flex-1 min-w-0 truncate line-through">
                   {todo.text}
                 </span>
-                <button
-                  onClick={() => deleteTodo(todo.id)}
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all p-0.5"
-                >
+                <button onClick={() => deleteTodo(todo.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all p-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
