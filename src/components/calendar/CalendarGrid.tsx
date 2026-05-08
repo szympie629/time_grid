@@ -43,12 +43,13 @@ interface CalendarGridProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
   highlightedCategoryId?: string | null;
+  copiedBlock: Block | null;
+  setCopiedBlock: (block: Block | null) => void;
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, isRightPanelOpen = false, onToggleRightPanel, currentDate, setCurrentDate, highlightedCategoryId }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, isRightPanelOpen = false, onToggleRightPanel, currentDate, setCurrentDate, highlightedCategoryId, copiedBlock, setCopiedBlock }: CalendarGridProps) {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
-  const [copiedBlock, setCopiedBlock] = useState<Block | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   const weekDays = getWeekDays(currentDate)
@@ -89,24 +90,38 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
     const start = new Date(day)
     start.setHours(hours, minutes, 0, 0)
 
-    if (copiedBlock && copiedBlock.start_time && copiedBlock.end_time) {
-      const copiedStart = new Date(copiedBlock.start_time).getTime()
-      const copiedEnd = new Date(copiedBlock.end_time).getTime()
-      const end = new Date(start.getTime() + (copiedEnd - copiedStart))
+    if (copiedBlock) {
+      let durationMs = 60 * 60000;
+      if (copiedBlock.start_time && copiedBlock.end_time) {
+        const copiedStart = new Date(copiedBlock.start_time).getTime()
+        const copiedEnd = new Date(copiedBlock.end_time).getTime()
+        durationMs = copiedEnd - copiedStart;
+      } else if (copiedBlock.duration_minutes) {
+        durationMs = copiedBlock.duration_minutes * 60000;
+      }
+
+      const end = new Date(start.getTime() + durationMs);
 
       const newBlock = await blocksApi.createBlock(supabase, {
         user_id: user.id,
         title: copiedBlock.title,
         description: copiedBlock.description,
         category_id: copiedBlock.category_id,
-        color_tag: null,
+        color_tag: copiedBlock.color_tag,
         start_time: toLocalISOString(start),
         end_time: toLocalISOString(end),
+        duration_minutes: null
       })
 
-      const originalTasks = await tasksApi.getTasks(supabase, copiedBlock.id)
-      for (const task of originalTasks) {
-        await tasksApi.createTask(supabase, newBlock.id, task.title)
+      if (copiedBlock.id !== 'draft-backlog') {
+        try {
+          const originalTasks = await tasksApi.getTasks(supabase, copiedBlock.id)
+          for (const task of originalTasks) {
+            await tasksApi.createTask(supabase, newBlock.id, task.title)
+          }
+        } catch (e) {
+          console.warn("Nie udało się skopiować sub-tasków", e)
+        }
       }
 
       setBlocks(prev => [...prev, newBlock])
@@ -197,10 +212,8 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {isSidebarOpen ? (
-                    // Stan rozszerzony -> przyszły to zwinięty (sam prostokąt)
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   ) : (
-                    // Stan zwinięty -> przyszły to rozszerzony (prostokąt z lewym panelem)
                     <>
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       <line x1="9" y1="3" x2="9" y2="21"></line>
@@ -243,10 +256,8 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {isRightPanelOpen ? (
-                    // Wysunięty -> przyszły stan: zwinięty (sam prostokąt)
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   ) : (
-                    // Zwinięty -> przyszły stan: wysunięty (prostokąt z prawym panelem)
                     <>
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       <line x1="15" y1="3" x2="15" y2="21"></line>
@@ -365,19 +376,6 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
           onDelete={() => setDraftBlock(null)}
           onChangePreview={(updates) => setDraftBlock({ ...draftBlock, ...updates })}
         />
-      )}
-
-      {copiedBlock && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-[200] border-2 border-white/20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" /><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" /></svg>
-          <span className="font-semibold text-sm">Malujesz: {copiedBlock.title}</span>
-          <button
-            onClick={() => setCopiedBlock(null)}
-            className="bg-indigo-800 px-3 py-1 rounded-full hover:bg-indigo-900 transition-colors text-xs font-bold"
-          >
-            Zakończ
-          </button>
-        </div>
       )}
     </>
   )
