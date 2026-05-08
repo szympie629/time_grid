@@ -374,7 +374,16 @@ export default function CalendarPage() {
                   <Panel defaultSize={50} minSize={20} id="backlog-panel">
                     <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                       <DroppableBacklogContainer>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Backlog</h2>
+                        <div className="flex items-center gap-2 mb-4">
+                          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Backlog</h2>
+                          <div className="group relative flex items-center z-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded-lg shadow-xl z-50 font-medium">
+                              Zadania wymagające dłuższego skupienia. Kiedy będziesz gotowy, przeciągnij je na kalendarz, by zaplanować na nie konkretny czas.
+                              <div className="absolute left-2 top-full border-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
+                            </div>
+                          </div>
+                        </div>
 
                         <div className="flex flex-col gap-1 min-h-[100px] pb-16">
                           {backlogItems.length === 0 ? (
