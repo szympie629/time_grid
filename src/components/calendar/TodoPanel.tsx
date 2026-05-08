@@ -70,12 +70,9 @@ export default function TodoPanel() {
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <div className="flex items-center gap-1.5">
           <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">To-Do</h3>
-          <div className="group relative flex items-center z-50">
+          <Tooltip content="Szybkie zadania i drobne obowiązki. Lista rzeczy do zrobienia w tzw. międzyczasie, które nie wymagają rezerwacji bloku w kalendarzu.">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <Tooltip content="Szybkie zadania i drobne obowiązki. Lista rzeczy do zrobienia w tzw. międzyczasie, które nie wymagają rezerwacji bloku w kalendarzu.">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            </Tooltip>
-          </div>
+          </Tooltip>
         </div>
         <div className="flex-1" />
         <span className="text-[10px] text-gray-400 dark:text-slate-600">
