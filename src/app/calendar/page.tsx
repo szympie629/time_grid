@@ -541,19 +541,19 @@ export default function CalendarPage() {
                     </section>
                   </Panel>
 
-                  {/* Prawy panel — Sticky Notes (tej samej wysokości co kalendarz) */}
+                  {/* Prawy panel — Sticky Notes */}
                   {isRightPanelOpen && (
-                    <>
-                      <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10" id="right-sep">
-                        <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-                      </Separator>
+                    <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10" id="right-sep">
+                      <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                    </Separator>
+                  )}
 
-                      <Panel defaultSize={20} minSize={12} maxSize={35} id="right-panel">
-                        <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col overflow-hidden">
-                          <StickyNotesPanel />
-                        </aside>
-                      </Panel>
-                    </>
+                  {isRightPanelOpen && (
+                    <Panel defaultSize={20} minSize={12} maxSize={35} id="right-panel">
+                      <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col overflow-hidden">
+                        <StickyNotesPanel />
+                      </aside>
+                    </Panel>
                   )}
 
                 </Group>
