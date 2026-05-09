@@ -399,6 +399,24 @@ export default function CalendarPage() {
       } catch (err) {
         alert("Błąd przenoszenia notatki!")
       }
+    } else if (type === 'minddump' && overId === 'droppable-backlog') {
+      const entry = activeData?.item as MindDump
+      if (!entry) return
+      
+      setEditingBacklogBlock({
+        id: `draft-minddump-${entry.id}`,
+        user_id: '',
+        title: entry.text,
+        description: '',
+        start_time: null,
+        end_time: null,
+        duration_minutes: 60,
+        color_tag: null,
+        category_id: null,
+        is_completed: false,
+        is_deleted: false,
+        created_at: new Date().toISOString()
+      })
     }
   }
 
@@ -677,7 +695,7 @@ export default function CalendarPage() {
           categories={categories}
           onClose={() => setEditingBacklogBlock(null)}
           onUpdate={async (id, updates) => {
-            if (id === 'draft-backlog') {
+            if (id === 'draft-backlog' || id.startsWith('draft-minddump-')) {
               const { data: { user } } = await supabase.auth.getUser()
               if (!user) return
               const newBlock = await blocksApi.createBlock(supabase, {
@@ -693,6 +711,12 @@ export default function CalendarPage() {
                 is_deleted: false
               })
               setBacklogItems(prev => [newBlock, ...prev])
+
+              if (id.startsWith('draft-minddump-')) {
+                const minddumpId = id.replace('draft-minddump-', '')
+                await mindDumpApi.deleteEntry(supabase, minddumpId)
+                window.dispatchEvent(new CustomEvent('minddump-deleted', { detail: { id: minddumpId } }))
+              }
             } else {
               setBacklogItems(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
               await blocksApi.updateBlock(supabase, id, updates)
@@ -700,7 +724,7 @@ export default function CalendarPage() {
             setEditingBacklogBlock(null)
           }}
           onDelete={async (id) => {
-            if (id !== 'draft-backlog') {
+            if (id !== 'draft-backlog' && !id.startsWith('draft-minddump-')) {
               setBacklogItems(prev => prev.filter(b => b.id !== id))
               await blocksApi.updateBlock(supabase, id, { is_deleted: true })
             }
