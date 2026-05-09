@@ -552,17 +552,16 @@ export default function CalendarPage() {
                   </Panel>
 
                   {isRightPanelOpen && (
-                    <Separator className="w-4 group flex items-center justify-center cursor-col-resize z-10" id="right-sep">
-                      <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
-                    </Separator>
-                  )}
-
-                  {isRightPanelOpen && (
-                    <Panel defaultSize={20} minSize={5} maxSize={40} id="right-panel" className="min-w-0">
-                      <aside className="h-full min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col overflow-hidden">
-                        <StickyNotesPanel />
-                      </aside>
-                    </Panel>
+                    <>
+                      <Separator className="w-4 mx-2 group flex items-center justify-center cursor-col-resize z-10" id="right-sep">
+                        <div className="w-1 h-16 rounded-full bg-gray-300 dark:bg-slate-800 group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors" />
+                      </Separator>
+                      <Panel defaultSize={20} minSize={10} id="right-panel" className="min-w-0">
+                        <aside className="h-full min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col overflow-hidden">
+                          <StickyNotesPanel />
+                        </aside>
+                      </Panel>
+                    </>
                   )}
 
                 </Group>
