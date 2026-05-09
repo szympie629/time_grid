@@ -146,6 +146,7 @@ export default function CalendarPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
   const [activeRitual, setActiveRitual] = useState<Ritual | null>(null)
+  const [activeMindDump, setActiveMindDump] = useState<MindDump | null>(null)
   const [overlayWidth, setOverlayWidth] = useState<number>(200)
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null)
 
@@ -235,6 +236,12 @@ export default function CalendarPage() {
       const ritual = data.ritual as Ritual
       setActiveRitual(ritual)
       setActiveBlock(null)
+      setActiveMindDump(null)
+    } else if (data?.type === 'minddump') {
+      setOverlayWidth(defaultColumnWidth)
+      setActiveMindDump(data.item as MindDump)
+      setActiveBlock(null)
+      setActiveRitual(null)
     }
   }
 
@@ -243,6 +250,7 @@ export default function CalendarPage() {
     setActiveId(null)
     setActiveBlock(null)
     setActiveRitual(null)
+    setActiveMindDump(null)
 
     const { active, over, delta } = event
     if (!over) return
@@ -685,6 +693,11 @@ export default function CalendarPage() {
               style={{ width: `${overlayWidth}px`, margin: 0 }}
               onResizeEnd={() => { }} onClick={() => { }} onDelete={() => { }} onUpdate={() => { }}
             />
+          ) : activeMindDump ? (
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-2xl border-2 border-indigo-500 w-64 rotate-3 opacity-90 cursor-grabbing flex items-start gap-2">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300">#{activeMindDump.tag}</span>
+              <span className="text-xs text-gray-800 dark:text-slate-200">{activeMindDump.text}</span>
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
