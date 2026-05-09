@@ -21,6 +21,7 @@ import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
 import { globalTodosApi } from '@/lib/api/globalTodos'
 import { mindDumpApi, type MindDump } from '@/lib/api/mindDump'
+import { stickyNotesApi } from '@/lib/api/stickyNotes'
 import { RITUAL_ICONS } from '@/components/calendar/RitualManagerModal'
 import { formatTaskCount } from '@/utils/grammar'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -374,6 +375,29 @@ export default function CalendarPage() {
         window.dispatchEvent(new CustomEvent('minddump-deleted', { detail: { id: entry.id } }))
       } catch (err) {
         alert("Błąd konwersji notatki na zadanie!")
+      }
+    } else if (type === 'minddump' && overId === 'droppable-stickynotes') {
+      const entry = activeData?.item as MindDump
+      if (!entry) return
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      try {
+        const colorMap: Record<string, string> = {
+          idea: 'yellow',
+          worry: 'pink',
+          question: 'blue',
+          note: 'purple'
+        }
+        const color = colorMap[entry.tag] || 'yellow'
+        await stickyNotesApi.createNote(supabase, user.id, `[${entry.tag}] ${entry.text}`, color)
+        await mindDumpApi.deleteEntry(supabase, entry.id)
+        
+        window.dispatchEvent(new CustomEvent('sticky-note-added'))
+        window.dispatchEvent(new CustomEvent('minddump-deleted', { detail: { id: entry.id } }))
+      } catch (err) {
+        alert("Błąd przenoszenia notatki!")
       }
     }
   }

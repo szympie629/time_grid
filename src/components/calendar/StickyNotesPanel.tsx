@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Tooltip } from '../ui/Tooltip'
 import { supabase } from '@/lib/supabase/client'
 import { stickyNotesApi, type StickyNote } from '@/lib/api/stickyNotes'
+import { useDroppable } from '@dnd-kit/core'
 
 const COLORS = [
   { id: 'yellow', class: 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100', dot: 'bg-amber-300 dark:bg-amber-600' },
@@ -14,6 +15,8 @@ const COLORS = [
 ]
 
 export default function StickyNotesPanel() {
+  const { setNodeRef, isOver } = useDroppable({ id: 'droppable-stickynotes' })
+
   const [notes, setNotes] = useState<StickyNote[]>([])
   const [input, setInput] = useState('')
   const [selectedColor, setSelectedColor] = useState('yellow')
@@ -104,7 +107,7 @@ export default function StickyNotesPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div ref={setNodeRef} className={`flex flex-col h-full overflow-hidden transition-colors ${isOver ? 'bg-amber-50/50 dark:bg-amber-900/10 rounded-xl ring-2 ring-amber-400 border-transparent' : ''}`}>
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
         <Tooltip position="bottom" content="Ważne myśli, cele lub informacje na cały tydzień, które chcesz mieć przed oczami.">
