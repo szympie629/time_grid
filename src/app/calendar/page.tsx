@@ -375,8 +375,8 @@ export default function CalendarPage() {
                   <Panel defaultSize={50} minSize={20} id="backlog-panel">
                     <aside className="relative h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                       <DroppableBacklogContainer>
-                        <div className="flex items-center gap-2 mb-4">
-                          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Backlog</h2>
+                        <div className="flex items-center gap-2 mb-3 shrink-0">
+                          <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Backlog</h3>
                           <Tooltip position="right" content="Zadania wymagające dłuższego skupienia. Kiedy będziesz gotowy, przeciągnij je na kalendarz, by zaplanować na nie konkretny czas.">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                           </Tooltip>
@@ -422,7 +422,7 @@ export default function CalendarPage() {
                   <Panel defaultSize={50} minSize={20} id="rituals-panel">
                     <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col">
                       <div className="flex-1 overflow-y-auto p-4 min-h-0 no-scrollbar relative flex flex-col">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 px-2">Rytuały</h2>
+                        <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3 px-2 shrink-0">Rytuały</h3>
                         <div className="flex flex-col gap-1 pb-16 px-2">
                           {rituals.length === 0 ? (
                             <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">

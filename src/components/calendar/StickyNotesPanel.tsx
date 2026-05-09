@@ -13,7 +13,7 @@ export default function StickyNotesPanel() {
       </div>
 
       <div className="flex items-center gap-1.5 pointer-events-auto">
-        <p className="text-xs text-gray-500 dark:text-slate-500 font-medium">Sticky Notes</p>
+        <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
         <Tooltip content="Tablica kontekstowa. Miejsce na główne cele tygodnia, linki lub przypomnienia, które chcesz mieć zawsze na widoku.">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </Tooltip>
