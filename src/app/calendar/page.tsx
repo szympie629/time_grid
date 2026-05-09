@@ -19,6 +19,8 @@ import StickyNotesPanel from '@/components/calendar/StickyNotesPanel'
 import RitualManagerModal from '@/components/calendar/RitualManagerModal'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { ritualsApi, Ritual } from '@/lib/api/rituals'
+import { globalTodosApi } from '@/lib/api/globalTodos'
+import { mindDumpApi, type MindDump } from '@/lib/api/mindDump'
 import { RITUAL_ICONS } from '@/components/calendar/RitualManagerModal'
 import { formatTaskCount } from '@/utils/grammar'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -358,6 +360,21 @@ export default function CalendarPage() {
       setBlocks(prev => [...prev, ...newBlocks])
       setRecentlyDroppedId(newBlocks[0]?.id || null)
       setTimeout(() => setRecentlyDroppedId(null), 1000)
+    } else if (type === 'minddump' && overId === 'droppable-todo') {
+      const entry = activeData?.item as MindDump
+      if (!entry) return
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      try {
+        await globalTodosApi.createTodo(supabase, user.id, entry.text)
+        await mindDumpApi.deleteEntry(supabase, entry.id)
+        window.dispatchEvent(new CustomEvent('todo-added'))
+        window.dispatchEvent(new CustomEvent('minddump-deleted', { detail: { id: entry.id } }))
+      } catch (err) {
+        alert("Błąd konwersji notatki na zadanie!")
+      }
     }
   }
 

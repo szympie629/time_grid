@@ -4,12 +4,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { globalTodosApi, type GlobalTodo } from '@/lib/api/globalTodos'
 import { Tooltip } from '../ui/Tooltip'
+import { useDroppable } from '@dnd-kit/core'
 
 
 export default function TodoPanel() {
   const [todos, setTodos] = useState<GlobalTodo[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'droppable-todo',
+  })
 
   const fetchTodos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -26,6 +31,12 @@ export default function TodoPanel() {
 
   useEffect(() => {
     fetchTodos()
+  }, [fetchTodos])
+
+  useEffect(() => {
+    const handleTodoAdded = () => fetchTodos()
+    window.addEventListener('todo-added', handleTodoAdded)
+    return () => window.removeEventListener('todo-added', handleTodoAdded)
   }, [fetchTodos])
 
   const addTodo = async () => {
@@ -66,7 +77,7 @@ export default function TodoPanel() {
   if (loading) return <div className="p-4 text-xs text-gray-400">Ładowanie...</div>
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div ref={setNodeRef} className={`flex flex-col h-full overflow-hidden transition-colors ${isOver ? 'bg-blue-50/50 dark:bg-blue-900/10 rounded-xl ring-2 ring-blue-400 border-transparent' : ''}`}>
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <div className="flex items-center gap-1.5">
           <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">To-Do</h3>
