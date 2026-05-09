@@ -46,7 +46,14 @@ export default function MindDumpPanel() {
       if (entry.tag === 'todo') {
         await globalTodosApi.createTodo(supabase, user.id, entry.text)
       } else {
-        await stickyNotesApi.createNote(supabase, user.id, `[${entry.tag}] ${entry.text}`)
+        const colorMap: Record<string, string> = {
+          idea: 'yellow',
+          worry: 'pink',
+          question: 'blue',
+          note: 'purple'
+        }
+        const color = colorMap[entry.tag] || 'yellow'
+        await stickyNotesApi.createNote(supabase, user.id, `[${entry.tag}] ${entry.text}`, color)
       }
       await mindDumpApi.deleteEntry(supabase, entry.id)
       setEntries(prev => prev.filter(e => e.id !== entry.id))
