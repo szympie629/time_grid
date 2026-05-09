@@ -141,13 +141,13 @@ export default function StickyNotesPanel() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2.5">
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-wrap content-start items-start gap-3">
         {loading ? (
-          <div className="flex items-center justify-center h-full opacity-40">
+          <div className="w-full flex items-center justify-center h-full opacity-40">
             <p className="text-xs text-gray-500">Ładowanie...</p>
           </div>
         ) : notes.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+          <div className="w-full flex-1 flex flex-col items-center justify-center opacity-40 min-h-[150px]">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3 text-gray-400 dark:text-slate-600">
               <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z" />
               <polyline points="15 3 15 9 21 9" />
@@ -161,7 +161,7 @@ export default function StickyNotesPanel() {
             return (
               <div 
                 key={note.id} 
-                className={`relative p-3 rounded-xl shadow-sm hover:shadow-md transition-all group ${colorObj.class}`}
+                className={`relative p-3 rounded-xl shadow-sm hover:shadow-md transition-all group flex flex-col w-36 min-h-36 shrink-0 ${colorObj.class}`}
               >
                 {editingId === note.id ? (
                   <textarea
@@ -178,7 +178,7 @@ export default function StickyNotesPanel() {
                         setEditingId(null)
                       }
                     }}
-                    className="w-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed min-h-[60px]"
+                    className="flex-1 w-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed"
                   />
                 ) : (
                   <div 
@@ -186,7 +186,7 @@ export default function StickyNotesPanel() {
                       setEditContent(note.content)
                       setEditingId(note.id)
                     }}
-                    className="text-xs leading-relaxed whitespace-pre-wrap cursor-text min-h-[40px]"
+                    className="flex-1 text-xs leading-relaxed whitespace-pre-wrap cursor-text break-words"
                   >
                     {note.content}
                   </div>
