@@ -41,6 +41,12 @@ export default function StickyNotesPanel() {
   }, [fetchNotes])
 
   useEffect(() => {
+    const handleStickyNoteAdded = () => fetchNotes()
+    window.addEventListener('sticky-note-added', handleStickyNoteAdded)
+    return () => window.removeEventListener('sticky-note-added', handleStickyNoteAdded)
+  }, [fetchNotes])
+
+  useEffect(() => {
     if (editingId && editInputRef.current) {
       editInputRef.current.focus()
       editInputRef.current.setSelectionRange(editInputRef.current.value.length, editInputRef.current.value.length)

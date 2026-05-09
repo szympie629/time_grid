@@ -103,6 +103,7 @@ export default function MindDumpPanel() {
         }
         const color = colorMap[entry.tag] || 'yellow'
         await stickyNotesApi.createNote(supabase, user.id, `[${entry.tag}] ${entry.text}`, color)
+        window.dispatchEvent(new CustomEvent('sticky-note-added'))
       }
       await mindDumpApi.deleteEntry(supabase, entry.id)
       setEntries(prev => prev.filter(e => e.id !== entry.id))
