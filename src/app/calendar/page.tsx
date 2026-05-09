@@ -377,7 +377,7 @@ export default function CalendarPage() {
                       <DroppableBacklogContainer>
                         <div className="flex items-center gap-2 mb-4">
                           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Backlog</h2>
-                          <Tooltip content="Zadania wymagające dłuższego skupienia. Kiedy będziesz gotowy, przeciągnij je na kalendarz, by zaplanować na nie konkretny czas.">
+                          <Tooltip position="right" content="Zadania wymagające dłuższego skupienia. Kiedy będziesz gotowy, przeciągnij je na kalendarz, by zaplanować na nie konkretny czas.">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                           </Tooltip>
                         </div>
