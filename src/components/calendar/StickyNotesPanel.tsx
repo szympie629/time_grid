@@ -101,7 +101,7 @@ export default function StickyNotesPanel() {
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
-        <Tooltip content="Ważne myśli, cele lub informacje na cały tydzień, które chcesz mieć przed oczami.">
+        <Tooltip position="bottom" content="Ważne myśli, cele lub informacje na cały tydzień, które chcesz mieć przed oczami.">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </Tooltip>
       </div>
@@ -207,14 +207,16 @@ export default function StickyNotesPanel() {
                       <button className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md transition-colors" title="Zmień kolor">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       </button>
-                      <div className="absolute right-full top-0 mr-1 hidden group-hover/color:flex bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1.5 gap-1.5 z-10">
-                        {COLORS.map(c => (
-                          <button
-                            key={c.id}
-                            onClick={() => changeNoteColor(note.id, c.id)}
-                            className={`w-3.5 h-3.5 rounded-full ${c.dot} hover:scale-110 transition-transform ${note.color === c.id ? 'ring-1 ring-offset-1 ring-indigo-500' : ''}`}
-                          />
-                        ))}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 pr-1 hidden group-hover/color:block z-10">
+                        <div className="flex bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1.5 gap-1.5">
+                          {COLORS.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => changeNoteColor(note.id, c.id)}
+                              className={`w-3.5 h-3.5 rounded-full ${c.dot} hover:scale-110 transition-transform ${note.color === c.id ? 'ring-1 ring-offset-1 ring-indigo-500' : ''}`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

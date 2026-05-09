@@ -2,7 +2,7 @@
 import { createPortal } from "react-dom";
 import { useState, useRef, ReactNode } from "react";
 
-type TooltipPosition = "top" | "right";
+type TooltipPosition = "top" | "right" | "bottom";
 
 export const Tooltip = ({ children, content, position = "top" }: { children: ReactNode; content: string; position?: TooltipPosition }) => {
     const [visible, setVisible] = useState(false);
@@ -22,11 +22,17 @@ export const Tooltip = ({ children, content, position = "top" }: { children: Rea
                     top: rect.top + rect.height / 2 + window.scrollY,
                     left: rect.right + 8
                 });
+            } else if (position === "bottom") {
+                setCoords({
+                    top: rect.bottom + window.scrollY + 8,
+                    left: rect.left + rect.width / 2
+                });
             }
         }
     };
 
     const isTop = position === "top";
+    const isBottom = position === "bottom";
 
     return (
         <div
@@ -39,13 +45,15 @@ export const Tooltip = ({ children, content, position = "top" }: { children: Rea
             {visible && createPortal(
                 <div
                     className={`fixed z-[9999] px-2 py-1.5 text-[10px] text-white dark:text-gray-900 bg-gray-900 dark:bg-gray-100 rounded shadow-xl pointer-events-none w-48 leading-relaxed ${
-                        isTop ? "-translate-x-1/2 -translate-y-full" : "-translate-y-1/2"
+                        isTop ? "-translate-x-1/2 -translate-y-full" : isBottom ? "-translate-x-1/2" : "-translate-y-1/2"
                     }`}
                     style={{ top: coords.top, left: coords.left }}
                 >
                     {content}
                     {isTop ? (
                         <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
+                    ) : isBottom ? (
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full border-4 border-transparent border-b-gray-900 dark:border-b-gray-100" />
                     ) : (
                         <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900 dark:border-r-gray-100" />
                     )}
