@@ -4,12 +4,20 @@ import { Database } from '../supabase/database.types'
 export type GlobalTodo = Database['public']['Tables']['global_todos']['Row']
 
 export const globalTodosApi = {
-    async getTodos(supabase: SupabaseClient<Database>, userId: string) {
-        const { data, error } = await supabase
+    async getTodos(supabase: SupabaseClient<Database>, userId: string, weekStart?: string, weekEnd?: string) {
+        let query = supabase
             .from('global_todos')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
+
+        if (weekStart && weekEnd) {
+            query = query
+                .gte('created_at', weekStart)
+                .lte('created_at', weekEnd)
+        }
+
+        const { data, error } = await query
 
         if (error) throw error
         return data

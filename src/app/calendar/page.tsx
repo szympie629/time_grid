@@ -10,6 +10,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, useDraggable } from '@dnd-kit/core'
 import { calculateTimeShift, getNewTimes } from '@/utils/dndHelpers'
 import { getWeekDays } from '@/utils/dateHelpers'
+import { format } from 'date-fns'
 import TrashPanel from '@/components/calendar/TrashPanel'
 import CategoryManagerModal from '@/components/calendar/CategoryManagerModal'
 import BudgetPanel from '@/components/calendar/BudgetPanel'
@@ -667,7 +668,10 @@ export default function CalendarPage() {
 
                       <Panel defaultSize={30} minSize={15} id="todo-panel">
                         <aside className="h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 p-4 flex flex-col">
-                          <TodoPanel />
+                          <TodoPanel
+                            weekStart={format(getWeekDays(currentDate)[0], 'yyyy-MM-dd')}
+                            weekEnd={format(getWeekDays(currentDate)[6], 'yyyy-MM-dd')}
+                          />
                         </aside>
                       </Panel>
 

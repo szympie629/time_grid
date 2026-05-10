@@ -8,7 +8,12 @@ import { useDroppable } from '@dnd-kit/core'
 import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 
-export default function TodoPanel() {
+interface Props {
+  weekStart: string // ISO date string e.g. '2025-05-05'
+  weekEnd: string   // ISO date string e.g. '2025-05-11'
+}
+
+export default function TodoPanel({ weekStart, weekEnd }: Props) {
   const { t } = useTranslation()
   const [todos, setTodos] = useState<GlobalTodo[]>([])
   const [input, setInput] = useState('')
@@ -22,14 +27,24 @@ export default function TodoPanel() {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       try {
-        const data = await globalTodosApi.getTodos(supabase, user.id)
+        // Build ISO timestamps covering the full local week (Mon 00:00 → Sun 23:59)
+        // We do NOT use "Z" suffix – Supabase compares timestamps in UTC, so we let
+        // the JS Date handle the timezone conversion by constructing real Date objects.
+        const startDate = new Date(`${weekStart}T00:00:00`)
+        const endDate = new Date(`${weekEnd}T23:59:59.999`)
+        const data = await globalTodosApi.getTodos(
+          supabase,
+          user.id,
+          startDate.toISOString(),
+          endDate.toISOString()
+        )
         setTodos(data)
       } catch (e) {
         console.error('Błąd pobierania:', e)
       }
     }
     setLoading(false)
-  }, [])
+  }, [weekStart, weekEnd])
 
   useEffect(() => {
     fetchTodos()
