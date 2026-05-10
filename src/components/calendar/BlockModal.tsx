@@ -783,7 +783,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               </div>
 
               {/* Distraction Tracker */}
-              <div className="flex-1 flex flex-col gap-2 min-h-0">
+              <div className="flex flex-col gap-2 shrink-0">
                 <form onSubmit={handleAddDistraction} className="flex gap-2">
                   <input
                     value={newDistraction}
@@ -800,13 +800,13 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 </form>
 
                 {distractions.length > 0 && (
-                  <div className="flex-1 overflow-y-auto no-scrollbar mt-1 border border-gray-100 dark:border-slate-800 rounded-xl p-2 bg-white/50 dark:bg-slate-900/50">
+                  <div className="mt-1 border border-gray-100 dark:border-slate-800 rounded-xl p-2 bg-white/50 dark:bg-slate-900/50">
                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Złodzieje Czasu ({distractions.length}):</h4>
                     <ul className="flex flex-col gap-1.5">
                       {distractions.map((dist, i) => (
-                        <li key={i} className="text-xs bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 py-1.5 px-3 rounded-md text-gray-700 dark:text-slate-300 shadow-sm flex items-center gap-2">
+                        <li key={i} className="text-xs bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 py-2 px-3 rounded-md text-gray-700 dark:text-slate-300 shadow-sm flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                          <span className="truncate">{dist}</span>
+                          <span className="break-words whitespace-normal">{dist}</span>
                         </li>
                       ))}
                     </ul>
