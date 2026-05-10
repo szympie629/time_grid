@@ -207,26 +207,25 @@ export default function MindDumpPanel() {
         </button>
 
         {isTagModalOpen && (
-          <>
-            <div className="fixed inset-0 z-[60]" onClick={() => setIsTagModalOpen(false)}></div>
-            <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 p-3 z-[70] flex flex-col gap-3">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-bold text-gray-700 dark:text-slate-200">Nowy tag</span>
-                <button onClick={() => setIsTagModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 transition-opacity" onClick={() => setIsTagModalOpen(false)}>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col p-5 gap-5" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-slate-800">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">Nowy tag</span>
+                <button onClick={() => setIsTagModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
 
               <div>
-                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Nazwa</label>
-                <div className="flex items-center bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                  <span className="pl-2 pr-1 py-1.5 text-xs text-gray-400 font-bold bg-gray-100 dark:bg-slate-800">#</span>
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Nazwa</label>
+                <div className="flex items-center bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                  <span className="pl-4 pr-1 py-2.5 text-sm text-gray-400 font-bold">#</span>
                   <input 
                     type="text" 
                     value={newTagName} 
                     onChange={e => setNewTagName(e.target.value)}
                     placeholder="nazwa_tagu"
-                    className="flex-1 bg-transparent px-2 py-1.5 text-xs text-gray-800 dark:text-slate-200 focus:outline-none"
+                    className="flex-1 bg-transparent px-2 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none"
                     onKeyDown={e => e.key === 'Enter' && saveCustomTag()}
                     autoFocus
                   />
@@ -234,13 +233,13 @@ export default function MindDumpPanel() {
               </div>
 
               <div>
-                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Kolor</label>
-                <div className="flex gap-1.5 flex-wrap">
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Kolor</label>
+                <div className="flex gap-2.5 flex-wrap">
                   {TAG_COLORS.map(colorOption => (
                     <button 
                       key={colorOption.name}
                       onClick={() => setNewTagColor(colorOption)}
-                      className={`w-5 h-5 rounded-full ${colorOption.bg} ${newTagColor.name === colorOption.name ? 'ring-2 ring-offset-1 ring-current ' + colorOption.color : ''} border border-transparent hover:border-gray-300 dark:hover:border-slate-600 transition-all`}
+                      className={`w-8 h-8 rounded-full ${colorOption.bg} ${newTagColor.name === colorOption.name ? 'ring-2 ring-offset-2 ring-current scale-110 ' + colorOption.color : 'hover:scale-110'} transition-transform`}
                       title={colorOption.name}
                     />
                   ))}
@@ -248,25 +247,25 @@ export default function MindDumpPanel() {
               </div>
 
               <div>
-                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Gdzie przenieść po użyciu</label>
-                <div className="flex gap-2">
-                  <label className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-slate-300 cursor-pointer">
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Gdzie przenieść po użyciu</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     <input 
                       type="radio" 
                       name="destination" 
                       checked={newTagDestination === 'sticky'} 
                       onChange={() => setNewTagDestination('sticky')}
-                      className="text-indigo-500 focus:ring-indigo-500"
+                      className="text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                     />
                     Notatki
                   </label>
-                  <label className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-slate-300 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     <input 
                       type="radio" 
                       name="destination" 
                       checked={newTagDestination === 'todo'} 
                       onChange={() => setNewTagDestination('todo')}
-                      className="text-indigo-500 focus:ring-indigo-500"
+                      className="text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                     />
                     Todo
                   </label>
@@ -276,12 +275,12 @@ export default function MindDumpPanel() {
               <button 
                 onClick={saveCustomTag}
                 disabled={!newTagName.trim()}
-                className="w-full py-1.5 mt-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 mt-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Dodaj tag
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
 
