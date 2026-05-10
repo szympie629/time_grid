@@ -11,6 +11,7 @@ import BlockModal from './BlockModal'
 import { useRouter } from 'next/navigation'
 import { getWeekDays, getNextWeek, getPrevWeek, toLocalISOString } from '@/utils/dateHelpers'
 import { tasksApi } from '@/lib/api/tasks'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
@@ -55,6 +56,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
   const weekDays = getWeekDays(currentDate)
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const { language, setLanguage } = useTranslation()
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -268,6 +270,15 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                 </svg>
               </button>
             )}
+            {/* Language Toggle */}
+            <button
+              onClick={() => setLanguage(language === 'pl' ? 'en' : 'pl')}
+              title={language === 'pl' ? 'Switch to English' : 'Przełącz na polski'}
+              className="h-9 px-3 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-lg flex items-center justify-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 shadow-sm ml-2 gap-1.5 font-semibold text-xs"
+            >
+              <span>{language === 'pl' ? '🇵🇱' : '🇬🇧'}</span>
+              <span>{language === 'pl' ? 'PL' : 'EN'}</span>
+            </button>
             <button onClick={handleLogout} title="Wyloguj się" className="w-9 h-9 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100 dark:border-red-900/50 transition-colors rounded-lg flex items-center justify-center text-red-600 dark:text-red-400 shadow-sm ml-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
