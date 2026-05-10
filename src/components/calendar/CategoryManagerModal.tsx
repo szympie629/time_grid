@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Category, categoriesApi } from '@/lib/api/categories'
 import { supabase } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 const PALETTE = [
   '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function CategoryManagerModal({ isOpen, onClose, categories, onCategoryCreated, onCategoryDeleted, onCategoryUpdated }: Props) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [selectedColor, setSelectedColor] = useState(PALETTE[0])
   const [timeLimitHours, setTimeLimitHours] = useState<string>('')
@@ -94,7 +96,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć tę kategorię? Zostanie odpięta ze wszystkich zadań!')) return
+    if (!confirm(t('categoryModal.deleteConfirm'))) return
     try {
       await categoriesApi.deleteCategory(supabase, id)
       onCategoryDeleted(id)
@@ -110,7 +112,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Zarządzaj Kategoriami</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('categoryModal.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -123,16 +125,16 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
           {/* Creator Form */}
           <div className="flex flex-col gap-4 bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-gray-500 uppercase">{editingId ? 'Edytuj kategorię' : 'Nowa kategoria'}</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase">{editingId ? t('categoryModal.editCategory') : t('categoryModal.newCategory')}</h3>
               {editingId && (
-                <button onClick={handleCancelEdit} className="text-xs text-blue-500 hover:text-blue-600">Anuluj edycję</button>
+                <button onClick={handleCancelEdit} className="text-xs text-blue-500 hover:text-blue-600">{t('categoryModal.cancelEdit')}</button>
               )}
             </div>
 
             <div className="flex flex-col gap-2">
               <input
                 type="text"
-                placeholder="Nazwa kategorii..."
+                placeholder={t('categoryModal.namePlaceholder')}
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
@@ -141,11 +143,11 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-xs text-gray-500 font-medium">Tygodniowy limit czasu (opcjonalnie)</span>
+              <span className="text-xs text-gray-500 font-medium">{t('categoryModal.weeklyLimit')}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  placeholder="Godziny"
+                  placeholder={t('categoryModal.hours')}
                   value={timeLimitHours}
                   onChange={e => setTimeLimitHours(e.target.value)}
                   className="w-24 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
@@ -155,7 +157,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                 <span className="text-sm text-gray-500 font-medium">h</span>
                 <input
                   type="number"
-                  placeholder="Minuty"
+                  placeholder={t('categoryModal.minutes')}
                   value={timeLimitMinutes}
                   onChange={e => setTimeLimitMinutes(e.target.value)}
                   className="w-24 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
@@ -199,7 +201,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
               disabled={!name.trim() || loading}
               className="mt-2 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center text-sm"
             >
-              {loading ? 'Zapisywanie...' : editingId ? 'Zapisz zmiany' : 'Dodaj kategorię'}
+              {loading ? t('common.saving') : editingId ? t('categoryModal.saveChanges') : t('categoryModal.addCategory')}
             </button>
 
             {error && (
@@ -209,9 +211,9 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
 
           {/* List */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-bold text-gray-500 uppercase">Twoje kategorie</h3>
+            <h3 className="text-xs font-bold text-gray-500 uppercase">{t('categoryModal.yourCategories')}</h3>
             {categories.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">Brak kategorii. Stwórz pierwszą powyżej.</p>
+              <p className="text-sm text-gray-400 text-center py-4">{t('categoryModal.noCategories')}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {categories.map(cat => (
@@ -221,9 +223,9 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                       <div className="flex flex-col min-w-0">
                         <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{cat.name}</span>
                         {cat.time_limit_minutes ? (
-                          <span className="text-[10px] text-gray-500">Limit: {Math.floor(cat.time_limit_minutes / 60)}h {cat.time_limit_minutes % 60}m</span>
+                          <span className="text-[10px] text-gray-500">{t('categoryModal.limit')}: {Math.floor(cat.time_limit_minutes / 60)}h {cat.time_limit_minutes % 60}m</span>
                         ) : (
-                          <span className="text-[10px] text-gray-400">Brak limitu</span>
+                          <span className="text-[10px] text-gray-400">{t('categoryModal.noLimit')}</span>
                         )}
                       </div>
                     </div>
@@ -231,7 +233,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                       <button
                         onClick={() => handleEditInit(cat)}
                         className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-md transition-colors"
-                        title="Edytuj"
+                        title={t('common.edit')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -241,7 +243,7 @@ export default function CategoryManagerModal({ isOpen, onClose, categories, onCa
                       <button
                         onClick={() => handleDelete(cat.id)}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
-                        title="Usuń kategorię"
+                        title={t('categoryModal.deleteCategory')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 6h18" />

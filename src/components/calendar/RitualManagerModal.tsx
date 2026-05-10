@@ -5,6 +5,7 @@ import { Category } from '@/lib/api/categories'
 import { supabase } from '@/lib/supabase/client'
 import { ritualsApi, Ritual, RitualItem, RitualInsert } from '@/lib/api/rituals'
 import { formatTaskCount } from '@/utils/grammar'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 import {
   DndContext,
   closestCenter,
@@ -59,6 +60,7 @@ interface SortableRitualItemProps {
 
 function SortableRitualItem({ item, idx, categories, openCategoryIndex, setOpenCategoryIndex, updateItem, removeItem }: SortableRitualItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const { t } = useTranslation()
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -76,7 +78,7 @@ function SortableRitualItem({ item, idx, categories, openCategoryIndex, setOpenC
           {...listeners}
           {...attributes}
           className="text-gray-400 hover:text-blue-500 cursor-grab active:cursor-grabbing touch-none p-1 transition-colors"
-          title="Przeciągnij, by zmienić kolejność"
+          title={t('ritualModal.dragToReorder')}
         >
           <GripIcon />
         </button>
@@ -87,10 +89,10 @@ function SortableRitualItem({ item, idx, categories, openCategoryIndex, setOpenC
           <input
             value={item.title}
             onChange={(e) => updateItem(idx, { title: e.target.value })}
-            placeholder="Nazwa zadania"
+            placeholder={t('ritualModal.taskPlaceholder')}
             className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2 rounded-lg text-sm outline-none focus:border-blue-500 text-gray-900 dark:text-white"
           />
-          <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Usuń zadanie">
+          <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title={t('common.delete')}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -118,7 +120,7 @@ function SortableRitualItem({ item, idx, categories, openCategoryIndex, setOpenC
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full shrink-0 bg-slate-400" />
-                  <span>Brak kategorii</span>
+                  <span>{t('common.noCategory')}</span>
                 </div>
               )}
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -132,7 +134,7 @@ function SortableRitualItem({ item, idx, categories, openCategoryIndex, setOpenC
                     onClick={() => { updateItem(idx, { category_id: null }); setOpenCategoryIndex(null); }}
                   >
                     <div className="w-3 h-3 rounded-full shrink-0 bg-slate-400" />
-                    <span>Brak kategorii</span>
+                    <span>{t('common.noCategory')}</span>
                   </li>
                   {categories.map(c => (
                     <li
@@ -164,6 +166,7 @@ interface Props {
 }
 
 export default function RitualManagerModal({ isOpen, onClose, categories, editingRitual, onRitualCreated, onRitualUpdated }: Props) {
+  const { t } = useTranslation()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [icon, setIcon] = useState<string | null>(null)
@@ -279,12 +282,12 @@ export default function RitualManagerModal({ isOpen, onClose, categories, editin
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="np. Poranna Rutyna"
+                placeholder={t('ritualModal.ritualNamePlaceholder')}
                 className="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
               />
             </div>
             <div className="relative">
-              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Wygląd</label>
+              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">{t('ritualModal.appearance')}</label>
               <button 
                 onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
                 className="h-[42px] px-3 bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-lg flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
@@ -300,7 +303,7 @@ export default function RitualManagerModal({ isOpen, onClose, categories, editin
                   <div className="fixed inset-0 z-[210]" onClick={() => setIsIconPickerOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl rounded-xl p-3 z-[220] w-64">
                     <div className="mb-3">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Ikona</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">{t('ritualModal.icon')}</label>
                       <div className="grid grid-cols-4 gap-2">
                         {RITUAL_ICONS.map(i => (
                           <button
@@ -314,7 +317,7 @@ export default function RitualManagerModal({ isOpen, onClose, categories, editin
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Kolor</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">{t('ritualModal.color')}</label>
                       <div className="grid grid-cols-5 gap-2">
                         {RITUAL_COLORS.map(c => (
                           <button
@@ -333,7 +336,7 @@ export default function RitualManagerModal({ isOpen, onClose, categories, editin
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">Zadania ({items.length})</label>
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 block">{t('ritualModal.tasks')} ({items.length})</label>
             <div className="flex flex-col gap-3">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
@@ -356,7 +359,7 @@ export default function RitualManagerModal({ isOpen, onClose, categories, editin
               onClick={addItem}
               className="mt-3 w-full py-2 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 transition-colors"
             >
-              + Dodaj zadanie
+              {t('ritualModal.addTask')}
             </button>
           </div>
 

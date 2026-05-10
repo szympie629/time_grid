@@ -4,6 +4,7 @@ import { Category } from '@/lib/api/categories'
 import { tasksApi, Task } from '@/lib/api/tasks'
 import { supabase } from '@/lib/supabase/client'
 import { createPortal } from 'react-dom'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 import {
   DndContext,
   closestCenter,
@@ -162,6 +163,7 @@ interface Props {
 }
 
 export default function BlockModal({ block, categories = [], onClose, onUpdate, onDelete, onCopy, onChangePreview }: Props) {
+  const { t } = useTranslation()
   const isBacklogItem = block.start_time === null
   const defaultDate = new Date().toISOString().split('T')[0]
   const safeStart = block.start_time || `${defaultDate}T09:00:00`
@@ -453,7 +455,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       >
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold select-none text-gray-900 dark:text-white">
-            {block.id.startsWith('draft') ? 'Nowy blok' : 'Edytuj blok'}
+            {block.id.startsWith('draft') ? t('blockModal.newBlock') : t('blockModal.editBlock')}
           </h2>
           <label
             className="flex items-center gap-2 cursor-pointer"
@@ -465,7 +467,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               onChange={(e) => setIsCompleted(e.target.checked)}
               className="w-4 h-4 cursor-pointer accent-green-500 rounded block"
             />
-            <span className="text-sm text-gray-500 dark:text-slate-400 font-semibold select-none">Wykonano</span>
+            <span className="text-sm text-gray-500 dark:text-slate-400 font-semibold select-none">{t('blockModal.done')}</span>
           </label>
         </div>
         <button
@@ -480,10 +482,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       {/* ── Tabs ── */}
       <div className="flex border-b border-gray-100 dark:border-slate-800 mb-2 overflow-x-auto no-scrollbar">
         {[
-          { id: 'main', label: 'Główne' },
-          { id: 'todo', label: 'To-Do' },
-          { id: 'notes', label: 'Notatki' },
-          { id: 'focus', label: 'Skupienie' },
+          { id: 'main', label: t('blockModal.tabMain') },
+          { id: 'todo', label: t('blockModal.tabTodo') },
+          { id: 'notes', label: t('blockModal.tabNotes') },
+          { id: 'focus', label: t('blockModal.tabFocus') },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -502,7 +504,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       {activeTab === 'main' && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Tytuł</label>
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.title')}</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -512,7 +514,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
           <div className="grid grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Czas trwania</label>
+              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
               <div className="flex gap-2">
                 <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
                   <input
@@ -554,7 +556,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Kategoria</label>
+              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.category')}</label>
               <div className="relative h-10">
                 <button
                   type="button"
@@ -569,7 +571,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   ) : (
                     <div className="flex items-center gap-2">
                       <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
-                      <span>Brak kategorii</span>
+                      <span>{t('common.noCategory')}</span>
                     </div>
                   )}
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0 ml-2">
@@ -585,7 +587,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                         onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: null }); }}
                       >
                         <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
-                        <span>Brak kategorii</span>
+                        <span>{t('common.noCategory')}</span>
                       </li>
                       {categories.map(c => (
                         <li
@@ -603,7 +605,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               </div>
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Data</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.date')}</label>
                   <input
                     type="date"
                     value={date}
@@ -618,7 +620,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {!isBacklogItem && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Start</label>
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.startTime')}</label>
                 <input
                   type="time"
                   value={startTime}
@@ -627,7 +629,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Koniec</label>
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.endTime')}</label>
                 <input
                   type="time"
                   value={endTime}
@@ -639,7 +641,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Opis</label>
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.description')}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -654,7 +656,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
         <div className="flex flex-col gap-3 h-[310px]">
           {block.id.startsWith('draft') ? (
             <div className="flex-1 flex items-center justify-center text-center text-gray-500 dark:text-slate-400 text-sm italic">
-              Najpierw zapisz blok, aby móc dodawać do niego zadania To-Do.
+              {t('blockModal.saveDraftFirst')}
             </div>
           ) : (
             <>
@@ -662,7 +664,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 <input
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="Dodaj zadanie..."
+                  placeholder={t('blockModal.addTask')}
                   className="flex-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                 />
                 <button
@@ -677,16 +679,16 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               {tasks.length > 1 && (
                 <p className="text-[10px] text-gray-400 shrink-0 -mt-1 flex items-center gap-1">
                   <GripIcon />
-                  Przeciągnij za uchwyt, by zmienić kolejność
+                  {t('blockModal.dragToReorder')}
                 </p>
               )}
 
               <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5 min-h-0">
                 {loadingTasks ? (
-                  <p className="text-center text-gray-400 dark:text-slate-500 text-xs py-4">Ładowanie...</p>
+                  <p className="text-center text-gray-400 dark:text-slate-500 text-xs py-4">{t('common.loading')}</p>
                 ) : tasks.length === 0 ? (
                   <p className="text-center text-gray-400 dark:text-slate-500 text-xs py-4">
-                    Brak zadań. Dodaj pierwsze!
+                    {t('blockModal.noTasks')}
                   </p>
                 ) : (
                   <DndContext
@@ -722,12 +724,12 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {/* Cel Jednego Zdania */}
           <div className="flex flex-col gap-2 shrink-0">
             <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">
-              Jaka jest JEDNA rzecz, z którą musisz skończyć ten blok?
+              {t('blockModal.focusGoalLabel')}
             </label>
             <input
               value={focusGoal}
               onChange={(e) => setFocusGoal(e.target.value)}
-              placeholder="np. Zamknąć task w Jirze #1234"
+              placeholder={t('blockModal.focusGoalPlaceholder')}
               className="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-800 p-3 rounded-xl text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-indigo-900 dark:text-indigo-100 transition-all placeholder-indigo-300 dark:placeholder-indigo-700"
             />
           </div>
@@ -735,23 +737,23 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {!focusGoal.trim() ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 p-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2 text-indigo-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              <p className="text-sm font-medium text-indigo-900 dark:text-indigo-200">Ustal cel, by aktywować tryb skupienia.</p>
+              <p className="text-sm font-medium text-indigo-900 dark:text-indigo-200">{t('blockModal.focusGoalHint')}</p>
             </div>
           ) : (
             <>
               {/* Tryb Pomodoro */}
               <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center gap-3 shrink-0">
                 <div className="flex w-full justify-between items-center mb-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pomodoro Timer</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('blockModal.pomodoroTimer')}</span>
                   {!isTimerRunning && (
                     <select
                       value={pomodoroInterval}
                       onChange={(e) => setPomodoroInterval(Number(e.target.value))}
                       className="text-xs bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 rounded-md px-2 py-1 outline-none font-medium cursor-pointer"
                     >
-                      <option value={25}>25 min (Klasyczne)</option>
-                      <option value={50}>50 min (Długie)</option>
-                      <option value={90}>90 min (Deep Work)</option>
+                      <option value={25}>{t('blockModal.pomodoroClassic')}</option>
+                      <option value={50}>{t('blockModal.pomodoroLong')}</option>
+                      <option value={90}>{t('blockModal.pomodoroDeepWork')}</option>
                     </select>
                   )}
                 </div>
@@ -769,14 +771,14 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                         : 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
                     }`}
                   >
-                    {isTimerRunning ? 'Pauza' : (timeRemaining < pomodoroInterval * 60 ? 'Wznów' : 'Start Focus')}
+                    {isTimerRunning ? t('blockModal.timerPause') : (timeRemaining < pomodoroInterval * 60 ? t('blockModal.timerResume') : t('blockModal.timerStart'))}
                   </button>
                   {timeRemaining < pomodoroInterval * 60 && !isTimerRunning && (
                     <button
                       onClick={() => setTimeRemaining(pomodoroInterval * 60)}
                       className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg text-sm font-bold transition-all"
                     >
-                      Reset
+                      {t('blockModal.timerReset')}
                     </button>
                   )}
                 </div>
@@ -788,20 +790,20 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                   <input
                     value={newDistraction}
                     onChange={(e) => setNewDistraction(e.target.value)}
-                    placeholder="Co Cię rozproszyło? (np. telefon)"
+                    placeholder={t('blockModal.distractionPlaceholder')}
                     className="flex-1 bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 p-2.5 rounded-lg text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 text-gray-900 dark:text-white transition-all placeholder-red-300 dark:placeholder-red-700/50"
                   />
                   <button
                     type="submit"
                     className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-colors text-white px-3 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap"
                   >
-                    Rozproszenie!
+                    {t('blockModal.distractionButton')}
                   </button>
                 </form>
 
                 {distractions.length > 0 && (
                   <div className="mt-1 border border-gray-100 dark:border-slate-800 rounded-xl p-2 bg-white/50 dark:bg-slate-900/50">
-                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Złodzieje Czasu ({distractions.length}):</h4>
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{t('blockModal.distractionTitle')} ({distractions.length}):</h4>
                     <ul className="flex flex-col gap-1.5">
                       {distractions.map((dist, i) => (
                         <li key={i} className="text-xs bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 py-2 px-3 rounded-md text-gray-700 dark:text-slate-300 shadow-sm flex items-center gap-2">
@@ -821,17 +823,17 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       {/* ── Inne zakładki ── */}
       {activeTab === 'notes' && (
         <div className="py-10 text-center text-gray-400 dark:text-slate-500 text-sm italic h-[310px] flex items-center justify-center">
-          Sekcja Notatki będzie dostępna wkrótce...
+          {t('blockModal.notesComingSoon')}
         </div>
       )}
 
       {/* ── Footer ── */}
       <div className="flex justify-between mt-4 border-t border-gray-100 dark:border-slate-800 pt-5">
         <button
-          onClick={() => confirm('Usunąć cały blok?') && onDelete(block.id)}
+          onClick={() => confirm(t('blockModal.deleteConfirm')) && onDelete(block.id)}
           className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold hover:underline transition-colors"
         >
-          USUŃ BLOK
+          {t('blockModal.deleteBlock')}
         </button>
         <div className="flex gap-2">
           {onCopy && !block.id.startsWith('draft') && (
@@ -839,20 +841,20 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               onClick={handleCopy}
               className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors rounded-lg text-sm font-bold"
             >
-              Kopiuj
+              {t('common.copy')}
             </button>
           )}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 transition-colors rounded-lg text-sm font-medium"
           >
-            Anuluj
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors text-white rounded-lg text-sm font-bold shadow-sm"
           >
-            Zapisz
+            {t('common.save')}
           </button>
         </div>
       </div>
