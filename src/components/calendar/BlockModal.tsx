@@ -200,6 +200,48 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   const [isMounted, setIsMounted] = useState(false)
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null)
 
+  // Skupienie (Focus)
+  const [focusGoal, setFocusGoal] = useState((block as any).focus_goal || '')
+  const initialMetadata = (block as any).metadata || {}
+  const [pomodoroInterval, setPomodoroInterval] = useState<number>(initialMetadata.pomodoro_interval || 25)
+  const [distractions, setDistractions] = useState<string[]>(initialMetadata.distractions || [])
+  const [newDistraction, setNewDistraction] = useState('')
+
+  // Timer stanu
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(pomodoroInterval * 60)
+
+  useEffect(() => {
+    if (!isTimerRunning) {
+      setTimeRemaining(pomodoroInterval * 60)
+    }
+  }, [pomodoroInterval, isTimerRunning])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isTimerRunning && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining((prev) => prev - 1)
+      }, 1000)
+    } else if (timeRemaining <= 0) {
+      setIsTimerRunning(false)
+    }
+    return () => clearInterval(interval)
+  }, [isTimerRunning, timeRemaining])
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  const handleAddDistraction = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newDistraction.trim()) return
+    setDistractions((prev) => [newDistraction.trim(), ...prev])
+    setNewDistraction('')
+  }
+
   // Sensory dla DnD subzadań — dystans 5px zapobiega przypadkowemu drag
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -366,6 +408,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       color_tag: null, // Clear old color
       is_completed: isCompleted,
       duration_minutes: durationMins,
+      focus_goal: focusGoal,
+      metadata: { pomodoro_interval: pomodoroInterval, distractions } as any
     }
     if (!isBacklogItem) {
       updates.start_time = `${date}T${startTime}:00`
@@ -672,10 +716,112 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
         </div>
       )}
 
+      {/* ── Tab: Skupienie ── */}
+      {activeTab === 'focus' && (
+        <div className="flex flex-col gap-4 h-[310px] overflow-y-auto no-scrollbar">
+          {/* Cel Jednego Zdania */}
+          <div className="flex flex-col gap-2 shrink-0">
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">
+              Jaka jest JEDNA rzecz, z którą musisz skończyć ten blok?
+            </label>
+            <input
+              value={focusGoal}
+              onChange={(e) => setFocusGoal(e.target.value)}
+              placeholder="np. Zamknąć task w Jirze #1234"
+              className="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-800 p-3 rounded-xl text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-indigo-900 dark:text-indigo-100 transition-all placeholder-indigo-300 dark:placeholder-indigo-700"
+            />
+          </div>
+
+          {!focusGoal.trim() ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2 text-indigo-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <p className="text-sm font-medium text-indigo-900 dark:text-indigo-200">Ustal cel, by aktywować tryb skupienia.</p>
+            </div>
+          ) : (
+            <>
+              {/* Tryb Pomodoro */}
+              <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center gap-3 shrink-0">
+                <div className="flex w-full justify-between items-center mb-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pomodoro Timer</span>
+                  {!isTimerRunning && (
+                    <select
+                      value={pomodoroInterval}
+                      onChange={(e) => setPomodoroInterval(Number(e.target.value))}
+                      className="text-xs bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 rounded-md px-2 py-1 outline-none font-medium cursor-pointer"
+                    >
+                      <option value={25}>25 min (Klasyczne)</option>
+                      <option value={50}>50 min (Długie)</option>
+                      <option value={90}>90 min (Deep Work)</option>
+                    </select>
+                  )}
+                </div>
+                
+                <div className={`text-5xl font-black tabular-nums transition-colors ${isTimerRunning ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-800 dark:text-slate-200'}`}>
+                  {formatTime(timeRemaining)}
+                </div>
+                
+                <div className="flex gap-2 w-full mt-2">
+                  <button
+                    onClick={() => setIsTimerRunning(!isTimerRunning)}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm ${
+                      isTimerRunning 
+                        ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                    }`}
+                  >
+                    {isTimerRunning ? 'Pauza' : (timeRemaining < pomodoroInterval * 60 ? 'Wznów' : 'Start Focus')}
+                  </button>
+                  {timeRemaining < pomodoroInterval * 60 && !isTimerRunning && (
+                    <button
+                      onClick={() => setTimeRemaining(pomodoroInterval * 60)}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg text-sm font-bold transition-all"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Distraction Tracker */}
+              <div className="flex-1 flex flex-col gap-2 min-h-0">
+                <form onSubmit={handleAddDistraction} className="flex gap-2">
+                  <input
+                    value={newDistraction}
+                    onChange={(e) => setNewDistraction(e.target.value)}
+                    placeholder="Co Cię rozproszyło? (np. telefon)"
+                    className="flex-1 bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 p-2.5 rounded-lg text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 text-gray-900 dark:text-white transition-all placeholder-red-300 dark:placeholder-red-700/50"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-colors text-white px-3 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap"
+                  >
+                    Rozproszenie!
+                  </button>
+                </form>
+
+                {distractions.length > 0 && (
+                  <div className="flex-1 overflow-y-auto no-scrollbar mt-1 border border-gray-100 dark:border-slate-800 rounded-xl p-2 bg-white/50 dark:bg-slate-900/50">
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Złodzieje Czasu ({distractions.length}):</h4>
+                    <ul className="flex flex-col gap-1.5">
+                      {distractions.map((dist, i) => (
+                        <li key={i} className="text-xs bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 py-1.5 px-3 rounded-md text-gray-700 dark:text-slate-300 shadow-sm flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="truncate">{dist}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ── Inne zakładki ── */}
-      {activeTab !== 'main' && activeTab !== 'todo' && (
+      {activeTab === 'notes' && (
         <div className="py-10 text-center text-gray-400 dark:text-slate-500 text-sm italic h-[310px] flex items-center justify-center">
-          Sekcja {activeTab === 'notes' ? 'Notatki' : 'Skupienie'} będzie dostępna wkrótce...
+          Sekcja Notatki będzie dostępna wkrótce...
         </div>
       )}
 

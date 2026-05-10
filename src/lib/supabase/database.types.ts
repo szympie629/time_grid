@@ -28,6 +28,8 @@ export type Database = {
           start_time: string | null
           title: string
           user_id: string
+          focus_goal: string | null
+          metadata: Json | null
         }
         Insert: {
           category_id?: string | null
@@ -42,6 +44,8 @@ export type Database = {
           start_time?: string | null
           title: string
           user_id: string
+          focus_goal?: string | null
+          metadata?: Json | null
         }
         Update: {
           category_id?: string | null
@@ -56,6 +60,8 @@ export type Database = {
           start_time?: string | null
           title?: string
           user_id?: string
+          focus_goal?: string | null
+          metadata?: Json | null
         }
         Relationships: [
           {
