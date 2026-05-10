@@ -62,7 +62,7 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
     if (!user) return
 
     try {
-      const newTodo = await globalTodosApi.createTodo(supabase, user.id, input.trim())
+      const newTodo = await globalTodosApi.createTodo(supabase, user.id, input.trim(), weekStart)
       setTodos(prev => [newTodo, ...prev])
       setInput('')
     } catch (e) {

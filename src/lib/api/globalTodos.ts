@@ -23,10 +23,16 @@ export const globalTodosApi = {
         return data
     },
 
-    async createTodo(supabase: SupabaseClient<Database>, userId: string, text: string) {
+    async createTodo(supabase: SupabaseClient<Database>, userId: string, text: string, weekStart?: string) {
+        // If weekStart is provided, stamp the todo to noon of that Monday so it
+        // always falls within the viewed week's filter range (regardless of timezone).
+        const created_at = weekStart
+            ? new Date(`${weekStart}T12:00:00`).toISOString()
+            : undefined
+
         const { data, error } = await supabase
             .from('global_todos')
-            .insert({ user_id: userId, text })
+            .insert({ user_id: userId, text, ...(created_at ? { created_at } : {}) })
             .select()
             .single()
 
