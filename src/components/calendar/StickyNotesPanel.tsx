@@ -107,7 +107,8 @@ export default function StickyNotesPanel() {
   }
 
   return (
-    <div ref={setNodeRef} className={`flex flex-col h-full overflow-hidden transition-colors ${isOver ? 'bg-amber-50/50 dark:bg-amber-900/10 rounded-xl ring-2 ring-amber-400 border-transparent' : ''}`}>
+    <div ref={setNodeRef} className="flex flex-col h-full overflow-hidden relative">
+      {isOver && <div className="absolute -inset-4 z-50 rounded-2xl ring-2 ring-inset ring-amber-500 bg-amber-50/30 dark:bg-amber-900/20 pointer-events-none transition-all" />}
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
         <Tooltip position="bottom" content="Ważne myśli, cele lub informacje na cały tydzień, które chcesz mieć przed oczami.">

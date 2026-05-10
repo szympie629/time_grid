@@ -29,8 +29,11 @@ import { Tooltip } from '@/components/ui/Tooltip'
 function DroppableBacklogContainer({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-backlog' })
   return (
-    <div ref={setNodeRef} className={`flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar transition-colors ${isOver ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}>
-      {children}
+    <div ref={setNodeRef} className="flex-1 flex flex-col min-h-0 relative">
+      {isOver && <div className="absolute inset-0 z-50 rounded-2xl ring-2 ring-inset ring-violet-500 bg-violet-50/30 dark:bg-violet-900/20 pointer-events-none transition-all" />}
+      <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
+        {children}
+      </div>
     </div>
   )
 }
