@@ -143,7 +143,9 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
       created_at: new Date().toISOString(),
       duration_minutes: 60,
       is_completed: false,
-      is_deleted: false
+      is_deleted: false,
+      focus_goal: null,
+      metadata: null
     }
     setDraftBlock(draft)
   }

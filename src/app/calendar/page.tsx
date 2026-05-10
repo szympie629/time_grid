@@ -426,8 +426,10 @@ export default function CalendarPage() {
         category_id: null,
         is_completed: false,
         is_deleted: false,
-        created_at: new Date().toISOString()
-      })
+        created_at: new Date().toISOString(),
+        focus_goal: null,
+        metadata: null
+      } as Block)
     }
   }
 
