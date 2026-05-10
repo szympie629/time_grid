@@ -27,14 +27,10 @@ const DEFAULT_TAGS: MindDumpTag[] = [
   { id: 'note', label: '#notatka', color: 'text-slate-400', bg: 'bg-slate-400/10' },
 ]
 
-const TAG_COLORS = [
-  { name: 'amber', color: 'text-amber-500', bg: 'bg-amber-500/10', sticky: 'yellow' },
-  { name: 'red', color: 'text-red-400', bg: 'bg-red-400/10', sticky: 'pink' },
-  { name: 'blue', color: 'text-blue-400', bg: 'bg-blue-400/10', sticky: 'blue' },
-  { name: 'green', color: 'text-green-400', bg: 'bg-green-400/10', sticky: 'green' },
-  { name: 'slate', color: 'text-slate-400', bg: 'bg-slate-400/10', sticky: 'purple' },
-  { name: 'purple', color: 'text-purple-400', bg: 'bg-purple-400/10', sticky: 'purple' },
-  { name: 'pink', color: 'text-pink-400', bg: 'bg-pink-400/10', sticky: 'pink' },
+const PALETTE = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1',
+  '#f97316', '#84cc16'
 ]
 
 function DraggableMindDumpItem({ entry, tag, onMove, onDelete }: any) {
@@ -52,7 +48,12 @@ function DraggableMindDumpItem({ entry, tag, onMove, onDelete }: any) {
       <div {...attributes} {...listeners} className="mt-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-500 shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
       </div>
-      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${tag.color} ${tag.bg}`}>{tag.label}</span>
+      <span 
+        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${tag.color?.startsWith('#') ? '' : `${tag.color} ${tag.bg}`}`}
+        style={tag.color?.startsWith('#') ? { color: tag.color, backgroundColor: `${tag.color}1A` } : undefined}
+      >
+        {tag.label}
+      </span>
       <span className="text-xs text-gray-800 dark:text-slate-200 flex-1 leading-relaxed break-words">{entry.text}</span>
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 shrink-0">
         <button onClick={() => onMove(entry)} title="Przenieś" className="text-green-500 p-0.5">
@@ -75,7 +76,7 @@ export default function MindDumpPanel() {
   const [customTags, setCustomTags] = useState<MindDumpTag[]>([])
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const [newTagName, setNewTagName] = useState('')
-  const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0])
+  const [newTagColor, setNewTagColor] = useState(PALETTE[0])
   const [newTagDestination, setNewTagDestination] = useState<'todo' | 'sticky'>('sticky')
 
   const allTags = [...DEFAULT_TAGS, ...customTags]
@@ -91,15 +92,25 @@ export default function MindDumpPanel() {
     }
   }, [])
 
+  const deleteCustomTag = (id: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć ten tag? (Istniejące wpisy z tym tagiem nie zostaną zmienione)')) return;
+    const updatedTags = customTags.filter(t => t.id !== id);
+    setCustomTags(updatedTags);
+    localStorage.setItem('mindDumpCustomTags', JSON.stringify(updatedTags));
+    if (selectedTag === id) {
+      setSelectedTag('idea');
+    }
+  }
+
   const saveCustomTag = () => {
     if (!newTagName.trim()) return
     const newTag: MindDumpTag = {
       id: `custom-${Date.now()}`,
       label: `#${newTagName.trim()}`,
-      color: newTagColor.color,
-      bg: newTagColor.bg,
+      color: newTagColor,
+      bg: newTagColor,
       destination: newTagDestination,
-      stickyColor: newTagColor.sticky
+      stickyColor: 'yellow' // Domyślny kolor karteczki
     }
     const updatedTags = [...customTags, newTag]
     setCustomTags(updatedTags)
@@ -107,6 +118,7 @@ export default function MindDumpPanel() {
     setSelectedTag(newTag.id)
     setIsTagModalOpen(false)
     setNewTagName('')
+    setNewTagColor(PALETTE[0])
   }
 
   const fetchEntries = useCallback(async () => {
@@ -192,12 +204,35 @@ export default function MindDumpPanel() {
       </div>
 
       <div className="flex gap-1 flex-wrap mb-2 shrink-0 items-center relative">
-        {allTags.map(tag => (
-          <button key={tag.id} onClick={() => setSelectedTag(tag.id)}
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors ${selectedTag === tag.id ? `${tag.color} ${tag.bg} ring-1 ring-current` : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
-            {tag.label}
-          </button>
-        ))}
+        {allTags.map(tag => {
+          const isCustom = tag.id.startsWith('custom-');
+          const isSelected = selectedTag === tag.id;
+          const isHex = tag.color?.startsWith('#');
+          
+          return (
+            <div 
+              key={tag.id} 
+              className={`flex items-center text-[10px] font-semibold rounded-full transition-colors ${isSelected && !isHex ? `${tag.color} ${tag.bg} ring-1 ring-current` : ''} ${!isSelected ? 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' : ''}`}
+              style={isSelected && isHex ? { color: tag.color, backgroundColor: `${tag.color}1A`, boxShadow: `0 0 0 1px ${tag.color}` } : undefined}
+            >
+              <button 
+                onClick={() => setSelectedTag(tag.id)}
+                className={`px-2 py-0.5 ${isCustom ? 'rounded-l-full' : 'rounded-full'}`}
+              >
+                {tag.label}
+              </button>
+              {isCustom && (
+                <button 
+                  onClick={() => deleteCustomTag(tag.id)}
+                  className="pr-2 py-0.5 rounded-r-full hover:text-red-500 dark:hover:text-red-400 opacity-50 hover:opacity-100 transition-opacity"
+                  title="Usuń tag"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              )}
+            </div>
+          )
+        })}
         <button 
           onClick={() => setIsTagModalOpen(true)}
           title="Dodaj nowy tag"
@@ -234,15 +269,32 @@ export default function MindDumpPanel() {
 
               <div>
                 <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Kolor</label>
-                <div className="flex gap-2.5 flex-wrap">
-                  {TAG_COLORS.map(colorOption => (
-                    <button 
-                      key={colorOption.name}
-                      onClick={() => setNewTagColor(colorOption)}
-                      className={`w-8 h-8 rounded-full ${colorOption.bg} ${newTagColor.name === colorOption.name ? 'ring-2 ring-offset-2 ring-current scale-110 ' + colorOption.color : 'hover:scale-110'} transition-transform`}
-                      title={colorOption.name}
+                <div className="flex flex-wrap gap-2 pt-1 items-center">
+                  {PALETTE.map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setNewTagColor(c)}
+                      className={`w-6 h-6 rounded-full border-2 transition-transform ${newTagColor === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent hover:scale-110'}`}
+                      style={{ backgroundColor: c }}
+                      title={c}
                     />
                   ))}
+                  
+                  <label
+                    className={`relative w-6 h-6 rounded-full border-2 transition-transform cursor-pointer flex items-center justify-center hover:scale-110 ${!PALETTE.includes(newTagColor) ? 'border-gray-900 dark:border-white scale-110' : 'border-dashed border-gray-400 dark:border-slate-500'}`}
+                    style={{ backgroundColor: !PALETTE.includes(newTagColor) ? newTagColor : 'transparent', background: !PALETTE.includes(newTagColor) ? undefined : 'conic-gradient(red, yellow, green, cyan, blue, magenta, red)' }}
+                    title="Wybierz własny kolor z palety"
+                  >
+                    <input
+                      type="color"
+                      value={newTagColor}
+                      onChange={(e) => setNewTagColor(e.target.value)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    {!PALETTE.includes(newTagColor) && (
+                      <div className="w-full h-full absolute inset-0 rounded-full mix-blend-overlay opacity-20 bg-white"></div>
+                    )}
+                  </label>
                 </div>
               </div>
 
