@@ -5,6 +5,7 @@ import { Tooltip } from '../ui/Tooltip'
 import { supabase } from '@/lib/supabase/client'
 import { stickyNotesApi, type StickyNote } from '@/lib/api/stickyNotes'
 import { useDroppable } from '@dnd-kit/core'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 const COLORS = [
   { id: 'yellow', class: 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100', dot: 'bg-amber-300 dark:bg-amber-600' },
@@ -16,6 +17,7 @@ const COLORS = [
 
 export default function StickyNotesPanel() {
   const { setNodeRef, isOver } = useDroppable({ id: 'droppable-stickynotes' })
+  const { t } = useTranslation()
 
   const [notes, setNotes] = useState<StickyNote[]>([])
   const [input, setInput] = useState('')
@@ -111,7 +113,7 @@ export default function StickyNotesPanel() {
       {isOver && <div className="absolute -inset-4 z-50 rounded-2xl ring-2 ring-inset ring-amber-500 bg-amber-50/30 dark:bg-amber-900/20 pointer-events-none transition-all" />}
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
-        <Tooltip position="bottom" content="Ważne myśli, cele lub informacje na cały tydzień, które chcesz mieć przed oczami.">
+        <Tooltip position="bottom" content={t('panels.stickyTooltip')}>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </Tooltip>
       </div>
@@ -126,7 +128,7 @@ export default function StickyNotesPanel() {
               addNote()
             }
           }}
-          placeholder="Nowa notatka..."
+          placeholder={t('panels.stickyPlaceholder')}
           className="w-full bg-transparent resize-none text-xs text-gray-800 dark:text-slate-200 placeholder-gray-400 focus:outline-none min-h-[40px]"
           rows={2}
         />
@@ -146,7 +148,7 @@ export default function StickyNotesPanel() {
             disabled={!input.trim()}
             className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wider"
           >
-            Dodaj
+            {t('panels.stickyAdd')}
           </button>
         </div>
       </div>
@@ -154,7 +156,7 @@ export default function StickyNotesPanel() {
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-wrap content-start items-start gap-3">
         {loading ? (
           <div className="w-full flex items-center justify-center h-full opacity-40">
-            <p className="text-xs text-gray-500">Ładowanie...</p>
+            <p className="text-xs text-gray-500">{t('common.loading')}</p>
           </div>
         ) : notes.length === 0 ? (
           <div className="w-full flex-1 flex flex-col items-center justify-center opacity-40 min-h-[150px]">
@@ -162,7 +164,7 @@ export default function StickyNotesPanel() {
               <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z" />
               <polyline points="15 3 15 9 21 9" />
             </svg>
-            <p className="text-xs font-medium text-gray-500 dark:text-slate-500">Brak notatek</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-slate-500">{t('panels.stickyEmpty')}</p>
           </div>
         ) : (
           notes.map(note => {
@@ -208,13 +210,13 @@ export default function StickyNotesPanel() {
                     <button 
                       onClick={() => deleteNote(note.id)}
                       className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md text-red-500 transition-colors"
-                      title="Usuń"
+                      title={t('panels.stickyDelete')}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                     
                     <div className="relative group/color">
-                      <button className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md transition-colors" title="Zmień kolor">
+                      <button className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md transition-colors" title={t('panels.stickyChangeColor')}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       </button>
                       <div className="absolute right-full top-1/2 -translate-y-1/2 pr-1 hidden group-hover/color:block z-10">

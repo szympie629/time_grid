@@ -5,9 +5,11 @@ import { supabase } from '@/lib/supabase/client'
 import { globalTodosApi, type GlobalTodo } from '@/lib/api/globalTodos'
 import { Tooltip } from '../ui/Tooltip'
 import { useDroppable } from '@dnd-kit/core'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 
 export default function TodoPanel() {
+  const { t } = useTranslation()
   const [todos, setTodos] = useState<GlobalTodo[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
@@ -74,7 +76,7 @@ export default function TodoPanel() {
   const pending = todos.filter(t => !t.is_completed)
   const completed = todos.filter(t => t.is_completed)
 
-  if (loading) return <div className="p-4 text-xs text-gray-400">Ładowanie...</div>
+  if (loading) return <div className="p-4 text-xs text-gray-400">{t('common.loading')}</div>
 
   return (
     <div ref={setNodeRef} className="flex flex-col h-full min-h-0 relative">
@@ -82,13 +84,13 @@ export default function TodoPanel() {
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <div className="flex items-center gap-1.5">
           <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">To-Do</h3>
-          <Tooltip content="Szybkie zadania i drobne obowiązki. Lista rzeczy do zrobienia w tzw. międzyczasie, które nie wymagają rezerwacji bloku w kalendarzu.">
+          <Tooltip content={t('panels.todoTooltip')}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           </Tooltip>
         </div>
         <div className="flex-1" />
         <span className="text-[10px] text-gray-400 dark:text-slate-600">
-          {pending.length > 0 ? `${pending.length} do zrobienia` : ''}
+          {pending.length > 0 ? `${pending.length} ${t('panels.todoPending')}` : ''}
         </span>
       </div>
 
@@ -98,7 +100,7 @@ export default function TodoPanel() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addTodo()}
-          placeholder="Dodaj zadanie..."
+          placeholder={t('panels.todoPlaceholder')}
           className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
         />
         <button
@@ -113,7 +115,7 @@ export default function TodoPanel() {
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-1">
         {todos.length === 0 && (
           <div className="flex-1 flex items-center justify-center opacity-40">
-            <p className="text-xs text-gray-500 dark:text-slate-500">Brak zadań.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">{t('panels.todoEmpty')}</p>
           </div>
         )}
 

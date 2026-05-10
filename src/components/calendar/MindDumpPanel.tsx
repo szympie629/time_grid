@@ -7,6 +7,7 @@ import { globalTodosApi } from '@/lib/api/globalTodos'
 import { stickyNotesApi } from '@/lib/api/stickyNotes'
 import { Tooltip } from '../ui/Tooltip'
 import { useDraggable } from '@dnd-kit/core'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 type TagId = 'idea' | 'worry' | 'question' | 'todo' | 'note' | string
 
@@ -38,6 +39,7 @@ function DraggableMindDumpItem({ entry, tag, onMove, onDelete }: any) {
     id: `minddump-${entry.id}`,
     data: { type: 'minddump', item: entry },
   })
+  const { t } = useTranslation()
 
   return (
     <div 
@@ -56,7 +58,7 @@ function DraggableMindDumpItem({ entry, tag, onMove, onDelete }: any) {
       </span>
       <span className="text-xs text-gray-800 dark:text-slate-200 flex-1 leading-relaxed break-words">{entry.text}</span>
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 shrink-0">
-        <button onClick={() => onMove(entry)} title="Przenieś" className="text-green-500 p-0.5">
+        <button onClick={() => onMove(entry)} title={t('panels.mindDumpMove')} className="text-green-500 p-0.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
         </button>
         <button onClick={() => onDelete(entry.id)} className="text-gray-400 hover:text-red-500 p-0.5">
@@ -68,6 +70,7 @@ function DraggableMindDumpItem({ entry, tag, onMove, onDelete }: any) {
 }
 
 export default function MindDumpPanel() {
+  const { t } = useTranslation()
   const [entries, setEntries] = useState<MindDump[]>([])
   const [input, setInput] = useState('')
   const [selectedTag, setSelectedTag] = useState<TagId>('idea')
@@ -93,7 +96,7 @@ export default function MindDumpPanel() {
   }, [])
 
   const deleteCustomTag = (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten tag? (Istniejące wpisy z tym tagiem nie zostaną zmienione)')) return;
+    if (!confirm(t('panels.mindDumpDeleteTagConfirm'))) return;
     const updatedTags = customTags.filter(t => t.id !== id);
     setCustomTags(updatedTags);
     localStorage.setItem('mindDumpCustomTags', JSON.stringify(updatedTags));
@@ -182,13 +185,13 @@ export default function MindDumpPanel() {
     } catch (e) { alert("Błąd przenoszenia") }
   }
 
-  if (loading) return <div className="p-4 text-xs text-gray-400">Ładowanie...</div>
+  if (loading) return <div className="p-4 text-xs text-gray-400">{t('common.loading')}</div>
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mind Dump</h3>
-        <Tooltip content="Bufor na luźne myśli i pomysły. Wrzucaj tu wszystko, co odrywa Cię od pracy, a wieczorem zadecyduj, co z tym zrobić.">
+        <Tooltip content={t('panels.mindDumpTooltip')}>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </Tooltip>
       </div>
@@ -197,7 +200,7 @@ export default function MindDumpPanel() {
         <input
           type="text" value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addEntry()}
-          placeholder="Wrzuć myśl..."
+          placeholder={t('panels.mindDumpPlaceholder')}
           className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
         />
         <button onClick={addEntry} className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition-colors">+</button>
@@ -225,7 +228,7 @@ export default function MindDumpPanel() {
                 <button 
                   onClick={() => deleteCustomTag(tag.id)}
                   className="pr-2 py-0.5 rounded-r-full hover:text-red-500 dark:hover:text-red-400 opacity-50 hover:opacity-100 transition-opacity"
-                  title="Usuń tag"
+                  title={t('panels.mindDumpDeleteTag')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
@@ -235,7 +238,7 @@ export default function MindDumpPanel() {
         })}
         <button 
           onClick={() => setIsTagModalOpen(true)}
-          title="Dodaj nowy tag"
+          title={t('panels.mindDumpAddTagTitle')}
           className="p-1 rounded-full text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors ml-1"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -245,14 +248,14 @@ export default function MindDumpPanel() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 transition-opacity" onClick={() => setIsTagModalOpen(false)}>
             <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 dark:border-slate-800 overflow-hidden flex flex-col p-5 gap-5" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-slate-800">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">Nowy tag</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-white">{t('panels.mindDumpNewTag')}</span>
                 <button onClick={() => setIsTagModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Nazwa</label>
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">{t('panels.mindDumpTagName')}</label>
                 <div className="flex items-center bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
                   <span className="pl-4 pr-1 py-2.5 text-sm text-gray-400 font-bold">#</span>
                   <input 
@@ -268,7 +271,7 @@ export default function MindDumpPanel() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Kolor</label>
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">{t('panels.mindDumpTagColor')}</label>
                 <div className="flex flex-wrap gap-2 pt-1 items-center">
                   {PALETTE.map(c => (
                     <button
@@ -299,7 +302,7 @@ export default function MindDumpPanel() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Gdzie przenieść po użyciu</label>
+                <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">{t('panels.mindDumpTagDestination')}</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     <input 
@@ -309,7 +312,7 @@ export default function MindDumpPanel() {
                       onChange={() => setNewTagDestination('sticky')}
                       className="text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                     />
-                    Notatki
+                    {t('panels.mindDumpDestSticky')}
                   </label>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     <input 
@@ -319,7 +322,7 @@ export default function MindDumpPanel() {
                       onChange={() => setNewTagDestination('todo')}
                       className="text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                     />
-                    Todo
+                    {t('panels.mindDumpDestTodo')}
                   </label>
                 </div>
               </div>
@@ -329,7 +332,7 @@ export default function MindDumpPanel() {
                 disabled={!newTagName.trim()}
                 className="w-full py-3 mt-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Dodaj tag
+                {t('panels.mindDumpAddTag')}
               </button>
             </div>
           </div>

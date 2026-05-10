@@ -23,6 +23,7 @@ import { globalTodosApi } from '@/lib/api/globalTodos'
 import { mindDumpApi, type MindDump } from '@/lib/api/mindDump'
 import { stickyNotesApi } from '@/lib/api/stickyNotes'
 import { RITUAL_ICONS } from '@/components/calendar/RitualManagerModal'
+import { useTranslation } from '@/lib/i18n/LanguageContext'
 import { formatTaskCount } from '@/utils/grammar'
 import { Tooltip } from '@/components/ui/Tooltip'
 
@@ -162,6 +163,7 @@ export default function CalendarPage() {
 
   const [currentDate, setCurrentDate] = useState(new Date())
   const [highlightedCategoryId, setHighlightedCategoryId] = useState<string | null>(null)
+  const { t } = useTranslation()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -170,7 +172,7 @@ export default function CalendarPage() {
   )
 
   const handleRitualDelete = async (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten rytuał?')) return
+    if (!confirm(t('panels.backlogDeleteConfirm'))) return
     try {
       await ritualsApi.deleteRitual(supabase, id)
       setRituals(prev => prev.filter(r => r.id !== id))
@@ -180,7 +182,7 @@ export default function CalendarPage() {
   }
 
   const handleBacklogDelete = async (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć to zadanie z backlogu?')) return
+    if (!confirm(t('panels.backlogDeleteConfirm'))) return
     setBacklogItems(prev => prev.filter(b => b.id !== id))
     try {
       await blocksApi.updateBlock(supabase, id, { is_deleted: true })
@@ -457,7 +459,7 @@ export default function CalendarPage() {
                         <div className="flex flex-col gap-1 min-h-[100px] pb-16">
                           {backlogItems.length === 0 ? (
                             <div className="p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-                              <p className="text-sm text-gray-600 dark:text-slate-300">Brak zadań.</p>
+                              <p className="text-sm text-gray-600 dark:text-slate-300">{t('panels.backlogEmpty')}</p>
                             </div>
                           ) : (
                             backlogItems.map(item => (
@@ -477,7 +479,7 @@ export default function CalendarPage() {
                       <button
                         onClick={() => setEditingBacklogBlock({ id: 'draft-backlog', title: 'Nowe zadanie', start_time: null, end_time: null, duration_minutes: 60, color_tag: null, category_id: null, description: '', is_completed: false } as Block)}
                         className="absolute bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 z-20"
-                        title="Dodaj zadanie"
+                        title={t('panels.backlogAddTask')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="12" y1="5" x2="12" y2="19" />

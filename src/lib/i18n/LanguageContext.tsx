@@ -62,11 +62,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return typeof value === 'string' ? value : path
   }
 
-  // Zapobiegamy renderowaniu przed pobraniem localStorage, by uniknąć migotania języka (hydration mismatch)
-  if (!isMounted) {
-    return <>{children}</> // Renderuje z defaultowym 'pl' po stronie serwera
-  }
-
+  // Always render inside Provider – on SSR isMounted=false but we still provide
+  // the default Polish context so useTranslation() never throws during prerender.
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
@@ -77,7 +74,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useTranslation() {
   const context = useContext(LanguageContext)
   if (!context) {
-    throw new Error('useTranslation must be used within a LanguageProvider')
+    // SSR / prerender safety fallback – return Polish dictionary directly
+    const fallbackT = (path: string): string => {
+      const keys = path.split('.')
+      let value: any = dictionaries['pl']
+      for (const key of keys) {
+        if (value && typeof value === 'object' && key in value) {
+          value = value[key]
+        } else {
+          return path
+        }
+      }
+      return typeof value === 'string' ? value : path
+    }
+    return { language: 'pl' as const, setLanguage: (_: 'pl' | 'en') => {}, t: fallbackT }
   }
   return context
 }
