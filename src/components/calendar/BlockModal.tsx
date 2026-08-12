@@ -491,7 +491,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   return createPortal(
     <div
-      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[500px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[500px] min-h-[400px] max-w-[90vw] max-h-[90vh]"
+      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[min(500px,90vw)] h-[min(800px,85vh)] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[360px] min-h-[400px] max-w-[95vw] max-h-[95vh]"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
       onPointerDown={(e) => e.stopPropagation()}
     >
