@@ -561,186 +561,200 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
-            {!isMultiDay && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
-                {isAllDay ? (
-                  <div className="flex h-[42px] items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-lg text-sm text-gray-500 dark:text-slate-400 italic border border-dashed border-gray-200 dark:border-slate-700 select-none">
-                    Cały dzień
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.category')}</label>
+            <div className="relative h-10">
+              <button
+                type="button"
+                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                className="w-full h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 px-3 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white flex items-center justify-between transition-all"
+              >
+                {categoryId ? (
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: categories.find(c => c.id === categoryId)?.color || '#64748b' }} />
+                    <span className="truncate">{categories.find(c => c.id === categoryId)?.name || 'Nieznana kategoria'}</span>
                   </div>
                 ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                        <input
-                          type="number"
-                          min="0"
-                          value={hours}
-                          onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
-                          className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                        />
-                        <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
-                      </div>
-                      <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={minutes}
-                          onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
-                          className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                        />
-                        <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 mt-1">
-                      {[15, 30, 45, 60, 90, 120].map((mins) => (
-                        <button
-                          type="button"
-                          key={mins}
-                          onClick={() => handleDurationChange(mins)}
-                          className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
-                            ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
-                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
-                            }`}
-                        >
-                          {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
+                    <span>{t('common.noCategory')}</span>
+                  </div>
                 )}
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.category')}</label>
-              <div className="relative h-10">
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                  className="w-full h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 px-3 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white flex items-center justify-between transition-all"
-                >
-                  {categoryId ? (
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: categories.find(c => c.id === categoryId)?.color || '#64748b' }} />
-                      <span className="truncate">{categories.find(c => c.id === categoryId)?.name || 'Nieznana kategoria'}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0 ml-2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              {isCategoryDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-[150]" onClick={() => setIsCategoryDropdownOpen(false)} />
+                  <ul className="absolute top-full left-0 right-0 mt-1 z-[160] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto max-h-48 py-1">
+                    <li
+                      className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
+                      onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: null }); }}
+                    >
                       <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
                       <span>{t('common.noCategory')}</span>
-                    </div>
-                  )}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0 ml-2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                {isCategoryDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-[150]" onClick={() => setIsCategoryDropdownOpen(false)} />
-                    <ul className="absolute top-full left-0 right-0 mt-1 z-[160] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto max-h-48 py-1">
+                    </li>
+                    {categories.map(c => (
                       <li
+                        key={c.id}
                         className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
-                        onClick={() => { setCategoryId(null); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: null }); }}
+                        onClick={() => { setCategoryId(c.id); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: c.id }); }}
                       >
-                        <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-slate-500" />
-                        <span>{t('common.noCategory')}</span>
+                        <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                        <span className="truncate">{c.name}</span>
                       </li>
-                      {categories.map(c => (
-                        <li
-                          key={c.id}
-                          className="px-3 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2.5 transition-colors"
-                          onClick={() => { setCategoryId(c.id); setIsCategoryDropdownOpen(false); onChangePreview?.({ category_id: c.id }); }}
-                        >
-                          <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                          <span className="truncate">{c.name}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-              {!isBacklogItem && (
-                <div className="flex flex-col gap-2 mt-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">
-                      {isMultiDay ? 'Ramy Czasowe' : t('blockModal.date')}
-                    </label>
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-1.5 cursor-pointer group">
-                        <div className="relative flex items-center">
-                          <input type="checkbox" checked={isMultiDay} onChange={(e) => setIsMultiDay(e.target.checked)} className="sr-only peer" />
-                          <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
-                        </div>
-                        <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Wielodniowe</span>
-                      </label>
-                      <label className="flex items-center gap-1.5 cursor-pointer group">
-                        <div className="relative flex items-center">
-                          <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="sr-only peer" />
-                          <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
-                        </div>
-                        <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Cały dzień</span>
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {isMultiDay ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-semibold text-gray-400 dark:text-slate-500 uppercase ml-1">Data Startu</span>
-                        <input
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-semibold text-gray-400 dark:text-slate-500 uppercase ml-1">Data Końca</span>
-                        <input
-                          type="date"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                    />
-                  )}
-                </div>
+                    ))}
+                  </ul>
+                </>
               )}
             </div>
           </div>
 
-          {!isBacklogItem && !isAllDay && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Start (Godzina)' : t('blockModal.startTime')}</label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => handleTimeChange('start', e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                />
+          {!isBacklogItem && (
+            <>
+              {/* Opcje Czasu (Switches) */}
+              <div className="flex flex-col gap-2 mt-2">
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Opcje czasu:</label>
+                <div className="flex items-center gap-6">
+                  {/* Toggle Wielodniowe */}
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={isMultiDay} onChange={(e) => setIsMultiDay(e.target.checked)} className="sr-only peer" />
+                      <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                    </div>
+                    <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Wielodniowe</span>
+                  </label>
+                  {/* Toggle Cały dzień */}
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="sr-only peer" />
+                      <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                    </div>
+                    <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Cały dzień</span>
+                  </label>
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Koniec (Godzina)' : t('blockModal.endTime')}</label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => handleTimeChange('end', e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                />
+
+              {/* Grid 2-col dla Dat/Czasu/Duration */}
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                
+                {/* LEWA KOLUMNA */}
+                <div className="flex flex-col gap-4">
+                  {isMultiDay ? (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Data Startu</label>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
+                      {isAllDay ? (
+                        <div className="flex h-[42px] items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-lg text-sm text-gray-500 dark:text-slate-400 italic border border-dashed border-gray-200 dark:border-slate-700 select-none">
+                          Cały dzień
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex gap-2">
+                            <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                              <input
+                                type="number"
+                                min="0"
+                                value={hours}
+                                onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
+                                className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                              />
+                              <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
+                            </div>
+                            <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                              <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                value={minutes}
+                                onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
+                                className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                              />
+                              <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1 mt-1">
+                            {[15, 30, 45, 60, 90, 120].map((mins) => (
+                              <button
+                                type="button"
+                                key={mins}
+                                onClick={() => handleDurationChange(mins)}
+                                className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
+                                  ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
+                                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+                                  }`}
+                              >
+                                {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {!isAllDay && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Start (Godzina)' : t('blockModal.startTime')}</label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => handleTimeChange('start', e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* PRAWA KOLUMNA */}
+                <div className="flex flex-col gap-4">
+                  {isMultiDay ? (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">Data Końca</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.date')}</label>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full h-[42px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  )}
+
+                  {!isAllDay && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Koniec (Godzina)' : t('blockModal.endTime')}</label>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => handleTimeChange('end', e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  )}
+                </div>
+
               </div>
-            </div>
+            </>
           )}
 
           <div className="flex flex-col gap-1.5">
