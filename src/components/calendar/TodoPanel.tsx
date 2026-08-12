@@ -56,8 +56,11 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
     return () => window.removeEventListener('todo-added', handleTodoAdded)
   }, [fetchTodos])
 
+  const pending = todos.filter(t => !t.is_completed)
+  const isLimitReached = pending.length >= 5
+
   const addTodo = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || isLimitReached) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -88,7 +91,6 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
     }
   }
 
-  const pending = todos.filter(t => !t.is_completed)
   const completed = todos.filter(t => t.is_completed)
 
   if (loading) return <div className="p-4 text-xs text-gray-400">{t('common.loading')}</div>
@@ -115,13 +117,22 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addTodo()}
-          placeholder={t('panels.todoPlaceholder')}
-          className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+          placeholder={isLimitReached ? "Limit (5/5). Zakończ zadanie." : t('panels.todoPlaceholder')}
+          disabled={isLimitReached}
+          className={`flex-1 border rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-colors ${
+            isLimitReached
+              ? "bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 cursor-not-allowed opacity-70"
+              : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          }`}
         />
         <button
           onClick={addTodo}
-          disabled={!input.trim()}
-          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white text-xs font-medium rounded-lg transition-colors shrink-0"
+          disabled={!input.trim() || isLimitReached}
+          className={`px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 ${
+            isLimitReached
+              ? "bg-gray-300 dark:bg-slate-700 text-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
+          }`}
         >
           +
         </button>

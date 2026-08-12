@@ -24,6 +24,18 @@ export const globalTodosApi = {
     },
 
     async createTodo(supabase: SupabaseClient<Database>, userId: string, text: string, weekStart?: string) {
+        // Sprawdzenie limitu aktywnych zadań globalnych (max 5)
+        const { count, error: countError } = await supabase
+            .from('global_todos')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('is_completed', false)
+
+        if (countError) throw countError
+        if (count !== null && count >= 5) {
+            throw new Error('Osiągnięto limit 5 aktywnych zadań.')
+        }
+
         // If weekStart is provided, stamp the todo to noon of that Monday so it
         // always falls within the viewed week's filter range (regardless of timezone).
         const created_at = weekStart
