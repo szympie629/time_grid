@@ -223,7 +223,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
   return (
     <>
       <div className="flex flex-col h-full bg-white dark:bg-slate-950 text-black dark:text-slate-100 transition-colors">
-        <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
+        <header className="flex justify-between items-center px-4 py-2 border-b border-gray-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4">
             {onToggleSidebar && (
               <button
@@ -243,7 +243,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                 </svg>
               </button>
             )}
-            <h2 className="text-xl font-bold capitalize flex items-baseline gap-2">
+            <h2 className="text-lg font-bold capitalize flex items-baseline gap-2">
               {format(weekDays[0], 'MMMM yyyy')}
               <span className="text-sm font-medium text-gray-500 dark:text-slate-400 lowercase">
                 (tydzień {format(weekDays[0], 'I')})
@@ -305,7 +305,7 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
         <div ref={scrollContainerRef} className="flex-1 overflow-auto no-scrollbar">
           <div className="flex min-w-[700px]">
             <div className="w-16 flex-none border-r border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 transition-colors">
-              <div className="h-14 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-30 transition-colors"></div>
+              <div className="h-10 border-b border-gray-200 dark:border-slate-800 sticky top-0 bg-gray-50 dark:bg-slate-900/50 z-30 transition-colors"></div>
               {HOURS.map(hour => (
                 <div key={hour} className="h-[60px] text-sm text-center pt-2 border-b border-gray-200 dark:border-slate-800 text-gray-500 dark:text-slate-400 font-medium box-border transition-colors">{hour}</div>
               ))}
