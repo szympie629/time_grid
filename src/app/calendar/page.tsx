@@ -147,8 +147,8 @@ export default function CalendarPage() {
   const [rituals, setRituals] = useState<Ritual[]>([])
   const [isRitualsModalOpen, setIsRitualsModalOpen] = useState(false)
   const [editingRitual, setEditingRitual] = useState<Ritual | null>(null)
-
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [timeMarkers, setTimeMarkers] = useState<any[]>([])
   const [activeBlock, setActiveBlock] = useState<Block | null>(null)
   const [activeRitual, setActiveRitual] = useState<Ritual | null>(null)
   const [activeMindDump, setActiveMindDump] = useState<MindDump | null>(null)
@@ -209,7 +209,28 @@ export default function CalendarPage() {
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
+
+    // Ładowanie znaczników czasu z localStorage
+    const savedMarkers = localStorage.getItem('timeMarkers')
+    if (savedMarkers) {
+      try {
+        setTimeMarkers(JSON.parse(savedMarkers))
+      } catch (e) {
+        console.error(e)
+      }
+    } else {
+      setTimeMarkers([
+        { id: '1', time: '08:00', label: 'Praca', color: '#3b82f6' },
+        { id: '2', time: '16:00', label: 'Koniec Pracy', color: '#f59e0b' },
+        { id: '3', time: '23:00', label: 'Sen', color: '#8b5cf6' }
+      ])
+    }
   }, [refreshData])
+
+  const handleTimeMarkersChange = (newMarkers: any[]) => {
+    setTimeMarkers(newMarkers)
+    localStorage.setItem('timeMarkers', JSON.stringify(newMarkers))
+  }
 
   const handleDragStart = (e: DragStartEvent) => {
     document.body.style.overflow = 'hidden'
@@ -561,6 +582,7 @@ export default function CalendarPage() {
                           highlightedCategoryId={highlightedCategoryId}
                           copiedBlock={copiedBlock}
                           setCopiedBlock={setCopiedBlock}
+                          timeMarkers={timeMarkers}
                         />
                       </div>
 
@@ -569,7 +591,7 @@ export default function CalendarPage() {
                           onClick={() => setCategoriesOpen(true)}
                           onPointerDown={(e) => e.stopPropagation()}
                           className="w-12 h-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all text-gray-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
-                          title="Kategorie"
+                          title="Personalizacja siatki"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
@@ -765,6 +787,8 @@ export default function CalendarPage() {
         onCategoryCreated={cat => setCategories(prev => [...prev, cat])}
         onCategoryDeleted={id => setCategories(prev => prev.filter(c => c.id !== id))}
         onCategoryUpdated={cat => setCategories(prev => prev.map(c => c.id === cat.id ? cat : c))}
+        timeMarkers={timeMarkers}
+        onTimeMarkersChange={handleTimeMarkersChange}
       />
 
       <RitualManagerModal

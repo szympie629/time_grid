@@ -15,12 +15,12 @@ import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
-// Konfiguracja wskaźników czasu (Time Markers) na siatce
-const timeMarkers = [
-  { time: '08:00', label: 'Praca', color: '#3b82f6' },
-  { time: '16:00', label: 'Koniec Pracy', color: '#f59e0b' },
-  { time: '23:00', label: 'Sen', color: '#8b5cf6' }
-]
+export type TimeMarker = {
+  id: string
+  time: string
+  label: string
+  color: string
+}
 
 function getBlockPosition(startTime: string, endTime: string) {
   // Ucinamy ewentualne strefy czasowe (Z lub +00:00), aby zawsze operować na czasie lokalnym kalendarza
@@ -62,9 +62,10 @@ interface CalendarGridProps {
   highlightedCategoryId?: string | null;
   copiedBlock: Block | null;
   setCopiedBlock: (block: Block | null) => void;
+  timeMarkers?: TimeMarker[];
 }
 
-export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, isRightPanelOpen = false, onToggleRightPanel, currentDate, setCurrentDate, highlightedCategoryId, copiedBlock, setCopiedBlock }: CalendarGridProps) {
+export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, categories = [], isSidebarOpen = true, onToggleSidebar, isRightPanelOpen = false, onToggleRightPanel, currentDate, setCurrentDate, highlightedCategoryId, copiedBlock, setCopiedBlock, timeMarkers = [] }: CalendarGridProps) {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [draftBlock, setDraftBlock] = useState<Block | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -405,28 +406,30 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                         </div>
                       ))}
 
-                      {/* Time Markers - Wskaźniki czasu (pointer-events-none aby nie blokować kliknięć i drag&drop) */}
-                      {timeMarkers.map((marker, idx) => {
-                        const [mHours, mMinutes] = marker.time.split(':').map(Number)
-                        const topPx = (mHours + mMinutes / 60) * 60
-                        return (
-                          <div
-                            key={`marker-${idx}`}
-                            className="absolute left-0 w-full pointer-events-none z-10"
-                            style={{ top: `${topPx}px` }}
-                          >
-                            <div className="absolute w-full border-t-2 border-dashed opacity-40" style={{ borderColor: marker.color }} />
-                            <span
-                              className="absolute right-1 -top-4 text-[9px] font-bold uppercase tracking-wider px-1"
-                              style={{ color: marker.color }}
+                      {/* Time Markers - Wskaźniki czasu w głównym kontenerze pointer-events-none */}
+                      <div className="absolute inset-0 pointer-events-none z-10">
+                        {timeMarkers.map((marker) => {
+                          const [mHours, mMinutes] = marker.time.split(':').map(Number)
+                          const topPx = (mHours + mMinutes / 60) * 60
+                          return (
+                            <div
+                              key={marker.id}
+                              className="absolute left-0 w-full"
+                              style={{ top: `${topPx}px` }}
                             >
-                              {marker.label}
-                            </span>
-                          </div>
-                        )
-                      })}
+                              <div className="absolute w-full border-t-2 border-dashed opacity-40" style={{ borderColor: marker.color }} />
+                              <span
+                                className="absolute right-1 -top-4 text-[9px] font-bold uppercase tracking-wider px-1"
+                                style={{ color: marker.color }}
+                              >
+                                {marker.label}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
 
-                      {blocksWithLayout.map(block => {
+                      {blocksWithLayout.map((block) => {
                         const baseStyle = getBlockPosition(block.segStartStr, block.segEndStr)
                         const leftPercent = block.isMultiDayBlock ? 0 : Math.min(75, 5 + (block.overlapLevel * 8))
                         const widthPercent = block.isMultiDayBlock ? 100 : Math.max(20, 95 - leftPercent)
