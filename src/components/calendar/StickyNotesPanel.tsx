@@ -146,9 +146,9 @@ export default function StickyNotesPanel() {
           <button
             onClick={addNote}
             disabled={!input.trim()}
-            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wider"
+            className="px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
           >
-            {t('panels.stickyAdd')}
+            +
           </button>
         </div>
       </div>
