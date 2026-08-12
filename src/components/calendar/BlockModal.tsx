@@ -663,34 +663,49 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 )}
               </div>
               {!isBacklogItem && (
-                <div className="flex flex-col gap-1 mt-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 flex items-center justify-between">
-                    <span>{isMultiDay ? 'Data Startu / Data Końca' : t('blockModal.date')}</span>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" checked={isMultiDay} onChange={(e) => setIsMultiDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
-                        <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Wielodniowe</span>
+                <div className="flex flex-col gap-2 mt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">
+                      {isMultiDay ? 'Ramy Czasowe' : t('blockModal.date')}
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1.5 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={isMultiDay} onChange={(e) => setIsMultiDay(e.target.checked)} className="sr-only peer" />
+                          <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                        </div>
+                        <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Wielodniowe</span>
                       </label>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
-                        <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Cały dzień</span>
+                      <label className="flex items-center gap-1.5 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="sr-only peer" />
+                          <div className="w-7 h-4 bg-gray-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                        </div>
+                        <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors">Cały dzień</span>
                       </label>
                     </div>
-                  </label>
+                  </div>
+                  
                   {isMultiDay ? (
                     <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                      />
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                      />
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-semibold text-gray-400 dark:text-slate-500 uppercase ml-1">Data Startu</span>
+                        <input
+                          type="date"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-semibold text-gray-400 dark:text-slate-500 uppercase ml-1">Data Końca</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                        />
+                      </div>
                     </div>
                   ) : (
                     <input
