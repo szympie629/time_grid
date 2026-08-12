@@ -272,7 +272,15 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   }, [block.id])
 
   useEffect(() => {
-    setPosition({ x: 0, y: 0 })
+    // Obliczenie domyślnych, responsywnych wymiarów modala
+    const w = Math.min(500, window.innerWidth * 0.9)
+    const h = Math.min(800, window.innerHeight * 0.85)
+    
+    // Sztywne obliczenie pozycji top/left na srodek ekranu w pikselach
+    setPosition({ 
+      x: (window.innerWidth - w) / 2, 
+      y: (window.innerHeight - h) / 2 
+    })
     setIsMounted(true)
     fetchTasks()
   }, [fetchTasks])
@@ -491,8 +499,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   return createPortal(
     <div
-      className="fixed z-[9999] top-1/2 left-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[min(500px,90vw)] h-[min(800px,85vh)] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[360px] min-h-[400px] max-w-[95vw] max-h-[95vh]"
-      style={{ transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))` }}
+      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[min(500px,90vw)] h-[min(800px,85vh)] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[360px] min-h-[400px] max-w-[95vw] max-h-[95vh]"
+      style={{ left: `${position.x}px`, top: `${position.y}px` }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       {/* ── Header ── */}
