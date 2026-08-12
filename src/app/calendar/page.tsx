@@ -280,10 +280,27 @@ export default function CalendarPage() {
     setActiveMindDump(null)
 
     const { active, over, delta } = event
-    if (!over) return
-
     const activeData = active.data.current
     const type = activeData?.type
+
+    if (type === 'stickynote') {
+      const item = activeData?.item as any
+      if (item) {
+        const newX = Math.max(0, (item.position_x || 0) + delta.x)
+        const newY = Math.max(0, (item.position_y || 0) + delta.y)
+        
+        try {
+          await stickyNotesApi.updateNote(supabase, item.id, { position_x: newX, position_y: newY })
+          window.dispatchEvent(new CustomEvent('sticky-note-added'))
+        } catch (err) {
+          console.error("Błąd przesuwania notatki", err)
+        }
+      }
+      return
+    }
+
+    if (!over) return
+
     const overId = String(over.id)
 
     if (type === 'calendar') {

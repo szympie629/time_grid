@@ -14,10 +14,10 @@ export const stickyNotesApi = {
         return data as StickyNote[]
     },
 
-    async createNote(supabase: SupabaseClient<Database>, userId: string, content: string, color: string | null = 'yellow') {
+    async createNote(supabase: SupabaseClient<Database>, userId: string, content: string, color: string | null = 'yellow', position_x = 0, position_y = 0) {
         const { data, error } = await supabase
             .from('sticky_notes')
-            .insert({ user_id: userId, content, color })
+            .insert({ user_id: userId, content, color, position_x, position_y })
             .select().single()
         if (error) throw error
         return data as StickyNote

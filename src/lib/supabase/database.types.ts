@@ -184,6 +184,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          position_x: number | null
+          position_y: number | null
           updated_at: string
           user_id: string
         }
@@ -192,6 +194,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          position_x?: number | null
+          position_y?: number | null
           updated_at?: string
           user_id: string
         }
@@ -200,6 +204,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          position_x?: number | null
+          position_y?: number | null
           updated_at?: string
           user_id?: string
         }
