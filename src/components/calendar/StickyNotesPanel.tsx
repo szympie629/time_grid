@@ -173,7 +173,7 @@ export default function StickyNotesPanel() {
             return (
               <div 
                 key={note.id} 
-                className={`relative p-3 rounded-xl shadow-sm hover:shadow-md transition-all group flex flex-col w-36 min-h-36 shrink-0 ${colorObj.class}`}
+                className={`relative p-3 rounded-xl shadow-sm hover:shadow-md transition-all group flex flex-col w-36 shrink-0 ${colorObj.class}`}
               >
                 {editingId === note.id ? (
                   <div className="flex-1 grid">
