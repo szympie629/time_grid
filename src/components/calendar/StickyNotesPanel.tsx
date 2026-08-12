@@ -153,7 +153,8 @@ export default function StickyNotesPanel() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-wrap content-start items-start gap-3">
+      <div className="flex-1 overflow-auto no-scrollbar relative">
+        <div className="w-[1200px] min-h-full flex flex-wrap content-start items-start gap-3 pb-4">
         {loading ? (
           <div className="w-full flex items-center justify-center h-full opacity-40">
             <p className="text-xs text-gray-500">{t('common.loading')}</p>
@@ -242,6 +243,7 @@ export default function StickyNotesPanel() {
             )
           })
         )}
+        </div>
       </div>
     </div>
   )
