@@ -61,7 +61,14 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
   const isLimitReached = pending.length >= 5
 
   const addTodo = async () => {
-    if (!input.trim() || isLimitReached) return
+    if (!input.trim()) return
+
+    const activeTasksCount = todos.filter(t => !t.is_completed).length
+    if (activeTasksCount >= 5) {
+      toast.error("Osiągnięto limit 5 zadań. Zakończ lub usuń zadanie, aby dodać nowe.")
+      return
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -118,22 +125,13 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addTodo()}
-          placeholder={isLimitReached ? "Limit (5/5). Zakończ zadanie." : t('panels.todoPlaceholder')}
-          disabled={isLimitReached}
-          className={`flex-1 border rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-colors ${
-            isLimitReached
-              ? "bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 cursor-not-allowed opacity-70"
-              : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          }`}
+          placeholder={t('panels.todoPlaceholder')}
+          className="flex-1 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 border rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-colors"
         />
         <button
           onClick={addTodo}
-          disabled={!input.trim() || isLimitReached}
-          className={`px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 ${
-            isLimitReached
-              ? "bg-gray-300 dark:bg-slate-700 text-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
-          }`}
+          disabled={!input.trim()}
+          className="px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
         >
           +
         </button>
