@@ -491,13 +491,13 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   return createPortal(
     <div
-      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[400px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800"
+      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[500px] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[500px] min-h-[400px] max-w-[90vw] max-h-[90vh]"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       {/* ── Header ── */}
       <div
-        className="flex justify-between items-center border-b border-gray-100 dark:border-slate-800 pb-3 cursor-grab active:cursor-grabbing"
+        className="flex justify-between items-center border-b border-gray-100 dark:border-slate-800 pb-3 cursor-grab active:cursor-grabbing shrink-0"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -529,7 +529,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex border-b border-gray-100 dark:border-slate-800 mb-2 overflow-x-auto no-scrollbar">
+      <div className="flex border-b border-gray-100 dark:border-slate-800 mb-2 overflow-x-auto no-scrollbar shrink-0">
         {[
           { id: 'main', label: t('blockModal.tabMain') },
           { id: 'todo', label: t('blockModal.tabTodo') },
@@ -549,9 +549,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
         ))}
       </div>
 
-      {/* ── Tab: Główne ── */}
-      {activeTab === 'main' && (
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar pr-2 flex flex-col">
+        {/* ── Tab: Główne ── */}
+        {activeTab === 'main' && (
+          <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.title')}</label>
             <input
@@ -943,9 +944,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {t('blockModal.notesComingSoon')}
         </div>
       )}
+      </div>
 
       {/* ── Footer ── */}
-      <div className="flex justify-between mt-4 border-t border-gray-100 dark:border-slate-800 pt-5">
+      <div className="flex justify-between mt-4 border-t border-gray-100 dark:border-slate-800 pt-5 shrink-0 pr-4">
         <button
           onClick={() => confirm(t('blockModal.deleteConfirm')) && onDelete(block.id)}
           className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold hover:underline transition-colors"
