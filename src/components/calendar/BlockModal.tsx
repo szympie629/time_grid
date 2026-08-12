@@ -272,7 +272,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   }, [block.id])
 
   useEffect(() => {
-    setPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 250 })
+    setPosition({ x: 0, y: 0 })
     setIsMounted(true)
     fetchTasks()
   }, [fetchTasks])
@@ -491,8 +491,8 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   return createPortal(
     <div
-      className="fixed z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[min(500px,90vw)] h-[min(800px,85vh)] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[360px] min-h-[400px] max-w-[95vw] max-h-[95vh]"
-      style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      className="fixed z-[9999] top-1/2 left-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl w-[min(500px,90vw)] h-[min(800px,85vh)] shadow-2xl flex flex-col gap-5 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-800 resize overflow-hidden min-w-[360px] min-h-[400px] max-w-[95vw] max-h-[95vh]"
+      style={{ transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))` }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       {/* ── Header ── */}
@@ -668,7 +668,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                                 min="0"
                                 value={hours}
                                 onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
-                                className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                                className="w-full min-w-0 p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
                               />
                               <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
                             </div>
@@ -679,7 +679,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                                 max="59"
                                 value={minutes}
                                 onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
-                                className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                                className="w-full min-w-0 p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
                               />
                               <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
                             </div>
