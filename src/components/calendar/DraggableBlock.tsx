@@ -279,7 +279,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       )}
 
       {block.description && !isDraft && (
-        <div className="mt-0.5 text-[9px] text-white/75 italic leading-tight whitespace-pre-wrap break-words line-clamp-2 z-10 w-full pr-1 shrink-0">
+        <div className="mt-0.5 text-[10.5px] text-white/80 italic leading-snug whitespace-pre-wrap break-words line-clamp-2 z-10 w-full pr-1 shrink-0">
           {block.description}
         </div>
       )}
@@ -287,8 +287,8 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
       {!isDraft && pendingTasks.length > 0 && (
         <div className="mt-1 flex flex-col gap-0.5 z-10 overflow-hidden shrink-0">
           {pendingTasks.map(task => (
-            <div key={task.id} className="text-[9px] leading-tight bg-black/15 rounded-sm px-1.5 py-1 flex items-start gap-1.5 shadow-sm">
-              <div className="mt-[1px] w-1.5 h-1.5 rounded-[2px] border border-white/50 shrink-0" />
+            <div key={task.id} className="text-[10px] leading-tight bg-black/15 rounded-sm px-1.5 py-1 flex items-start gap-1.5 shadow-sm">
+              <div className="mt-[2px] w-1.5 h-1.5 rounded-[2px] border border-white/50 shrink-0" />
               <span className="line-clamp-2 opacity-95">{task.title}</span>
             </div>
           ))}
