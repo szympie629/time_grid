@@ -6,6 +6,7 @@ import { globalTodosApi, type GlobalTodo } from '@/lib/api/globalTodos'
 import { Tooltip } from '../ui/Tooltip'
 import { useDroppable } from '@dnd-kit/core'
 import { useTranslation } from '@/lib/i18n/LanguageContext'
+import { toast } from 'sonner'
 
 
 interface Props {
@@ -69,7 +70,7 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
       setTodos(prev => [newTodo, ...prev])
       setInput('')
     } catch (e) {
-      alert("Błąd dodawania")
+      toast.error("Osiągnięto limit 5 zadań. Zakończ lub usuń zadanie, aby dodać nowe.")
     }
   }
 
@@ -78,7 +79,7 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
       await globalTodosApi.toggleTodo(supabase, id, !currentStatus)
       setTodos(prev => prev.map(t => t.id === id ? { ...t, is_completed: !currentStatus } : t))
     } catch (e) {
-      alert("Błąd zmiany statusu")
+      toast.error("Błąd zmiany statusu")
     }
   }
 
@@ -87,7 +88,7 @@ export default function TodoPanel({ weekStart, weekEnd }: Props) {
       await globalTodosApi.deleteTodo(supabase, id)
       setTodos(prev => prev.filter(t => t.id !== id))
     } catch (e) {
-      alert("Błąd usuwania")
+      toast.error("Błąd usuwania")
     }
   }
 
