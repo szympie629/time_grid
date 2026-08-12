@@ -16,19 +16,25 @@ import { useTranslation } from '@/lib/i18n/LanguageContext'
 const HOURS = Array.from({ length: 24 }).map((_, i) => `${i.toString().padStart(2, '0')}:00`)
 
 function getBlockPosition(startTime: string, endTime: string) {
-  const startT = startTime.split('T')[1]
-  const endT = endTime.split('T')[1]
+  const start = new Date(startTime)
+  const end = new Date(endTime)
 
-  const [sHours, sMinutes] = startT.split(':').map(Number)
-  const [eHours, eMinutes] = endT.split(':').map(Number)
-
+  const sHours = start.getHours()
+  const sMinutes = start.getMinutes()
+  
   const startDecimal = sHours + sMinutes / 60
-  const endDecimal = eHours + eMinutes / 60
-  const duration = endDecimal - startDecimal
+  
+  // Obliczamy czas trwania na podstawie prawdziwej różnicy w czasie (ms)
+  let durationMinutes = (end.getTime() - start.getTime()) / 60000
+
+  // Jeśli block byłby ujemny, wymuś min 15
+  if (durationMinutes < 0) durationMinutes = 15
+
+  const durationHours = durationMinutes / 60
 
   return {
     top: `${startDecimal * 60}px`,
-    height: `${duration * 60}px`,
+    height: `${durationHours * 60}px`,
   }
 }
 

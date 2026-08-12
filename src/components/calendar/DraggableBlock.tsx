@@ -45,13 +45,11 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
 
   let baseHeight = style?.height ? parseInt(style.height as string) : 60;
   if (isOverlay && block.start_time && block.end_time) {
-    const startT = block.start_time.split('T')[1];
-    const endT = block.end_time.split('T')[1];
-    if (startT && endT) {
-      const [sHours, sMinutes] = startT.split(':').map(Number);
-      const [eHours, eMinutes] = endT.split(':').map(Number);
-      baseHeight = ((eHours + eMinutes / 60) - (sHours + sMinutes / 60)) * 60;
-    }
+    const start = new Date(block.start_time);
+    const end = new Date(block.end_time);
+    let durationMins = (end.getTime() - start.getTime()) / 60000;
+    if (durationMins < 0) durationMins = 15;
+    baseHeight = durationMins;
   }
   const currentHeight = resizeHeight !== null ? resizeHeight : baseHeight
 
@@ -141,7 +139,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   }
   const hours = Math.floor(durationMinutes / 60)
   const mins = durationMinutes % 60
-  const durationText = hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`
+  const durationText = durationMinutes >= 1439 ? '24h' : (hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`)
 
   const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 transition-transform duration-200 cursor-grabbing' : ''
   const dragClass = isDraft ? '' : (isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing')

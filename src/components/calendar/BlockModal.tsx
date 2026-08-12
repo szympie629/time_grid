@@ -185,6 +185,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   const [date, setDate] = useState(safeStart.split('T')[0])
   const [startTime, setStartTime] = useState(safeStart.split('T')[1].substring(0, 5))
   const [endTime, setEndTime] = useState(safeEnd.split('T')[1].substring(0, 5))
+  const [isAllDay, setIsAllDay] = useState(getInitialDuration() >= 1439 && safeStart.includes('00:00'))
   const [categoryId, setCategoryId] = useState<string | null>(block.category_id || null)
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(block.is_completed ?? false)
@@ -403,19 +404,25 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   // ── Zapis ─────────────────────────────────────────────────────────────────
   const handleSave = () => {
+    const finalDuration = isAllDay ? 1440 : durationMins
     const updates: Partial<Block> = {
       title,
       description,
       category_id: categoryId,
       color_tag: null, // Clear old color
       is_completed: isCompleted,
-      duration_minutes: durationMins,
+      duration_minutes: finalDuration,
       focus_goal: focusGoal,
       metadata: { pomodoro_interval: pomodoroInterval, distractions } as any
     }
     if (!isBacklogItem) {
-      updates.start_time = `${date}T${startTime}:00`
-      updates.end_time = `${date}T${endTime}:00`
+      if (isAllDay) {
+        updates.start_time = `${date}T00:00:00`
+        updates.end_time = `${date}T23:59:59`
+      } else {
+        updates.start_time = `${date}T${startTime}:00`
+        updates.end_time = `${date}T${endTime}:00`
+      }
     } else {
       updates.start_time = null
       updates.end_time = null
@@ -426,10 +433,16 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   const handleCopy = () => {
     if (!onCopy) return
-    const copyData: Partial<Block> = { ...block, title, description, category_id: categoryId, color_tag: null, duration_minutes: durationMins }
+    const finalDuration = isAllDay ? 1440 : durationMins
+    const copyData: Partial<Block> = { ...block, title, description, category_id: categoryId, color_tag: null, duration_minutes: finalDuration }
     if (!isBacklogItem) {
-      copyData.start_time = `${date}T${startTime}:00`
-      copyData.end_time = `${date}T${endTime}:00`
+      if (isAllDay) {
+        copyData.start_time = `${date}T00:00:00`
+        copyData.end_time = `${date}T23:59:59`
+      } else {
+        copyData.start_time = `${date}T${startTime}:00`
+        copyData.end_time = `${date}T${endTime}:00`
+      }
     } else {
       copyData.start_time = null
       copyData.end_time = null
@@ -515,44 +528,52 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           <div className="grid grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
-              <div className="flex gap-2">
-                <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                  <input
-                    type="number"
-                    min="0"
-                    value={hours}
-                    onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
-                    className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                  />
-                  <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
+              {isAllDay ? (
+                <div className="flex h-[42px] items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-lg text-sm text-gray-500 dark:text-slate-400 italic border border-dashed border-gray-200 dark:border-slate-700 select-none">
+                  Cały dzień
                 </div>
-                <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={minutes}
-                    onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
-                    className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                  />
-                  <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-1 mt-1">
-                {[15, 30, 45, 60, 90, 120].map((mins) => (
-                  <button
-                    type="button"
-                    key={mins}
-                    onClick={() => handleDurationChange(mins)}
-                    className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
-                      ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
-                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
-                      }`}
-                  >
-                    {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
-                  </button>
-                ))}
-              </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                      <input
+                        type="number"
+                        min="0"
+                        value={hours}
+                        onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
+                        className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                      />
+                      <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
+                    </div>
+                    <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={minutes}
+                        onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
+                        className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                      />
+                      <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1 mt-1">
+                    {[15, 30, 45, 60, 90, 120].map((mins) => (
+                      <button
+                        type="button"
+                        key={mins}
+                        onClick={() => handleDurationChange(mins)}
+                        className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
+                          ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
+                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+                          }`}
+                      >
+                        {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -605,7 +626,13 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               </div>
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.date')}</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 flex items-center justify-between">
+                    <span>{t('blockModal.date')}</span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
+                      <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Cały dzień</span>
+                    </label>
+                  </label>
                   <input
                     type="date"
                     value={date}
@@ -617,7 +644,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
             </div>
           </div>
 
-          {!isBacklogItem && (
+          {!isBacklogItem && !isAllDay && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.startTime')}</label>
