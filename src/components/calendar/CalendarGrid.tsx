@@ -303,32 +303,84 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
               {weekDays.map((day) => {
                 const dateKey = format(day, 'yyyy-MM-dd')
                 const isToday = dateKey === format(new Date(), 'yyyy-MM-dd')
+                const dateKeyStart = new Date(`${dateKey}T00:00:00`).getTime()
+                const dateKeyEnd = new Date(`${dateKey}T23:59:59.999`).getTime()
 
-                const dayBlocks = blocks.filter(b => b.start_time?.startsWith(dateKey))
-                if (draftBlock && draftBlock.start_time?.startsWith(dateKey)) {
-                  dayBlocks.push(draftBlock)
+                const dayBlocks = blocks.filter(b => {
+                  if (!b.start_time || !b.end_time) return false;
+                  const bStart = new Date(b.start_time.substring(0, 19)).getTime();
+                  const bEnd = new Date(b.end_time.substring(0, 19)).getTime();
+                  // Task touches this day if start is before day end and end is after day start
+                  return bStart <= dateKeyEnd && bEnd > dateKeyStart;
+                });
+
+                if (draftBlock && draftBlock.start_time && draftBlock.end_time) {
+                  const bStart = new Date(draftBlock.start_time.substring(0, 19)).getTime();
+                  const bEnd = new Date(draftBlock.end_time.substring(0, 19)).getTime();
+                  if (bStart <= dateKeyEnd && bEnd > dateKeyStart) {
+                    dayBlocks.push(draftBlock);
+                  }
                 }
 
-                const blocksWithLayout = dayBlocks.map(block => {
-                  const start = new Date(block.start_time!.substring(0, 19)).getTime()
-                  const end = new Date(block.end_time!.substring(0, 19)).getTime()
-                  const duration = end - start
+                let segmentedBlocks = dayBlocks.map(block => {
+                  const bStart = new Date(block.start_time!.substring(0, 19)).getTime();
+                  const bEnd = new Date(block.end_time!.substring(0, 19)).getTime();
+                  
+                  const startDayStr = block.start_time!.substring(0, 10);
+                  const endDayStr = block.end_time!.substring(0, 10);
+                  
+                  // Jest wielodniowy jeśli daty się różnią, i kończy się później niż 00:00 danego dnia
+                  // (zadanie 00:00-00:00 następnego dnia technicznie ma inny endDayStr, ale nie chcemy go ciąć)
+                  const isMultiDayBlock = (startDayStr !== endDayStr) && (bEnd > new Date(`${startDayStr}T23:59:59`).getTime());
 
-                  const overlappingBigger = dayBlocks.filter(other => {
+                  let segStartStr = block.start_time!;
+                  let segEndStr = block.end_time!;
+                  
+                  let isStartSegment = false;
+                  let isEndSegment = false;
+                  let isMiddleSegment = false;
+
+                  if (isMultiDayBlock) {
+                    const nextDateKeyStr = format(new Date(dateKeyStart + 86400000), 'yyyy-MM-dd');
+                    if (dateKey === startDayStr) {
+                      segEndStr = `${nextDateKeyStr}T00:00:00`;
+                      isStartSegment = true;
+                    } else if (dateKey === endDayStr) {
+                      segStartStr = `${dateKey}T00:00:00`;
+                      isEndSegment = true;
+                    } else {
+                      segStartStr = `${dateKey}T00:00:00`;
+                      segEndStr = `${nextDateKeyStr}T00:00:00`;
+                      isMiddleSegment = true;
+                    }
+                  }
+
+                  const segStartTs = new Date(segStartStr.substring(0, 19)).getTime();
+                  const segEndTs = new Date(segEndStr.substring(0, 19)).getTime();
+                  const duration = segEndTs - segStartTs;
+                  
+                  return { ...block, segStartStr, segEndStr, duration, isMultiDayBlock, isStartSegment, isEndSegment, isMiddleSegment }
+                });
+
+                const blocksWithLayout = segmentedBlocks.map(block => {
+                  const start = new Date(block.segStartStr.substring(0, 19)).getTime()
+                  const end = new Date(block.segEndStr.substring(0, 19)).getTime()
+
+                  const overlappingBigger = segmentedBlocks.filter(other => {
                     if (other.id === block.id) return false
-                    const oStart = new Date(other.start_time!.substring(0, 19)).getTime()
-                    const oEnd = new Date(other.end_time!.substring(0, 19)).getTime()
+                    const oStart = new Date(other.segStartStr.substring(0, 19)).getTime()
+                    const oEnd = new Date(other.segEndStr.substring(0, 19)).getTime()
                     const oDuration = oEnd - oStart
 
                     if (!(start < oEnd && end > oStart)) return false
 
-                    if (oDuration > duration) return true
-                    if (oDuration === duration && oStart < start) return true
-                    if (oDuration === duration && oStart === start && other.id < block.id) return true
+                    if (oDuration > block.duration) return true
+                    if (oDuration === block.duration && oStart < start) return true
+                    if (oDuration === block.duration && oStart === start && other.id < block.id) return true
                     return false
                   })
 
-                  return { ...block, duration, overlapLevel: overlappingBigger.length }
+                  return { ...block, overlapLevel: block.isMultiDayBlock ? 0 : overlappingBigger.length }
                 })
 
                 blocksWithLayout.sort((a, b) => b.duration - a.duration)
@@ -343,17 +395,39 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
                       ))}
 
                       {blocksWithLayout.map(block => {
-                        const baseStyle = getBlockPosition(block.start_time!, block.end_time!)
-                        const leftPercent = Math.min(75, 5 + (block.overlapLevel * 8))
-                        const widthPercent = Math.max(20, 95 - leftPercent)
+                        const baseStyle = getBlockPosition(block.segStartStr, block.segEndStr)
+                        const leftPercent = block.isMultiDayBlock ? 0 : Math.min(75, 5 + (block.overlapLevel * 8))
+                        const widthPercent = block.isMultiDayBlock ? 100 : Math.max(20, 95 - leftPercent)
+                        
+                        let extraStyle: React.CSSProperties = { 
+                          ...baseStyle, 
+                          width: `${widthPercent}%`, 
+                          left: `${leftPercent}%` 
+                        };
+
+                        if (block.isMultiDayBlock) {
+                          if (block.isStartSegment) {
+                             extraStyle.borderBottomRightRadius = 0;
+                             extraStyle.borderBottomLeftRadius = 0;
+                             extraStyle.borderBottom = '1px dashed rgba(255,255,255,0.4)';
+                          } else if (block.isEndSegment) {
+                             extraStyle.borderTopRightRadius = 0;
+                             extraStyle.borderTopLeftRadius = 0;
+                             extraStyle.borderTop = '1px dashed rgba(255,255,255,0.4)';
+                          } else if (block.isMiddleSegment) {
+                             extraStyle.borderRadius = 0;
+                             extraStyle.borderTop = '1px dashed rgba(255,255,255,0.4)';
+                             extraStyle.borderBottom = '1px dashed rgba(255,255,255,0.4)';
+                          }
+                        }
 
                         return (
                           <DraggableBlock
-                            key={`calendar-${block.id}`}
-                            idPrefix="calendar-"
+                            key={`calendar-${block.id}-${dateKey}`}
+                            idPrefix={`calendar-${dateKey}-`}
                             block={block as Block}
                             categories={categories}
-                            style={{ ...baseStyle, width: `${widthPercent}%`, left: `${leftPercent}%` }}
+                            style={extraStyle}
                             onResizeEnd={handleResizeEnd}
                             onClick={(id) => setSelectedBlockId(id)}
                             onDelete={handleDeleteBlock}

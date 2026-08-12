@@ -183,8 +183,10 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   const [description, setDescription] = useState(block.description || '')
   const [activeTab, setActiveTab] = useState('main')
   const [date, setDate] = useState(safeStart.split('T')[0])
+  const [endDate, setEndDate] = useState(safeEnd.split('T')[0])
   const [startTime, setStartTime] = useState(safeStart.split('T')[1].substring(0, 5))
   const [endTime, setEndTime] = useState(safeEnd.split('T')[1].substring(0, 5))
+  const [isMultiDay, setIsMultiDay] = useState(safeStart.split('T')[0] !== safeEnd.split('T')[0])
   const [isAllDay, setIsAllDay] = useState(getInitialDuration() >= 1439 && safeStart.includes('00:00'))
   const [categoryId, setCategoryId] = useState<string | null>(block.category_id || null)
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
@@ -404,7 +406,16 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   // ── Zapis ─────────────────────────────────────────────────────────────────
   const handleSave = () => {
-    const finalDuration = isAllDay ? 1440 : durationMins
+    const getFinalDuration = () => {
+      if (isMultiDay) {
+        const start = new Date(`${date}T${startTime}:00`).getTime()
+        const end = new Date(`${endDate}T${endTime}:00`).getTime()
+        return Math.max(15, (end - start) / 60000)
+      }
+      return isAllDay ? 1440 : durationMins
+    }
+    const finalDuration = getFinalDuration()
+
     const updates: Partial<Block> = {
       title,
       description,
@@ -416,7 +427,15 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
       metadata: { pomodoro_interval: pomodoroInterval, distractions } as any
     }
     if (!isBacklogItem) {
-      if (isAllDay) {
+      if (isMultiDay) {
+        if (isAllDay) {
+          updates.start_time = `${date}T00:00:00`
+          updates.end_time = `${endDate}T23:59:59`
+        } else {
+          updates.start_time = `${date}T${startTime}:00`
+          updates.end_time = `${endDate}T${endTime}:00`
+        }
+      } else if (isAllDay) {
         updates.start_time = `${date}T00:00:00`
         updates.end_time = `${date}T23:59:59`
       } else {
@@ -433,10 +452,27 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
 
   const handleCopy = () => {
     if (!onCopy) return
-    const finalDuration = isAllDay ? 1440 : durationMins
+    const getFinalDuration = () => {
+      if (isMultiDay) {
+        const start = new Date(`${date}T${startTime}:00`).getTime()
+        const end = new Date(`${endDate}T${endTime}:00`).getTime()
+        return Math.max(15, (end - start) / 60000)
+      }
+      return isAllDay ? 1440 : durationMins
+    }
+    const finalDuration = getFinalDuration()
+
     const copyData: Partial<Block> = { ...block, title, description, category_id: categoryId, color_tag: null, duration_minutes: finalDuration }
     if (!isBacklogItem) {
-      if (isAllDay) {
+      if (isMultiDay) {
+        if (isAllDay) {
+          copyData.start_time = `${date}T00:00:00`
+          copyData.end_time = `${endDate}T23:59:59`
+        } else {
+          copyData.start_time = `${date}T${startTime}:00`
+          copyData.end_time = `${endDate}T${endTime}:00`
+        }
+      } else if (isAllDay) {
         copyData.start_time = `${date}T00:00:00`
         copyData.end_time = `${date}T23:59:59`
       } else {
@@ -526,55 +562,57 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           </div>
 
           <div className="grid grid-cols-2 gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
-              {isAllDay ? (
-                <div className="flex h-[42px] items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-lg text-sm text-gray-500 dark:text-slate-400 italic border border-dashed border-gray-200 dark:border-slate-700 select-none">
-                  Cały dzień
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2">
-                    <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                      <input
-                        type="number"
-                        min="0"
-                        value={hours}
-                        onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
-                        className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                      />
-                      <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
-                    </div>
-                    <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={minutes}
-                        onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
-                        className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
-                      />
-                      <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
-                    </div>
+            {!isMultiDay && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.duration')}</label>
+                {isAllDay ? (
+                  <div className="flex h-[42px] items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-lg text-sm text-gray-500 dark:text-slate-400 italic border border-dashed border-gray-200 dark:border-slate-700 select-none">
+                    Cały dzień
                   </div>
-                  <div className="grid grid-cols-3 gap-1 mt-1">
-                    {[15, 30, 45, 60, 90, 120].map((mins) => (
-                      <button
-                        type="button"
-                        key={mins}
-                        onClick={() => handleDurationChange(mins)}
-                        className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
-                          ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
-                          }`}
-                      >
-                        {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                        <input
+                          type="number"
+                          min="0"
+                          value={hours}
+                          onChange={(e) => handleDurationChange(Number(e.target.value) * 60 + minutes)}
+                          className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                        />
+                        <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">h</span>
+                      </div>
+                      <div className="flex flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={minutes}
+                          onChange={(e) => handleDurationChange(hours * 60 + Number(e.target.value))}
+                          className="w-full p-2 text-sm text-center outline-none bg-transparent text-gray-900 dark:text-white"
+                        />
+                        <span className="flex items-center text-xs font-medium text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 px-2.5 border-l border-gray-200 dark:border-slate-700">m</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 mt-1">
+                      {[15, 30, 45, 60, 90, 120].map((mins) => (
+                        <button
+                          type="button"
+                          key={mins}
+                          onClick={() => handleDurationChange(mins)}
+                          className={`text-[10px] py-1 rounded-lg border transition-colors ${durationMins === mins
+                            ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+                            }`}
+                        >
+                          {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.category')}</label>
@@ -627,18 +665,41 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
               {!isBacklogItem && (
                 <div className="flex flex-col gap-1 mt-2">
                   <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 flex items-center justify-between">
-                    <span>{t('blockModal.date')}</span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
-                      <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Cały dzień</span>
-                    </label>
+                    <span>{isMultiDay ? 'Data Startu / Data Końca' : t('blockModal.date')}</span>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" checked={isMultiDay} onChange={(e) => setIsMultiDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
+                        <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Wielodniowe</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} className="w-3 h-3 accent-blue-500 rounded" />
+                        <span className="text-[9px] text-gray-500 dark:text-slate-400 font-bold normal-case">Cały dzień</span>
+                      </label>
+                    </div>
                   </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
-                  />
+                  {isMultiDay ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white transition-all dark:[color-scheme:dark]"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -647,7 +708,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
           {!isBacklogItem && !isAllDay && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.startTime')}</label>
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Start (Godzina)' : t('blockModal.startTime')}</label>
                 <input
                   type="time"
                   value={startTime}
@@ -656,7 +717,7 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{t('blockModal.endTime')}</label>
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400">{isMultiDay ? 'Koniec (Godzina)' : t('blockModal.endTime')}</label>
                 <input
                   type="time"
                   value={endTime}
