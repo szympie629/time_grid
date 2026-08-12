@@ -176,22 +176,27 @@ export default function StickyNotesPanel() {
                 className={`relative p-3 rounded-xl shadow-sm hover:shadow-md transition-all group flex flex-col w-36 min-h-36 shrink-0 ${colorObj.class}`}
               >
                 {editingId === note.id ? (
-                  <textarea
-                    ref={editInputRef}
-                    value={editContent}
-                    onChange={e => setEditContent(e.target.value)}
-                    onBlur={() => saveEdit(note.id)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        editInputRef.current?.blur()
-                      }
-                      if (e.key === 'Escape') {
-                        setEditingId(null)
-                      }
-                    }}
-                    className="flex-1 w-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed"
-                  />
+                  <div className="flex-1 grid">
+                    <div className="col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words invisible pointer-events-none">
+                      {editContent + ' '}
+                    </div>
+                    <textarea
+                      ref={editInputRef}
+                      value={editContent}
+                      onChange={e => setEditContent(e.target.value)}
+                      onBlur={() => saveEdit(note.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          editInputRef.current?.blur()
+                        }
+                        if (e.key === 'Escape') {
+                          setEditingId(null)
+                        }
+                      }}
+                      className="col-start-1 row-start-1 w-full h-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed p-0 m-0 border-none overflow-hidden whitespace-pre-wrap break-words"
+                    />
+                  </div>
                 ) : (
                   <div 
                     onClick={() => {
