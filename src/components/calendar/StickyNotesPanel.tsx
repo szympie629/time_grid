@@ -36,13 +36,19 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     top: note.position_y || 0,
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     zIndex: isDragging ? 99999 : (zIndex || 10),
+    boxShadow: isDragging
+      ? '0 20px 40px -8px rgba(0,0,0,0.30), 0 8px 16px -4px rgba(0,0,0,0.20), 0 0 0 2px rgba(99,102,241,0.4)'
+      : '0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.5)',
   }
 
   return (
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-2xl scale-105 cursor-grabbing ring-2 ring-indigo-500' : 'transition-all duration-200 shadow-md hover:shadow-lg cursor-grab'}`}
+      className={`p-3 rounded-xl group flex flex-col w-36 shrink-0 ${colorObj.class} ${isDragging
+        ? 'scale-105 cursor-grabbing ring-2 ring-inset ring-indigo-400'
+        : 'transition-all duration-200 cursor-grab hover:-translate-y-0.5'
+      }`}
       onClick={(e) => {
         if (!editingId) {
           e.stopPropagation()
@@ -163,7 +169,12 @@ export default function StickyNotesPanel() {
     const handleStickyNoteAdded = () => fetchNotes()
     const handleStickyNoteMoved = (e: any) => {
       const { id, position_x, position_y } = e.detail
-      setNotes(prev => prev.map(n => n.id === id ? { ...n, position_x, position_y } : n))
+      // Use requestAnimationFrame to let dnd-kit fully reset its transform
+      // before we update position_x/y — otherwise both run simultaneously
+      // which causes the visible "bounce" jitter after dropping.
+      requestAnimationFrame(() => {
+        setNotes(prev => prev.map(n => n.id === id ? { ...n, position_x, position_y } : n))
+      })
     }
     window.addEventListener('sticky-note-added', handleStickyNoteAdded)
     window.addEventListener('sticky-note-moved', handleStickyNoteMoved)
