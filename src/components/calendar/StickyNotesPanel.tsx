@@ -8,11 +8,11 @@ import { useDroppable, useDraggable } from '@dnd-kit/core'
 import { useTranslation } from '@/lib/i18n/LanguageContext'
 
 const COLORS = [
-  { id: 'yellow', class: 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100', dot: 'bg-amber-300 dark:bg-amber-600' },
-  { id: 'pink', class: 'bg-pink-100 dark:bg-pink-900/50 text-pink-900 dark:text-pink-100', dot: 'bg-pink-300 dark:bg-pink-600' },
-  { id: 'blue', class: 'bg-sky-100 dark:bg-sky-900/50 text-sky-900 dark:text-sky-100', dot: 'bg-sky-300 dark:bg-sky-600' },
-  { id: 'green', class: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100', dot: 'bg-emerald-300 dark:bg-emerald-600' },
-  { id: 'purple', class: 'bg-purple-100 dark:bg-purple-900/50 text-purple-900 dark:text-purple-100', dot: 'bg-purple-300 dark:bg-purple-600' },
+  { id: 'yellow', class: 'bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-100', dot: 'bg-amber-300 dark:bg-amber-600' },
+  { id: 'pink', class: 'bg-pink-100 dark:bg-pink-900 text-pink-900 dark:text-pink-100', dot: 'bg-pink-300 dark:bg-pink-600' },
+  { id: 'blue', class: 'bg-sky-100 dark:bg-sky-900 text-sky-900 dark:text-sky-100', dot: 'bg-sky-300 dark:bg-sky-600' },
+  { id: 'green', class: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100', dot: 'bg-emerald-300 dark:bg-emerald-600' },
+  { id: 'purple', class: 'bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100', dot: 'bg-purple-300 dark:bg-purple-600' },
 ]
 
 const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEdit, t, editingId, setEditingId, editContent, setEditContent }: any) => {
@@ -42,7 +42,14 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 ${colorObj.class} ${isDragging ? 'opacity-70 shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
+      className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 ${colorObj.class} ${isDragging ? 'shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
+      onClick={(e) => {
+        if (!editingId) {
+          e.stopPropagation()
+          setEditContent(note.content)
+          setEditingId(note.id)
+        }
+      }}
       {...(!editingId ? { ...attributes, ...listeners } : {})}
     >
       {editingId === note.id ? (
@@ -68,14 +75,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
           />
         </div>
       ) : (
-        <div 
-          onClick={(e) => {
-            e.stopPropagation()
-            setEditContent(note.content)
-            setEditingId(note.id)
-          }}
-          className="flex-1 text-xs leading-relaxed whitespace-pre-wrap cursor-text break-words"
-        >
+        <div className="flex-1 text-xs leading-relaxed whitespace-pre-wrap break-words pointer-events-none">
           {note.content}
         </div>
       )}
@@ -255,10 +255,6 @@ export default function StickyNotesPanel() {
       <div className="flex-1 overflow-auto no-scrollbar relative" id="sticky-scroll-container">
         <div 
           className="w-[2000px] h-[2000px] relative bg-slate-50/50 dark:bg-slate-900/20"
-          style={{
-            backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
-            backgroundSize: "24px 24px"
-          }}
         >
         {loading ? (
           <div className="w-full flex items-center justify-center h-full opacity-40">
