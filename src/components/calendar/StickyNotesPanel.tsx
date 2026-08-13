@@ -244,90 +244,90 @@ export default function StickyNotesPanel() {
   }
 
   return (
-    <div ref={setNodeRef} className="flex flex-col h-full min-h-0 relative overflow-hidden">
+    <div ref={setNodeRef} className="h-full min-h-0 relative overflow-hidden">
       {isOver && <div className="absolute -inset-4 z-50 rounded-2xl ring-2 ring-inset ring-amber-500 bg-amber-50/30 dark:bg-amber-900/20 pointer-events-none transition-all" />}
 
-      {/* Fixed-width top section — clips instead of wrapping when panel is narrow */}
-      <div className="w-[220px] shrink-0 p-3">
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
-          <Tooltip position="bottom" content={t('panels.stickyTooltip')}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          </Tooltip>
-        </div>
+      {/* Full-panel desk canvas — the whole surface is the work area */}
+      <div className="w-full h-full overflow-auto no-scrollbar relative" id="sticky-scroll-container">
+        <div className="w-[2000px] h-[2000px] relative bg-slate-50/50 dark:bg-slate-900/20">
 
-        <div className="flex flex-col gap-2 mb-4 bg-gray-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50">
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                addNote()
-              }
-            }}
-            placeholder={t('panels.stickyPlaceholder')}
-            className="w-full bg-transparent resize-none text-xs text-gray-800 dark:text-slate-200 placeholder-gray-400 focus:outline-none min-h-[40px]"
-            rows={2}
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1.5">
-              {COLORS.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedColor(c.id)}
-                  className={`w-4 h-4 rounded-full ${c.dot} transition-transform ${selectedColor === c.id ? 'scale-125 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 ring-indigo-500' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
-                  title="Wybierz kolor"
+          {/* Floating input widget — absolute in top-left, clips when panel is narrow */}
+          <div className="absolute top-3 left-3 w-[210px] z-20 pointer-events-none">
+            <div className="pointer-events-auto">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
+                <Tooltip position="bottom" content={t('panels.stickyTooltip')}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help transition-colors"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </Tooltip>
+              </div>
+              <div className="flex flex-col gap-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2.5 rounded-xl border border-gray-200 dark:border-slate-700/50 shadow-lg">
+                <textarea
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      addNote()
+                    }
+                  }}
+                  placeholder={t('panels.stickyPlaceholder')}
+                  className="w-full bg-transparent resize-none text-xs text-gray-800 dark:text-slate-200 placeholder-gray-400 focus:outline-none min-h-[40px]"
+                  rows={2}
                 />
-              ))}
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1.5">
+                    {COLORS.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedColor(c.id)}
+                        className={`w-4 h-4 rounded-full ${c.dot} transition-transform ${selectedColor === c.id ? 'scale-125 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-800 ring-indigo-500' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
+                        title="Wybierz kolor"
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={addNote}
+                    disabled={!input.trim()}
+                    className="px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={addNote}
-              disabled={!input.trim()}
-              className="px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700"
-            >
-              +
-            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Desk canvas — lives outside the fixed-width wrapper, fills the full panel */}
-      <div className="flex-1 overflow-auto no-scrollbar relative" id="sticky-scroll-container">
-        <div 
-          className="w-[2000px] h-[2000px] relative bg-slate-50/50 dark:bg-slate-900/20"
-        >
-        {loading ? (
-          <div className="w-full flex items-center justify-center h-full opacity-40">
-            <p className="text-xs text-gray-500">{t('common.loading')}</p>
-          </div>
-        ) : notes.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center opacity-40 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3 text-gray-400 dark:text-slate-600">
-              <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z" />
-              <polyline points="15 3 15 9 21 9" />
-            </svg>
-            <p className="text-xs font-medium text-gray-500 dark:text-slate-500">{t('panels.stickyEmpty')}</p>
-          </div>
-        ) : (
-          notes.map(note => (
-            <DraggableStickyNote
-              key={note.id}
-              note={note}
-              COLORS={COLORS}
-              deleteNote={deleteNote}
-              changeNoteColor={changeNoteColor}
-              saveEdit={saveEdit}
-              t={t}
-              editingId={editingId}
-              setEditingId={setEditingId}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              bringToFront={bringToFront}
-              zIndex={zIndexes[note.id]}
-            />
-          ))
-        )}
+          {loading ? (
+            <div className="absolute inset-0 flex items-center justify-center opacity-40">
+              <p className="text-xs text-gray-500">{t('common.loading')}</p>
+            </div>
+          ) : notes.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-40 pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3 text-gray-400 dark:text-slate-600">
+                <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z" />
+                <polyline points="15 3 15 9 21 9" />
+              </svg>
+              <p className="text-xs font-medium text-gray-500 dark:text-slate-500">{t('panels.stickyEmpty')}</p>
+            </div>
+          ) : (
+            notes.map(note => (
+              <DraggableStickyNote
+                key={note.id}
+                note={note}
+                COLORS={COLORS}
+                deleteNote={deleteNote}
+                changeNoteColor={changeNoteColor}
+                saveEdit={saveEdit}
+                t={t}
+                editingId={editingId}
+                setEditingId={setEditingId}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                bringToFront={bringToFront}
+                zIndex={zIndexes[note.id]}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>
