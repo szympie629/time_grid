@@ -63,8 +63,8 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
       : undefined,
     zIndex: isDragging ? 99999 : (zIndex || 10),
     boxShadow: isDragging ? shadowDrag : shadowRest,
-    // Smooth transition for shadow and transform on release (not during drag)
-    transition: isDragging ? 'none' : 'box-shadow 220ms ease, transform 220ms ease',
+    // Smooth transition for shadow on release (not during drag)
+    transition: isDragging ? 'none' : 'box-shadow 220ms ease',
   }
 
   return (
