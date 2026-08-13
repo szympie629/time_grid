@@ -244,8 +244,10 @@ export default function StickyNotesPanel() {
   }
 
   return (
-    <div ref={setNodeRef} className="flex flex-col h-full min-h-0 relative">
+    <div ref={setNodeRef} className="flex flex-col h-full min-h-0 relative overflow-hidden">
       {isOver && <div className="absolute -inset-4 z-50 rounded-2xl ring-2 ring-inset ring-amber-500 bg-amber-50/30 dark:bg-amber-900/20 pointer-events-none transition-all" />}
+      {/* Fixed-width inner container — like the desk canvas, clips rather than wraps when panel narrows */}
+      <div className="w-[220px] flex flex-col h-full min-h-0">
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <h3 className="text-xs font-bold text-gray-500 dark:text-slate-500 uppercase tracking-wider">Sticky Notes</h3>
         <Tooltip position="bottom" content={t('panels.stickyTooltip')}>
@@ -324,6 +326,7 @@ export default function StickyNotesPanel() {
           ))
         )}
         </div>
+      </div>
       </div>
     </div>
   )
