@@ -15,7 +15,7 @@ const COLORS = [
   { id: 'purple', class: 'bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100', dot: 'bg-purple-300 dark:bg-purple-600' },
 ]
 
-const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEdit, t, editingId, setEditingId, editContent, setEditContent }: any) => {
+const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEdit, t, editingId, setEditingId, editContent, setEditContent, bringToFront }: any) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `stickynote-${note.id}`,
     data: { type: 'stickynote', item: note }
@@ -43,6 +43,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
       ref={setNodeRef}
       style={style}
       className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
+      onPointerDown={() => bringToFront(note.id)}
       onClick={(e) => {
         if (!editingId) {
           e.stopPropagation()
@@ -71,6 +72,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
                 setEditingId(null)
               }
             }}
+            rows={1}
             className="col-start-1 row-start-1 w-full h-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed p-0 m-0 border-none overflow-hidden whitespace-pre-wrap break-words min-w-0"
           />
         )}
@@ -122,6 +124,17 @@ export default function StickyNotesPanel() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
   const editInputRef = useRef<HTMLTextAreaElement>(null)
+
+  const bringToFront = useCallback((id: string) => {
+    setNotes(prev => {
+      const idx = prev.findIndex(n => n.id === id)
+      if (idx === -1 || idx === prev.length - 1) return prev
+      const newNotes = [...prev]
+      const [note] = newNotes.splice(idx, 1)
+      newNotes.push(note)
+      return newNotes
+    })
+  }, [])
 
   const fetchNotes = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -288,6 +301,7 @@ export default function StickyNotesPanel() {
               setEditingId={setEditingId}
               editContent={editContent}
               setEditContent={setEditContent}
+              bringToFront={bringToFront}
             />
           ))
         )}
