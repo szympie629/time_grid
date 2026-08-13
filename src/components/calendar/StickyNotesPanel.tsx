@@ -52,8 +52,8 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
       }}
       {...(!editingId ? { ...attributes, ...listeners } : {})}
     >
-      <div className="flex-1 grid min-w-0 w-full cursor-text">
-        <div className={`col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words min-w-0 w-full ${editingId === note.id ? 'invisible pointer-events-none' : 'pointer-events-none'}`}>
+      <div className={`flex-1 grid min-w-0 w-full ${editingId === note.id ? 'cursor-text' : 'pointer-events-none'}`}>
+        <div className={`col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words min-w-0 w-full pointer-events-none ${editingId === note.id ? 'invisible' : ''}`}>
           {(editingId === note.id ? editContent : note.content) + '\u200b'}
         </div>
         {editingId === note.id && (
