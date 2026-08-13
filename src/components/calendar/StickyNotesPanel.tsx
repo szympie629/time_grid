@@ -194,12 +194,11 @@ export default function StickyNotesPanel() {
     const handleStickyNoteAdded = () => fetchNotes()
     const handleStickyNoteMoved = (e: any) => {
       const { id, position_x, position_y } = e.detail
-      // Use requestAnimationFrame to let dnd-kit fully reset its transform
-      // before we update position_x/y — otherwise both run simultaneously
-      // which causes the visible "bounce" jitter after dropping.
-      requestAnimationFrame(() => {
-        setNotes(prev => prev.map(n => n.id === id ? { ...n, position_x, position_y } : n))
-      })
+      // Synchronous update — React 18 auto-batches this with dnd-kit's
+      // transform reset in the same event cycle → single render, no bounce.
+      // requestAnimationFrame caused the double-offset bug (transform still
+      // non-zero when rAF fired → position + transform = 2× delta).
+      setNotes(prev => prev.map(n => n.id === id ? { ...n, position_x, position_y } : n))
     }
     window.addEventListener('sticky-note-added', handleStickyNoteAdded)
     window.addEventListener('sticky-note-moved', handleStickyNoteMoved)
