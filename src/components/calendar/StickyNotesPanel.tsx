@@ -81,31 +81,33 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
       )}
       
       {!editingId && (
-        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button 
-            onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
-            className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md text-red-500 transition-colors cursor-pointer"
-            title={t('panels.stickyDelete')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-          
+        <div className="absolute -top-11 right-0 flex flex-row items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-white dark:bg-slate-800 shadow-md rounded-lg p-1 border border-gray-100 dark:border-slate-700 z-50">
           <div className="relative group/color">
-            <button className="p-1 bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40 rounded-md transition-colors cursor-pointer" title={t('panels.stickyChangeColor')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md text-gray-500 dark:text-slate-400 transition-colors cursor-pointer" title={t('panels.stickyChangeColor')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
             </button>
-            <div className="absolute right-full top-1/2 -translate-y-1/2 pr-1 hidden group-hover/color:block z-10">
-              <div className="flex bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1.5 gap-1.5 cursor-default" onClick={e => e.stopPropagation()}>
+            <div className="absolute top-full right-0 pt-2 hidden group-hover/color:block z-50">
+              <div className="flex bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1.5 gap-1.5 border border-gray-100 dark:border-slate-700 cursor-default" onClick={e => e.stopPropagation()}>
                 {COLORS.map((c: any) => (
                   <button
                     key={c.id}
                     onClick={(e) => { e.stopPropagation(); changeNoteColor(note.id, c.id); }}
-                    className={`w-3.5 h-3.5 rounded-full ${c.dot} hover:scale-110 transition-transform ${note.color === c.id ? 'ring-1 ring-offset-1 ring-indigo-500' : ''}`}
+                    className={`w-4 h-4 rounded-full ${c.dot} hover:scale-110 transition-transform ${note.color === c.id ? 'ring-2 ring-offset-1 dark:ring-offset-slate-800 ring-indigo-500' : ''}`}
                   />
                 ))}
               </div>
             </div>
           </div>
+          
+          <div className="w-px h-4 bg-gray-200 dark:bg-slate-700 mx-0.5"></div>
+
+          <button 
+            onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md text-red-500 transition-colors cursor-pointer"
+            title={t('panels.stickyDelete')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       )}
     </div>
