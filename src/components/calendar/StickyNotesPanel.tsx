@@ -15,7 +15,7 @@ const COLORS = [
   { id: 'purple', class: 'bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100', dot: 'bg-purple-300 dark:bg-purple-600' },
 ]
 
-const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEdit, t, editingId, setEditingId, editContent, setEditContent, bringToFront }: any) => {
+const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEdit, t, editingId, setEditingId, editContent, setEditContent, bringToFront, zIndex }: any) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `stickynote-${note.id}`,
     data: { type: 'stickynote', item: note }
@@ -35,7 +35,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     left: note.position_x || 0,
     top: note.position_y || 0,
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    zIndex: isDragging ? 100 : 10,
+    zIndex: isDragging ? 99999 : (zIndex || 10),
   }
 
   return (
@@ -133,15 +133,13 @@ export default function StickyNotesPanel() {
   const [editContent, setEditContent] = useState('')
   const editInputRef = useRef<HTMLTextAreaElement>(null)
 
+  const [zIndexes, setZIndexes] = useState<Record<string, number>>({})
+  const maxZRef = useRef(10)
+
   const bringToFront = useCallback((id: string) => {
-    setNotes(prev => {
-      const idx = prev.findIndex(n => n.id === id)
-      if (idx === -1 || idx === prev.length - 1) return prev
-      const newNotes = [...prev]
-      const [note] = newNotes.splice(idx, 1)
-      newNotes.push(note)
-      return newNotes
-    })
+    maxZRef.current += 1
+    const nextZ = maxZRef.current
+    setZIndexes(prev => ({ ...prev, [id]: nextZ }))
   }, [])
 
   const fetchNotes = useCallback(async () => {
@@ -310,6 +308,7 @@ export default function StickyNotesPanel() {
               editContent={editContent}
               setEditContent={setEditContent}
               bringToFront={bringToFront}
+              zIndex={zIndexes[note.id]}
             />
           ))
         )}
