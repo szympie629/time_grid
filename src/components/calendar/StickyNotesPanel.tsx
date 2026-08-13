@@ -42,8 +42,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
-      onPointerDown={() => bringToFront(note.id)}
+      className={`p-3 rounded-xl transition-all duration-200 group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-2xl scale-105 cursor-grabbing ring-2 ring-indigo-500' : 'shadow-md hover:shadow-lg cursor-grab'}`}
       onClick={(e) => {
         if (!editingId) {
           e.stopPropagation()
@@ -51,7 +50,16 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
           setEditingId(note.id)
         }
       }}
-      {...(!editingId ? { ...attributes, ...listeners } : {})}
+      {...(!editingId ? { 
+        ...attributes, 
+        ...listeners,
+        onPointerDown: (e: any) => {
+          bringToFront(note.id);
+          if (listeners?.onPointerDown) {
+            listeners.onPointerDown(e);
+          }
+        }
+      } : {})}
     >
       <div className={`flex-1 grid min-w-0 w-full ${editingId === note.id ? 'cursor-text' : 'pointer-events-none'}`}>
         <div className={`col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words min-w-0 w-full pointer-events-none ${editingId === note.id ? 'invisible' : ''}`}>
