@@ -30,24 +30,49 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     }
   }, [editingId, note.id])
 
+  // ---------------------------------------------------------------------------
+  // Elevation shadow physics
+  // Light source: top-left corner → shadow falls right and down.
+  //
+  // REST  (elevation ~1 mm):
+  //   key shadow   — tight, directional, offset right+down
+  //   ambient shadow — very soft, symmetric
+  //
+  // DRAG  (elevation ~8 mm):
+  //   key shadow   — larger offset, more blur, still directional right+down
+  //   ambient shadow — wide, very soft
+  //   contact shadow — tiny near shadow keeps grounding
+  // ---------------------------------------------------------------------------
+  const shadowRest =
+    '1px 2px 3px rgba(0,0,0,0.10), ' +   // key: directional right+down
+    '2px 4px 8px rgba(0,0,0,0.07), ' +   // ambient: soft spread
+    'inset 0 1px 0 rgba(255,255,255,0.35)' // inner top highlight (paper edge)
+
+  const shadowDrag =
+    '4px 12px 20px rgba(0,0,0,0.18), ' +  // key: lifted, offset further down
+    '2px 6px 10px rgba(0,0,0,0.12), ' +   // mid shadow
+    '0 2px 4px rgba(0,0,0,0.08), ' +      // contact: tiny grounding shadow
+    'inset 0 1px 0 rgba(255,255,255,0.35)' // inner top highlight
+
   const style = {
     position: 'absolute' as const,
     left: note.position_x || 0,
     top: note.position_y || 0,
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0) ${isDragging ? 'scale(1.04) rotate(-0.8deg)' : ''}`
+      : undefined,
     zIndex: isDragging ? 99999 : (zIndex || 10),
-    boxShadow: isDragging
-      ? '0 20px 40px -8px rgba(0,0,0,0.30), 0 8px 16px -4px rgba(0,0,0,0.20), 0 0 0 2px rgba(99,102,241,0.4)'
-      : '0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.5)',
+    boxShadow: isDragging ? shadowDrag : shadowRest,
+    // Smooth transition for shadow and transform on release (not during drag)
+    transition: isDragging ? 'none' : 'box-shadow 220ms ease, transform 220ms ease',
   }
 
   return (
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl group flex flex-col w-36 shrink-0 ${colorObj.class} ${isDragging
-        ? 'scale-105 cursor-grabbing ring-2 ring-inset ring-indigo-400'
-        : 'transition-all duration-200 cursor-grab hover:-translate-y-0.5'
+      className={`p-3 rounded-xl group flex flex-col w-36 shrink-0 ${colorObj.class} ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       onClick={(e) => {
         if (!editingId) {
