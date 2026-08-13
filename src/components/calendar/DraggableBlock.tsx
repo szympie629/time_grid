@@ -25,7 +25,7 @@ interface Props {
 
 export default function DraggableBlock({ block, style, idPrefix = 'calendar-', isOverlay = false, onResizeEnd, onClick, onDelete, onUpdate, recentlyDroppedId, categories = [], onCopy, isCopyMode = false, isFaded = false }: Props) {
   const isDraft = block.id === 'draft'
-  const type = idPrefix.replace('-', '')
+  const type = idPrefix.split('-')[0]
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `${idPrefix}${block.id}`,
