@@ -289,11 +289,17 @@ export default function CalendarPage() {
         const newX = Math.max(0, (item.position_x || 0) + delta.x)
         const newY = Math.max(0, (item.position_y || 0) + delta.y)
         
+        window.dispatchEvent(new CustomEvent('sticky-note-moved', { 
+          detail: { id: item.id, position_x: newX, position_y: newY } 
+        }))
+
         try {
           await stickyNotesApi.updateNote(supabase, item.id, { position_x: newX, position_y: newY })
-          window.dispatchEvent(new CustomEvent('sticky-note-added'))
         } catch (err) {
           console.error("Błąd przesuwania notatki", err)
+          window.dispatchEvent(new CustomEvent('sticky-note-moved', { 
+            detail: { id: item.id, position_x: item.position_x, position_y: item.position_y } 
+          }))
         }
       }
       return

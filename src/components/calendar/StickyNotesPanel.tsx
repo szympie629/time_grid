@@ -142,8 +142,16 @@ export default function StickyNotesPanel() {
 
   useEffect(() => {
     const handleStickyNoteAdded = () => fetchNotes()
+    const handleStickyNoteMoved = (e: any) => {
+      const { id, position_x, position_y } = e.detail
+      setNotes(prev => prev.map(n => n.id === id ? { ...n, position_x, position_y } : n))
+    }
     window.addEventListener('sticky-note-added', handleStickyNoteAdded)
-    return () => window.removeEventListener('sticky-note-added', handleStickyNoteAdded)
+    window.addEventListener('sticky-note-moved', handleStickyNoteMoved)
+    return () => {
+      window.removeEventListener('sticky-note-added', handleStickyNoteAdded)
+      window.removeEventListener('sticky-note-moved', handleStickyNoteMoved)
+    }
   }, [fetchNotes])
 
   useEffect(() => {
