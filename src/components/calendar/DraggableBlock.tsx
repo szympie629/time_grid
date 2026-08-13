@@ -28,9 +28,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const type = idPrefix.replace('-', '')
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: `${idPrefix}${block.id}`,
+    id: isOverlay ? `overlay-${idPrefix}${block.id}` : `${idPrefix}${block.id}`,
     data: { type, block },
-    disabled: isDraft
+    disabled: isDraft || isOverlay
   })
 
   const [isResizing, setIsResizing] = useState(false)

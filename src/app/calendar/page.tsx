@@ -740,15 +740,19 @@ export default function CalendarPage() {
 
         <DragOverlay zIndex={1000} dropAnimation={null}>
           {activeRitual ? (
-            <RitualDragOverlay ritual={activeRitual} categories={categories} width={overlayWidth} />
+            <div style={{ pointerEvents: 'none' }}>
+              <RitualDragOverlay ritual={activeRitual} categories={categories} width={overlayWidth} />
+            </div>
           ) : activeBlock ? (
-            <DraggableBlock
-              block={activeBlock}
-              categories={categories}
-              isOverlay={true}
-              style={{ width: `${overlayWidth}px`, margin: 0 }}
-              onResizeEnd={() => { }} onClick={() => { }} onDelete={() => { }} onUpdate={() => { }}
-            />
+            <div style={{ pointerEvents: 'none' }}>
+              <DraggableBlock
+                block={activeBlock}
+                categories={categories}
+                isOverlay={true}
+                style={{ width: `${overlayWidth}px`, margin: 0 }}
+                onResizeEnd={() => { }} onClick={() => { }} onDelete={() => { }} onUpdate={() => { }}
+              />
+            </div>
           ) : activeMindDump ? (
             <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-2xl border-2 border-indigo-500 w-64 rotate-3 opacity-90 cursor-grabbing flex items-start gap-2">
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300">#{activeMindDump.tag}</span>
