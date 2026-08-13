@@ -1,6 +1,6 @@
 'use client'
 
-import { Panel, Group, Separator } from "react-resizable-panels"
+import { Panel, PanelGroup as Group, PanelResizeHandle as Separator } from "react-resizable-panels"
 import CalendarGrid from '@/components/calendar/CalendarGrid'
 import DraggableBlock from '@/components/calendar/DraggableBlock'
 import BlockModal from '@/components/calendar/BlockModal'
