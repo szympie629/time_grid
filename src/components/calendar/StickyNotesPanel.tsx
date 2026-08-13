@@ -42,7 +42,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 ${colorObj.class} ${isDragging ? 'shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
+      className={`p-3 rounded-xl shadow-sm transition-shadow group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-xl cursor-grabbing ring-2 ring-indigo-500' : 'hover:shadow-md cursor-grab'}`}
       onClick={(e) => {
         if (!editingId) {
           e.stopPropagation()
@@ -52,11 +52,11 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
       }}
       {...(!editingId ? { ...attributes, ...listeners } : {})}
     >
-      {editingId === note.id ? (
-        <div className="flex-1 grid cursor-text">
-          <div className="col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words invisible pointer-events-none">
-            {editContent + ' '}
-          </div>
+      <div className="flex-1 grid min-w-0 w-full cursor-text">
+        <div className={`col-start-1 row-start-1 text-xs leading-relaxed whitespace-pre-wrap break-words min-w-0 w-full ${editingId === note.id ? 'invisible pointer-events-none' : 'pointer-events-none'}`}>
+          {(editingId === note.id ? editContent : note.content) + '\u200b'}
+        </div>
+        {editingId === note.id && (
           <textarea
             ref={editInputRef}
             value={editContent}
@@ -71,14 +71,10 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
                 setEditingId(null)
               }
             }}
-            className="col-start-1 row-start-1 w-full h-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed p-0 m-0 border-none overflow-hidden whitespace-pre-wrap break-words"
+            className="col-start-1 row-start-1 w-full h-full bg-transparent resize-none focus:outline-none text-xs leading-relaxed p-0 m-0 border-none overflow-hidden whitespace-pre-wrap break-words min-w-0"
           />
-        </div>
-      ) : (
-        <div className="flex-1 text-xs leading-relaxed whitespace-pre-wrap break-words pointer-events-none">
-          {note.content}
-        </div>
-      )}
+        )}
+      </div>
       
       {!editingId && (
         <div className="absolute -top-11 right-0 flex flex-row items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-white dark:bg-slate-800 shadow-md rounded-lg p-1 border border-gray-100 dark:border-slate-700 z-50">
