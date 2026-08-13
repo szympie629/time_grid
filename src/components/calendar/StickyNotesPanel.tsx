@@ -42,7 +42,7 @@ const DraggableStickyNote = ({ note, COLORS, deleteNote, changeNoteColor, saveEd
     <div 
       ref={setNodeRef}
       style={style}
-      className={`p-3 rounded-xl transition-all duration-200 group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-2xl scale-105 cursor-grabbing ring-2 ring-indigo-500' : 'shadow-md hover:shadow-lg cursor-grab'}`}
+      className={`p-3 rounded-xl group flex flex-col w-36 shrink-0 border border-black/5 dark:border-white/10 ${colorObj.class} ${isDragging ? 'shadow-2xl scale-105 cursor-grabbing ring-2 ring-indigo-500' : 'transition-all duration-200 shadow-md hover:shadow-lg cursor-grab'}`}
       onClick={(e) => {
         if (!editingId) {
           e.stopPropagation()
