@@ -28,9 +28,9 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const type = idPrefix.replace('-', '')
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: isOverlay ? `overlay-${idPrefix}${block.id}` : `${idPrefix}${block.id}`,
+    id: `${idPrefix}${block.id}`,
     data: { type, block },
-    disabled: isDraft || isOverlay
+    disabled: isDraft
   })
 
   const [isResizing, setIsResizing] = useState(false)
@@ -141,7 +141,7 @@ export default function DraggableBlock({ block, style, idPrefix = 'calendar-', i
   const mins = durationMinutes % 60
   const durationText = durationMinutes >= 1439 ? '24h' : (hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`)
 
-  const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 transition-transform duration-200 cursor-grabbing' : ''
+  const overlayClass = isOverlay ? 'scale-105 shadow-2xl -rotate-1 opacity-90 cursor-grabbing' : ''
   const dragClass = isDraft ? '' : (isResizing ? 'cursor-ns-resize z-50' : 'cursor-grab active:cursor-grabbing')
   const rippleClass = ripple ? 'ripple-effect' : ''
   const completedClass = block.is_completed ? 'opacity-40 grayscale line-through' : ''
