@@ -209,11 +209,14 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
     if (!block || !block.start_time) return
 
     const durationMinutes = newHeightPixels * 1
-    const startObj = new Date(block.start_time.substring(0, 19))
+
+    // WAŻNE: NIE używaj substring(0,19) - to obcina offset strefy czasowej (+00:00)
+    // z timestampu Supabase, przez co new Date() parsuje czas jako lokalny zamiast UTC.
+    // Efekt: startObj jest o 2h za wcześnie (dla strefy +02:00) → newEnd też jest błędny.
+    // Parsujemy cały string z offsetem, żeby getTime() zwróciło poprawny UTC epoch.
+    const startObj = new Date(block.start_time)
     const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
-    // Aktualizuj zarówno end_time jak i duration_minutes, żeby BudgetPanel
-    // nie używał przestarzałej wartości duration_minutes po resize
     setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, end_time: newEnd, duration_minutes: durationMinutes } : b))
     try {
       await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd, duration_minutes: durationMinutes })
