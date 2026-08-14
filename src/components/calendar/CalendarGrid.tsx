@@ -212,9 +212,11 @@ export default function CalendarGrid({ blocks, setBlocks, recentlyDroppedId, cat
     const startObj = new Date(block.start_time.substring(0, 19))
     const newEnd = toLocalISOString(new Date(startObj.getTime() + durationMinutes * 60000))
 
-    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, end_time: newEnd } : b))
+    // Aktualizuj zarówno end_time jak i duration_minutes, żeby BudgetPanel
+    // nie używał przestarzałej wartości duration_minutes po resize
+    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, end_time: newEnd, duration_minutes: durationMinutes } : b))
     try {
-      await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd })
+      await blocksApi.updateBlock(supabase, blockId, { end_time: newEnd, duration_minutes: durationMinutes })
     } catch (error) {
       console.error(error)
     }
