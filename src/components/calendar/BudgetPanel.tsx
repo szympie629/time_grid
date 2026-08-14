@@ -22,20 +22,20 @@ export default function BudgetPanel({ blocks, categories, weekDays, onHoverCateg
     if (!block.start_time || !block.category_id || block.is_deleted) return
     const dateStr = block.start_time.substring(0, 10)
     if (weekDateStrings.includes(dateStr)) {
-      let minutes: number | null = null
-      // Zawsze licz z start_time/end_time jeśli oba istnieją — to jest zawsze aktualne
-      // (duration_minutes może być przestarzałe np. po resize suwakiem)
-      if (block.start_time && block.end_time) {
-        const start = new Date(block.start_time).getTime()
-        const end = new Date(block.end_time).getTime()
+      // duration_minutes jest teraz zawsze aktualne (aktualizowane przy resize i w modalu).
+      // Gdy go brakuje (stare bloki bez tej wartości), obliczamy z czasów —
+      // ale koniecznie z substring(0,19), żeby oba końce były traktowane
+      // jako naiwny czas lokalny (spójnie z getBlockPosition i resztą aplikacji).
+      let minutes = block.duration_minutes
+      if (!minutes && block.start_time && block.end_time) {
+        const start = new Date(block.start_time.substring(0, 19)).getTime()
+        const end = new Date(block.end_time.substring(0, 19)).getTime()
         minutes = Math.round((end - start) / 60000)
-      } else {
-        // Fallback dla bloków bez end_time (backlog)
-        minutes = block.duration_minutes
       }
       minutesByCategory[block.category_id] = (minutesByCategory[block.category_id] || 0) + (minutes || 0)
     }
   })
+
 
   // 2. Oddziel kategorie z limitami i bez limitów
   const withLimits = categories.filter(c => c.time_limit_minutes)
