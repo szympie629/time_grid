@@ -327,12 +327,9 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
   }
 
   // ── Obsługa To-Do ─────────────────────────────────────────────────────────
-  const activeTasksCount = tasks.filter((t) => !t.is_completed).length
-  const isLimitReached = activeTasksCount >= 5
-
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newTaskTitle.trim() || isLimitReached) return
+    if (!newTaskTitle.trim()) return
     try {
       const newTask = await tasksApi.createTask(supabase, block.id, newTaskTitle)
       setTasks((prev) => [...prev, newTask])
@@ -793,26 +790,12 @@ export default function BlockModal({ block, categories = [], onClose, onUpdate, 
                 <input
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder={
-                    isLimitReached
-                      ? "Limit (5/5). Zakończ zadanie, by dodać nowe."
-                      : t('blockModal.addTask')
-                  }
-                  disabled={isLimitReached}
-                  className={`flex-1 p-2.5 rounded-lg text-sm outline-none border transition-all ${
-                    isLimitReached
-                      ? "bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 cursor-not-allowed opacity-70"
-                      : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  }`}
+                  placeholder={t('blockModal.addTask')}
+                  className="flex-1 p-2.5 rounded-lg text-sm outline-none border transition-all bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
                 <button
                   type="submit"
-                  disabled={isLimitReached}
-                  className={`px-4 rounded-lg text-lg font-bold shadow-sm transition-colors ${
-                    isLimitReached
-                      ? "bg-gray-300 dark:bg-slate-700 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
-                  }`}
+                  className="px-4 rounded-lg text-lg font-bold shadow-sm transition-colors bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                 >
                   +
                 </button>
