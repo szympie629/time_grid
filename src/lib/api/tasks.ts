@@ -17,18 +17,6 @@ export const tasksApi = {
   },
 
   async createTask(supabase: SupabaseClient<Database>, blockId: string, title: string) {
-    // Sprawdzenie limitu aktywnych zadań (max 5)
-    const { count, error: countError } = await supabase
-      .from('tasks')
-      .select('*', { count: 'exact', head: true })
-      .eq('block_id', blockId)
-      .eq('is_completed', false)
-
-    if (countError) throw countError
-    if (count !== null && count >= 5) {
-      throw new Error('Osiągnięto limit 5 aktywnych zadań.')
-    }
-
     // Pobierz aktualną max pozycję, żeby nowe zadanie trafiło na koniec
     const { data: existing } = await supabase
       .from('tasks')
